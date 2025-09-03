@@ -1,38 +1,359 @@
-.App {
+/* Premier Pride Color Palette */
+:root {
+  --primary-color: #2c3e50;    /* Muted Navy/Dark Blue */
+  --secondary-color: #B38F43;  /* Rich Gold */
+  --accent-color: #3498db;     /* Vibrant Blue (for interactive elements) */
+  --text-dark: #333333;
+  --text-light: #555555;
+  --bg-light: #f4f7f6;         /* Light page background */
+  --border-color: #e0e0e0;
+  --success-color: #28a745;    /* Green for active/success */
+  --warning-color: #ffc107;    /* Yellow for on leave/warning */
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Navbar Styles */
+.navbar {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navbar-brand a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.navbar-brand .logo-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--secondary-color);
+}
+
+.navbar-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.navbar-links a {
+  color: #ecf0f1;
+  text-decoration: none;
+  padding: 5px 0;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-bottom-color 0.2s;
+}
+
+.navbar-links a:hover {
+  color: var(--secondary-color);
+  border-bottom-color: var(--secondary-color);
+}
+
+/* General Page Layout */
+.page-container {
+  padding: 2rem;
+  text-align: left;
+}
+
+.page-container h1 {
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  color: var(--primary-color);
+}
+
+/* Card and Widget Depth Styles */
+.widget,
+.card,
+.info-card,
+.chart-placeholder,
+.benefit-card,
+.tier-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.08);
+  transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+}
+
+.widget:hover,
+.card:hover,
+.info-card:hover,
+.chart-placeholder:hover,
+.benefit-card:hover,
+.tier-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.10), 0 6px 6px rgba(0,0,0,0.15);
+}
+
+/* Individual Card and Widget Layouts */
+.widget { padding: 1.5rem; flex: 1; min-width: 200px; text-align: center; }
+.card { padding: 1.5rem; flex: 1; min-width: 220px; display: flex; flex-direction: column; }
+.info-card { padding: 1.5rem; flex: 1; min-width: 300px; }
+.chart-placeholder { padding: 1.5rem; text-align: center; min-height: 300px; display: flex; flex-direction: column; justify-content: center; color: var(--text-light); }
+.benefit-card { display: flex; flex-direction: column; padding: 1.5rem; }
+.tier-card { padding: 1.5rem; }
+
+/* Dashboard Widgets Content */
+.widgets-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.widget {
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
+.widget h2 { font-size: 1.1rem; margin-top: 0; color: var(--text-light); }
+.widget p { font-size: 2.5rem; font-weight: bold; color: var(--secondary-color); margin: 0; }
+
+/* Employees Table Content */
+.employees-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.employees-table th, .employees-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.employees-table th { 
+  background-color: #f8f9fa; 
+  font-weight: bold; 
+  color: var(--text-dark); 
+}
+
+/* New Hover Effect for Individual Rows */
+.employees-table tbody tr:hover {
+  background-color: #f8f9fa; /* Subtle background change on hover */
+  cursor: pointer;
+}
+
+/* Updated status badge styles */
+.status-badge {
+  display: inline-block;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px; /* Reduced border radius */
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  text-transform: uppercase;
+}
+.status-active { background-color: var(--success-color); }
+.status-on-leave { background-color: var(--warning-color); }
+.status-pending { background-color: var(--primary-color); }
+.status-approved { background-color: var(--success-color); }
+.status-flagged { background-color: #dc3545; }
+
+/* Action buttons cell */
+.action-buttons-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Updated action button styles for consistency */
+.action-button,
+.action-button-approve,
+.action-button-flag,
+.action-button-delete {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  border: 1px solid transparent;
+}
+.action-button { background-color: var(--accent-color); color: white; }
+.action-button:hover { background-color: #0056b3; }
+.action-button-approve { background-color: var(--success-color); color: white; }
+.action-button-approve:hover { background-color: #218838; }
+.action-button-flag { background-color: #dc3545; color: white; }
+.action-button-flag:hover { background-color: #c82333; }
+.action-button-delete { background-color: var(--border-color); color: var(--text-light); border-color: #d1d5db; }
+.action-button-delete:hover { background-color: #e5e7eb; }
+
+/* Reconciliation Cards Content */
+.card h2 { font-size: 1.2rem; margin-top: 0; color: var(--text-dark); }
+.card .count { font-size: 2.8rem; font-weight: bold; color: var(--primary-color); margin: auto 0; text-align: center; }
+
+/* Client Details Content */
+.info-card h2 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; color: var(--primary-color); }
+.info-card p { line-height: 1.6; color: var(--text-dark); }
+
+/* Stats and Reports Content */
+.kpi-container { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2rem; }
+.kpi-card { background-color: var(--primary-color); color: white; border-radius: 8px; padding: 1.5rem; flex: 1; min-width: 180px; text-align: center; }
+.kpi-card h4 { margin: 0 0 0.5rem 0; font-size: 1rem; opacity: 0.9; }
+.kpi-card p { margin: 0; font-size: 2.2rem; font-weight: bold; }
+
+/* Open Enrollment Admin Styles */
+.open-enrollment-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+.open-enrollment-grid-detail {
+  display: grid;
+  grid-template-columns: 0 1fr; /* Hides the left column */
+  gap: 2rem;
+}
+
+.open-enrollment-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  transition: opacity 0.3s;
+}
+.open-enrollment-grid-detail .open-enrollment-main {
+  opacity: 0;
   pointer-events: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.open-enrollment-sidebar {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  gap: 2rem;
+  transition: grid-column 0.3s, background-color 0.3s;
+}
+.open-enrollment-sidebar.detail-view {
+  grid-column: 1 / -1; /* Makes the sidebar span the full width */
+  background-color: white; /* Adds a clean background to the expanded view */
+}
+
+/* Dashboard Chart Styles */
+.chart-container {
+  margin-top: 2rem;
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.08);
+  transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+}
+.chart-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.10), 0 6px 6px rgba(0,0,0,0.15);
+}
+
+/* Dashboard Layout Styles */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dashboard Calendar Styles */
+.calendar {
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.08);
+  transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+}
+.calendar:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.10), 0 6px 6px rgba(0,0,0,0.15);
+}
+
+.calendar-header {
+  background-color: var(--primary-color);
   color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.App-link {
-  color: #61dafb;
+.calendar-header h4 {
+  margin: 0;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.calendar-header button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.calendar-body {
+  background-color: #ffffff;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  padding: 0.5rem 0;
+  font-weight: bold;
+  color: var(--text-light);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+}
+
+.calendar-day {
+  padding: 0.5rem;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.calendar-day.highlight {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  color: var(--secondary-color);
+}
+
+.calendar-day:last-child {
+  border-right: none;
 }

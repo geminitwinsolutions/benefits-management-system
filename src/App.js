@@ -1,6 +1,6 @@
 // src/App.js
 import { useState, useEffect } from 'react'
-import { supabase } from './supabaseClient'
+import { supabase } from './supabase' // Corrected import path
 import './App.css'
 
 function App() {
