@@ -1,42 +1,43 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
+// src/components/Navbar.js
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../supabase';
 
-function Navbar() {
-  const handleLogout = async () => {
+const Navbar = () => {
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error logging out:', error);
+    if (!error) {
+      navigate('/');
+    } else {
+      alert('Error signing out. Please try again.');
     }
   };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-brand">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="logo-icon">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-          <path d="M2 17l10 5 10-5"></path>
-          <path d="M2 12l10 5 10-5"></path>
-        </svg>
-        <Link to="/">Premier Pride</Link>
+    <nav className="bg-white shadow-md">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex">
+            <div className="shrink-0">
+              <Link to="/dashboard" className="text-xl font-bold text-gray-800">Premier Benefits</Link>
+            </div>
+            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+              <Link to="/dashboard" className="text-gray-500 hover:text-gray-700">Dashboard</Link>
+              <Link to="/employees" className="text-gray-500 hover:text-gray-700">All Employees</Link>
+              <Link to="/open-enrollment" className="text-gray-500 hover:text-gray-700">Open Enrollment</Link>
+              <Link to="/client-details" className="text-gray-500 hover:text-gray-700">Client Details</Link>
+            </div>
+          </div>
+          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+            <button onClick={handleSignOut} className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600">
+              Sign Out
+            </button>
+          </div>
+        </div>
       </div>
-
-      <ul className="navbar-links">
-        <li><Link to="/">Dashboard</Link></li>
-        <li><Link to="/employees">Employees</Link></li>
-        <li><Link to="/central-hub/enrollment-management">Central Hub</Link></li>
-        <li><Link to="/enrollment">Open Enrollment</Link></li>
-        <li><Link to="/stats-reports">Reports</Link></li>
-        
-        {/* New Logout Button */}
-        <li className="ml-auto">
-          <button onClick={handleLogout} className="text-gray-200 hover:text-white px-4 py-2 transition duration-300 ease-in-out bg-transparent border border-gray-400 rounded-full hover:bg-gray-700">
-            Log Out
-          </button>
-        </li>
-      </ul>
     </nav>
   );
-}
+};
 
 export default Navbar;

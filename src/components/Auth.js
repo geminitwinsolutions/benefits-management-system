@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { supabase } from '../supabaseClient';
+import { useState } from 'react';
+import { supabase } from '../supabase';
+// import styles from './Auth.module.css'; // Removed this line
 
-function Auth() {
+const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
 
@@ -20,26 +21,29 @@ function Auth() {
   };
 
   return (
-    <div className="page-container" style={{ textAlign: 'center', maxWidth: '400px', margin: 'auto' }}>
-      <h1>Welcome to Premier Pride</h1>
-      <p>Sign in to your account below.</p>
-      <form onSubmit={handleLogin} className="add-employee-form">
-        <div className="form-group">
+    // Removed className={styles.container}
+    <div>
+      <h1>Benefits Management</h1>
+      <p>Sign in via magic link with your email below</p>
+      {loading ? (
+        'Sending...'
+      ) : (
+        <form onSubmit={handleLogin}>
           <label htmlFor="email">Email</label>
           <input
             id="email"
             type="email"
+            placeholder="Your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Your email address"
           />
-        </div>
-        <button type="submit" className="submit-button" disabled={loading}>
-          {loading ? 'Sending link...' : 'Send Magic Link'}
-        </button>
-      </form>
+          <button>
+            Send magic link
+          </button>
+        </form>
+      )}
     </div>
   );
-}
+};
 
 export default Auth;
