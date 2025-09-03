@@ -15,27 +15,19 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="shrink-0">
-              <Link to="/dashboard" className="text-xl font-bold text-gray-800">Premier Benefits</Link>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link to="/dashboard" className="text-gray-500 hover:text-gray-700">Dashboard</Link>
-              <Link to="/employees" className="text-gray-500 hover:text-gray-700">All Employees</Link>
-              <Link to="/open-enrollment" className="text-gray-500 hover:text-gray-700">Open Enrollment</Link>
-              <Link to="/client-details" className="text-gray-500 hover:text-gray-700">Client Details</Link>
-            </div>
-          </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
-            <button onClick={handleSignOut} className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600">
-              Sign Out
-            </button>
-          </div>
-        </div>
+    <nav className="navbar">
+      <div className="navbar-brand">
+        <Link to="/dashboard">Premier Pride</Link>
       </div>
+      <ul className="navbar-links">
+        <li><Link to="/dashboard">Dashboard</Link></li>
+        <li><Link to="/employees">Employees</Link></li>
+        <li><Link to="/central-hub">Central Hub</Link></li>
+        <li><Link to="/stats-and-reports">Reports</Link></li>
+      </ul>
+      <button onClick={handleSignOut} className="add-button" style={{ backgroundColor: '#dc3545' }}>
+        Log Out
+      </button>
     </nav>
   );
 };

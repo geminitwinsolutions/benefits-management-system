@@ -7,14 +7,24 @@ function CentralHub() {
       <div className="central-hub-layout">
         <nav className="central-hub-sidebar">
           <h3>Management Hub</h3>
-          <NavLink to="/central-hub/enrollment-management">Enrollment Management</NavLink>
-          <NavLink to="/central-hub/reconciliation">Benefit Reconciliation</NavLink>
-          <NavLink to="/central-hub/communications">Communications</NavLink>
-          <hr/>
-          <NavLink to="/central-hub/client-details">Client Details</NavLink>
-          <NavLink to="/central-hub/tier-management">Tier Management</NavLink>
-          <hr/>
-          <NavLink to="/central-hub/enrollment-periods">Enrollment Periods</NavLink>
+
+          <div className="sidebar-group">
+            <h4>Enrollment</h4>
+            <NavLink to="/central-hub/enrollment-management">Dashboard</NavLink>
+            <NavLink to="/central-hub/enrollment-periods">Enrollment Periods</NavLink>
+            <NavLink to="/central-hub/communications">Communications</NavLink>
+          </div>
+
+          <div className="sidebar-group">
+            <h4>Benefits</h4>
+            <NavLink to="/central-hub/reconciliation">Reconciliation</NavLink>
+            <NavLink to="/central-hub/tier-management">Tier Management</NavLink>
+          </div>
+
+          <div className="sidebar-group">
+            <h4>Client Admin</h4>
+            <NavLink to="/central-hub/client-details">Client Details</NavLink>
+          </div>
         </nav>
         <main className="central-hub-content">
           <Outlet />

@@ -10,7 +10,7 @@ function OpenEnrollment() {
     projected_start_date: '', 
     status: 'Upcoming' 
   });
-  const [isDetailView, setIsDetailView] = useState(false); // New state for the detail view
+  const [isDetailView, setIsDetailView] = useState(false);
 
   useEffect(() => {
     async function fetchPeriods() {
@@ -29,8 +29,8 @@ function OpenEnrollment() {
   const handleStartEnrollment = async (periodId) => {
     const updatedPeriod = await updateEnrollmentPeriod(periodId, { 
       status: 'Active', 
-      start_date: new Date().toISOString().split('T')[0], // Sets the actual start date now
-      end_date: new Date(new Date().setDate(new Date().getDate() + 14)).toISOString().split('T')[0] // Sets a 14-day standard enrollment
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: new Date(new Date().setDate(new Date().getDate() + 14)).toISOString().split('T')[0]
     });
     if (updatedPeriod) {
       setPeriods(periods.map(p => p.id === updatedPeriod.id ? updatedPeriod : p));

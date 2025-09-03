@@ -17,18 +17,20 @@ function Communications() {
   const [logs] = useState(initialLogs);
 
   return (
-    <div>
-      <h2>Carrier & Broker Communications</h2>
+    <div className="page-container">
+      <h1>Carrier & Broker Communications</h1>
       <div className="communications-layout">
         <div className="contact-list">
           <h3>Contacts</h3>
-          {contacts.map((contact, index) => (
-            <div className="contact-card" key={index}>
-              <strong>{contact.name}</strong>
-              <span>{contact.company} - {contact.role}</span>
-              <a href={`mailto:${contact.email}`}>{contact.email}</a>
-            </div>
-          ))}
+          <div className="contact-cards-container">
+            {contacts.map((contact, index) => (
+              <div className="contact-card" key={index}>
+                <strong>{contact.name}</strong>
+                <span>{contact.company} - {contact.role}</span>
+                <a href={`mailto:${contact.email}`}>{contact.email}</a>
+              </div>
+            ))}
+          </div>
         </div>
         <div className="communication-log">
           <h3>Communication Log</h3>
