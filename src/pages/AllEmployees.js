@@ -9,14 +9,6 @@ function AllEmployees() {
   const [employees, setEmployees] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newEmployee, setNewEmployee] = useState({ name: '', department: '', status: '' });
-
-  async function getEmployees() {
-    setLoading(true);
-    const { data } = await supabase.from('employees').select();
-    setEmployees(data);
-    setLoading(false);
-  }
 
   useEffect(() => {
     getEmployees();
