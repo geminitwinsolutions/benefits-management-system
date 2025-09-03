@@ -50,12 +50,6 @@ code {
   font-weight: bold;
 }
 
-.navbar-brand .logo-icon {
-  width: 32px;
-  height: 32px;
-  color: var(--secondary-color);
-}
-
 .navbar-links {
   list-style: none;
   margin: 0;
@@ -104,7 +98,6 @@ code {
 }
 
 .widget:hover,
-.card:hover,
 .info-card:hover,
 .chart-placeholder:hover,
 .benefit-card:hover,
@@ -221,6 +214,59 @@ code {
 .kpi-card h4 { margin: 0 0 0.5rem 0; font-size: 1rem; opacity: 0.9; }
 .kpi-card p { margin: 0; font-size: 2.2rem; font-weight: bold; }
 
+/* Central Hub Styles */
+.central-hub-layout { display: flex; gap: 2rem; }
+.central-hub-sidebar { flex: 0 0 250px; background-color: #ffffff; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); height: fit-content; }
+.central-hub-sidebar h3 { margin-top: 0; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
+.central-hub-sidebar a { display: block; text-decoration: none; color: var(--text-light); padding: 0.75rem 1rem; margin: 0.5rem 0; border-radius: 5px; transition: background-color 0.2s, color 0.2s; }
+.central-hub-sidebar a:hover { background-color: #e9ecef; }
+.central-hub-sidebar a.active { background-color: var(--primary-color); color: white; font-weight: bold; }
+.central-hub-content { flex-grow: 1; }
+
+/* Tier Management Styles */
+.tier-cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+.tier-card h3 { margin-top: 0; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
+.tier-benefits, .tier-features { margin-top: 1rem; }
+.tier-benefits h4, .tier-features h4 { margin-top: 0; color: var(--text-light); }
+.tier-card ul { list-style-type: none; padding: 0; margin: 0; }
+.tier-card li { background-color: #f8f9fa; padding: 0.5rem 1rem; border-radius: 5px; margin-bottom: 0.5rem; font-size: 0.9rem; }
+
+/* Communications Page Styles */
+.communications-layout { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; }
+.contact-list, .communication-log { background-color: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; }
+.contact-list h3, .communication-log h3 { margin-top: 0; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+.contact-card { display: flex; flex-direction: column; padding: 1rem; border: 1px solid var(--border-color); border-radius: 5px; margin-bottom: 1rem; }
+.contact-card strong { font-size: 1.1rem; }
+.contact-card span { font-size: 0.9rem; color: var(--text-light); margin: 0.25rem 0; }
+.contact-card a { font-size: 0.9rem; color: var(--accent-color); text-decoration: none; }
+.contact-card a:hover { text-decoration: underline; }
+
+/* Buttons */
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.page-header h1 { margin-bottom: 0; }
+.add-button { background-color: var(--success-color); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 5px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
+.add-button:hover { background-color: #218838; }
+.action-button-approve { background-color: var(--success-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; transition: background-color 0.2s; }
+.action-button-approve:hover { background-color: #218838; }
+.action-button-flag { background-color: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; transition: background-color 0.2s; }
+.action-button-flag:hover { background-color: #c82333; }
+.action-button-delete { background-color: var(--border-color); color: var(--text-light); border: 1px solid #d1d5db; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; transition: background-color 0.2s, color 0.2s; }
+.action-button-delete:hover { background-color: #e5e7eb; }
+
+/* Forms */
+.log-form { padding: 1.5rem; background-color: #f8f9fa; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 2rem; }
+.log-form h4 { margin-top: 0; margin-bottom: 1rem; }
+.form-group { margin-bottom: 1rem; display: flex; flex-direction: column; }
+.form-group label { font-weight: bold; margin-bottom: 0.5rem; color: var(--text-light); }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1rem; font-family: inherit; box-sizing: border-box; }
+.form-group textarea { min-height: 100px; resize: vertical; }
+.submit-button { background-color: var(--primary-color); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 5px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
+.submit-button:hover { background-color: #1a252f; }
+
+/* Add Employee Form Styles */
+.add-employee-form { display: flex; flex-direction: column; gap: 1.5rem; }
+.add-employee-form input, .add-employee-form select { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1rem; }
+
 /* Open Enrollment Admin Styles */
 .open-enrollment-grid {
   display: grid;
@@ -286,6 +332,50 @@ code {
 .sidebar-content {
   display: flex;
   flex-direction: column;
+}
+
+/* Central Hub Styles */
+.central-hub-layout {
+  display: flex;
+  gap: 2rem;
+}
+
+.central-hub-sidebar { 
+  flex: 0 0 250px; 
+  background-color: #ffffff; 
+  padding: 1.5rem; 
+  border-radius: 8px; 
+  border: 1px solid var(--border-color); 
+  height: fit-content; 
+  display: flex; /* Added display flex */
+  flex-direction: column; /* To make children stack vertically */
+}
+.central-hub-sidebar h3 {
+  margin-top: 0;
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem; /* Added margin for spacing */
+}
+.central-hub-sidebar a {
+  display: block;
+  text-decoration: none;
+  color: var(--text-light);
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 5px;
+  transition: background-color 0.2s, color 0.2s;
+}
+.central-hub-sidebar a:hover {
+  background-color: #e9ecef;
+}
+.central-hub-sidebar a.active {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: bold;
+}
+.central-hub-content {
+  flex-grow: 1;
 }
 
 /* Dashboard Calendar Styles */
