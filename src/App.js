@@ -1,10 +1,9 @@
 // src/App.js
-import { useState, useEffect } from 'react';
+import { useState } from 'react'; // 'useEffect' has been removed
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { supabase } from './supabase';
+// 'supabase' import removed as it's not used in bypass mode
 
 // Import Components
-import Auth from './components/Auth';
 import Navbar from './components/Navbar';
 
 // Import Pages
@@ -31,24 +30,8 @@ function ProtectedRoute({ session, children }) {
 }
 
 function App() {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setLoading(false);
-    };
-
-    getSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const [session] = useState(true); // <-- TEMPORARY BYPASS
+  const [loading] = useState(false);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -57,9 +40,10 @@ function App() {
   return (
     <>
       {session && <Navbar />}
-      <div className="container"> {/* Re-added the .container div for padding */}
+      <div className="container">
         <Routes>
-          <Route path="/" element={!session ? <Auth /> : <Navigate to="/dashboard" />} />
+          {/* The root path will now always navigate to the dashboard */}
+          <Route path="/" element={<Navigate to="/dashboard" />} />
           
           <Route 
             path="/dashboard" 
@@ -74,12 +58,10 @@ function App() {
             element={<ProtectedRoute session={session}><StatsAndReports /></ProtectedRoute>} 
           />
 
-          {/* --- Nested Central Hub Routes --- */}
           <Route 
             path="/central-hub" 
             element={<ProtectedRoute session={session}><CentralHub /></ProtectedRoute>}
           >
-            {/* Redirect to the enrollment management dashboard by default */}
             <Route index element={<Navigate to="enrollment-management" replace />} /> 
             <Route path="enrollment-management" element={<EnrollmentManagement />} />
             <Route path="enrollment-periods" element={<OpenEnrollment />} />

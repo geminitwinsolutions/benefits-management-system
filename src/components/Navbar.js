@@ -1,4 +1,3 @@
-// src/components/Navbar.js
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 
@@ -25,7 +24,11 @@ const Navbar = () => {
         <li><Link to="/central-hub">Central Hub</Link></li>
         <li><Link to="/stats-and-reports">Reports</Link></li>
       </ul>
-      <button onClick={handleSignOut} className="add-button" style={{ backgroundColor: '#dc3545' }}>
+      <button 
+        onClick={handleSignOut} 
+        className="add-button" 
+        style={{ backgroundColor: 'var(--danger-color)' }}
+      >
         Log Out
       </button>
     </nav>

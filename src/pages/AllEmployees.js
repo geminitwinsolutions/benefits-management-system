@@ -1,9 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import Modal from '../components/Modal';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
 
 const departments = ['Engineering', 'Marketing', 'Sales', 'Operations'];
 const statuses = ['Active', 'On Leave', 'Terminated'];
+
+// Example data for the charts and map
+const ethnicityData = [
+  { name: 'Asian', value: 366 },
+  { name: 'Caucasian', value: 252 },
+  { name: 'Latino', value: 233 },
+  { name: 'Black', value: 64 },
+];
+const COLORS = ['#84fab0', '#8fd3f4', '#a18cd1', '#fbc2eb'];
+
+const ageGroupData = [
+  { age: '25-29', value: 109 },
+  { age: '30-34', value: 113 },
+  { age: '35-39', value: 105 },
+  { age: '40-44', value: 101 },
+  { age: '45-49', value: 159 },
+];
+
+const tenureData = [
+  { tenure: '1-4 Yrs', value: 264 },
+  { tenure: '5-9 Yrs', value: 237 },
+  { tenure: '10-14 Yrs', value: 158 },
+  { tenure: '15-19 Yrs', value: 129 },
+];
+
+const bonusData = [
+  { bonus: 'None', value: 476 },
+  { bonus: 'Low', value: 19 },
+  { bonus: 'Moderate', value: 112 },
+  { bonus: 'High', value: 138 },
+];
+
+const departmentData = [
+  { dept: 'IT', value: 225 },
+  { dept: 'Engineering', value: 141 },
+  { dept: 'Sales', value: 130 },
+  { dept: 'HR', value: 114 },
+];
+
+const genderData = [
+  { gender: 'Female', value: 479 },
+  { gender: 'Male', value: 436 },
+];
+
+const hiresByGenderData = [
+  { year: '2018', Female: 30, Male: 28 },
+  { year: '2019', Female: 35, Male: 32 },
+  { year: '2020', Female: 40, Male: 38 },
+  { year: '2021', Female: 50, Male: 45 },
+];
+
+const countryData = [
+  { name: 'USA', coordinates: [-100, 40], value: 376 },
+  { name: 'Brazil', coordinates: [-51, -10], value: 128 },
+  { name: 'India', coordinates: [78, 22], value: 197 },
+];
 
 function AllEmployees() {
   const [employees, setEmployees] = useState(null);
@@ -66,32 +124,216 @@ function AllEmployees() {
           Add New Employee
         </button>
       </div>
-      <table className="employees-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Department</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {employees && employees.map((employee) => (
-            <tr key={employee.id}>
-              <td>{employee.name}</td>
-              <td>{employee.department}</td>
-              <td>
-                <span className={`status-badge status-${employee.status.toLowerCase().replace(' ', '-')}`}>
-                  {employee.status}
-                </span>
-              </td>
-              <td>
-                <button className="action-button-delete" onClick={() => handleDelete(employee.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      <div className="employees-analytics-layout">
+        {/* Left: Employees Table */}
+        <div className="employees-table-col">
+          <table className="employees-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {employees && employees.map((employee) => (
+                <tr key={employee.id}>
+                  <td>{employee.name}</td>
+                  <td>{employee.department}</td>
+                  <td>
+                    <span className={`status-badge status-${employee.status.toLowerCase().replace(' ', '-')}`}>
+                      {employee.status}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      className="action-button-delete"
+                      onClick={() => handleDelete(employee.id)}
+                      aria-label={`Delete ${employee.name}`}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Right: Analytics Cards */}
+        <div className="analytics-cards-col">
+          {/* Analytic Cards Row 1 */}
+          <div className="stat-cards-row">
+            <div className="stat-card">
+              <div className="stat-label">Hired Employees</div>
+              <div className="stat-value">1000</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Separated Employees</div>
+              <div className="stat-value">85</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Net Employees</div>
+              <div className="stat-value">915</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Retention Rate</div>
+              <div className="stat-value">81.4%</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Turnover Rate</div>
+              <div className="stat-value">18.6%</div>
+            </div>
+          </div>
+
+          {/* Analytic Cards Row 2 */}
+          <div className="stat-cards-row">
+            <div className="stat-card">
+              <div className="stat-label">Net Employees by Ethnicity</div>
+              <div style={{ width: 120, height: 120 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={ethnicityData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={35}
+                      outerRadius={55}
+                      fill="#8884d8"
+                      paddingAngle={2}
+                    >
+                      {ethnicityData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Net Employees by Age Group</div>
+              <div style={{ width: 140, height: 120 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={ageGroupData}>
+                    <XAxis dataKey="age" fontSize={10} />
+                    <YAxis fontSize={10} />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#84fab0" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Net Employees by Tenure</div>
+              <div style={{ width: 140, height: 120 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={tenureData}>
+                    <XAxis dataKey="tenure" fontSize={10} />
+                    <YAxis fontSize={10} />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#a18cd1" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Net Employees by Bonus</div>
+              <div style={{ width: 140, height: 120 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={bonusData}>
+                    <XAxis dataKey="bonus" fontSize={10} />
+                    <YAxis fontSize={10} />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#8fd3f4" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Net Employees by Department</div>
+              <div style={{ width: 140, height: 120 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={departmentData}>
+                    <XAxis dataKey="dept" fontSize={10} />
+                    <YAxis fontSize={10} />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#fbc2eb" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          {/* Analytic Cards Row 3 */}
+          <div className="stat-cards-row">
+            <div className="stat-card">
+              <div className="stat-label">Employees by Gender</div>
+              <div style={{ width: 120, height: 120 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={genderData}
+                      dataKey="value"
+                      nameKey="gender"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={35}
+                      outerRadius={55}
+                      fill="#8884d8"
+                      paddingAngle={2}
+                    >
+                      <Cell fill="#fa709a" />
+                      <Cell fill="#fee140" />
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Annual Hires by Gender</div>
+              <div style={{ width: 180, height: 120 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={hiresByGenderData}>
+                    <XAxis dataKey="year" fontSize={10} />
+                    <YAxis fontSize={10} />
+                    <Tooltip />
+                    <Bar dataKey="Female" fill="#fa709a" />
+                    <Bar dataKey="Male" fill="#fee140" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Net Employees by Country</div>
+              <div style={{ width: 180, height: 120 }}>
+                <ComposableMap
+                  projectionConfig={{ scale: 60 }}
+                  width={180}
+                  height={120}
+                  style={{ width: "100%", height: "auto" }}
+                >
+                  <Geographies geography="https://unpkg.com/world-atlas@2.0.2/countries-110m.json">
+                    {({ geographies }) =>
+                      geographies.map(geo => (
+                        <Geography key={geo.rsmKey} geography={geo} fill="#EEE" stroke="#DDD" />
+                      ))
+                    }
+                  </Geographies>
+                  {countryData.map(({ name, coordinates, value }) => (
+                    <Marker key={name} coordinates={coordinates}>
+                      <circle r={Math.sqrt(value) / 2} fill="#84fab0" stroke="#333" strokeWidth={0.5} />
+                    </Marker>
+                  ))}
+                </ComposableMap>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {showAddForm && (
         <Modal onClose={() => setShowAddForm(false)}>
