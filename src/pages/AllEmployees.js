@@ -127,7 +127,7 @@ function AllEmployees() {
 
       <div className="employees-analytics-layout">
         {/* Left: Employees Table */}
-        <div className="employees-table-col">
+        <div className="employees-table-col card">
           <table className="employees-table">
             <thead>
               <tr>

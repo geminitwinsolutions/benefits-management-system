@@ -29,25 +29,6 @@
   --gradient-6: linear-gradient(to right, #fa709a 0%, #fee140 100%);
 }
 
-.card-header.blue { background-color: var(--benefits-blue); }
-.card-header.green { background-color: var(--reconciliation-green); }
-.card-header.amber { background-color: var(--company-orange); }
-.card-header.red { background-color: var(--employee-red); }
-
-/* This is the key style that makes the card bodies appear correctly */
-.card-body {
-  padding: 1.5rem;
-  flex: 1;
-  min-height: 1px;
-  overflow-y: auto;
-}
-/* Specific adjustments for tables and lists inside the card body */
-.card-body .simple-table,
-.card-body .deadline-list {
-  height: auto;
-  width: auto;
-}
-
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
@@ -209,6 +190,7 @@ code {
   padding: 1.5rem;
   flex: 1;
   min-height: 1px; /* Corrects the height issue for charts */
+  overflow-y: auto;
 }
 
 /* Specific header colors */
@@ -216,6 +198,7 @@ code {
 .card-header.green { background-color: var(--reconciliation-green); }
 .card-header.amber { background-color: var(--company-orange); }
 .card-header.red { background-color: var(--employee-red); }
+
 
 /* --- Dashboard Specific Styles --- */
 .dashboard-grid {
@@ -394,15 +377,31 @@ tr:hover {
   margin-top: 1rem;
 }
 
-.employees-analytics-layout {
-  display: flex;
-  gap: 2rem;
-  align-items: flex-start;
+.employees-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--bg-white);
+  border-radius: 8px;
+  overflow: hidden;
+  /* Adds a subtle shadow to make the table look like a card */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-.employees-table-col {
-  flex: 2 1 0;
-  min-width: 350px;
+.employees-table th, .employees-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.employees-table th {
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.employees-table tbody tr:hover {
+  background-color: rgba(60, 30, 90, 0.03);
+  cursor: pointer;
 }
 
 .analytics-cards-col {
@@ -524,73 +523,5 @@ tr:hover {
 }
 
 .stat-card.chart-container .chart-card .recharts-tooltip:after {
-  border-color: rgba(0, 0, 0, 0.7);
-}
-
-/* Additional style for the specific chart card in question */
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 1rem;
-  border-radius: 12px;
-  background: var(--bg-white, #f5f5f5);
-  box-shadow: 0 4px 16px rgba(60, 30, 90, 0.08), 0 1.5px 6px rgba(60, 30, 90, 0.04);
-  position: relative;
-}
-
-.stat-card .stat-label {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--text-dark);
-}
-
-.chart-card {
-  width: 100%;
-  height: 120px;
-  margin-top: 0.5rem;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.chart-card svg {
-  width: 100% !important;
-  height: auto !important;
-}
-
-.chart-card .recharts-surface {
-  overflow: visible !important;
-}
-
-.chart-card .recharts-bar-rectangle {
-  transition: all 0.3s ease;
-}
-
-.chart-card .recharts-bar-rectangle:hover {
-  transform: scale(1.1);
-  opacity: 0.8;
-}
-
-.chart-card .recharts-tooltip {
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  border-radius: 4px;
-  padding: 0.5rem;
-  font-size: 0.8rem;
-  opacity: 0.9;
-}
-
-.chart-card .recharts-tooltip:before {
-  border-color: rgba(0, 0, 0, 0.7);
-}
-
-.chart-card .recharts-tooltip:after {
   border-color: rgba(0, 0, 0, 0.7);
 }

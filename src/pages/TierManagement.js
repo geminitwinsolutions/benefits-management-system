@@ -25,11 +25,11 @@ function TierManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Convert comma-separated strings to JSON arrays
+    // Convert comma-separated strings to arrays
     const formattedData = {
       ...newTier,
-      benefits: JSON.stringify(newTier.benefits.split(',').map(b => b.trim())),
-      features: JSON.stringify(newTier.features.split(',').map(f => f.trim()))
+      benefits: newTier.benefits.split(',').map(b => b.trim()),
+      features: newTier.features.split(',').map(f => f.trim())
     };
     
     const addedTier = await addTier(formattedData);

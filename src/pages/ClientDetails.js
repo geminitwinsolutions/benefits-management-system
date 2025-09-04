@@ -60,30 +60,37 @@ function ClientDetails() {
       </div>
       <p>Manage all client information, including tax and service details.</p>
 
-      <table className="employees-table">
-        <thead>
-          <tr>
-            <th>Company Name</th>
-            <th>EIN</th>
-            <th>Service Group</th>
-            <th>Notes</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {clients.map(client => (
-            <tr key={client.id}>
-              <td>{client.company_name}</td>
-              <td>{client.ein}</td>
-              <td>{client.service_group}</td>
-              <td>{client.notes}</td>
-              <td>
-                <button className="action-button">View</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="card">
+        <div className="card-header blue">
+          <h2>Client List</h2>
+        </div>
+        <div className="card-body" style={{padding: '0'}}>
+          <table className="employees-table">
+            <thead>
+              <tr>
+                <th>Company Name</th>
+                <th>EIN</th>
+                <th>Service Group</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clients.map(client => (
+                <tr key={client.id}>
+                  <td>{client.company_name}</td>
+                  <td>{client.ein}</td>
+                  <td>{client.service_group}</td>
+                  <td>{client.notes}</td>
+                  <td>
+                    <button className="action-button">View</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
       
       {showAddForm && (
         <Modal onClose={() => setShowAddForm(false)}>
