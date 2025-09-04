@@ -166,34 +166,56 @@ function AllEmployees() {
         <div className="analytics-cards-col">
           {/* Analytic Cards Row 1 */}
           <div className="stat-cards-row">
-            <div className="stat-card">
-              <div className="stat-label">Hired Employees</div>
-              <div className="stat-value">1000</div>
+            <div className="card">
+              <div className="card-header red">
+                <h4>Total Employees</h4>
+              </div>
+              <div className="card-body">
+                <p>1000</p>
+              </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Separated Employees</div>
-              <div className="stat-value">85</div>
+            <div className="card">
+              <div className="card-header red">
+                <h4>Separated Employees</h4>
+              </div>
+              <div className="card-body">
+                <p>85</p>
+              </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Net Employees</div>
-              <div className="stat-value">915</div>
+            <div className="card">
+              <div className="card-header blue">
+                <h4>Net Employees</h4>
+              </div>
+              <div className="card-body">
+                <p>915</p>
+              </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Retention Rate</div>
-              <div className="stat-value">81.4%</div>
+            <div className="card">
+              <div className="card-header green">
+                <h4>Retention Rate</h4>
+              </div>
+              <div className="card-body">
+                <p>81.4%</p>
+              </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Turnover Rate</div>
-              <div className="stat-value">18.6%</div>
+            <div className="card">
+              <div className="card-header red">
+                <h4>Turnover Rate</h4>
+              </div>
+              <div className="card-body">
+                <p>18.6%</p>
+              </div>
             </div>
           </div>
 
           {/* Analytic Cards Row 2 */}
           <div className="stat-cards-row">
-            <div className="stat-card">
-              <div className="stat-label">Net Employees by Ethnicity</div>
-              <div style={{ width: 120, height: 120 }}>
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="card">
+              <div className="card-header amber">
+                <h4>Net Employees by Ethnicity</h4>
+              </div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={120}>
                   <PieChart>
                     <Pie
                       data={ethnicityData}
@@ -214,10 +236,12 @@ function AllEmployees() {
                 </ResponsiveContainer>
               </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Net Employees by Age Group</div>
-              <div style={{ width: 140, height: 120 }}>
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="card">
+              <div className="card-header blue">
+                <h4>Net Employees by Age Group</h4>
+              </div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={120}>
                   <BarChart data={ageGroupData}>
                     <XAxis dataKey="age" fontSize={10} />
                     <YAxis fontSize={10} />
@@ -227,10 +251,12 @@ function AllEmployees() {
                 </ResponsiveContainer>
               </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Net Employees by Tenure</div>
-              <div style={{ width: 140, height: 120 }}>
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="card">
+              <div className="card-header blue">
+                <h4>Net Employees by Tenure</h4>
+              </div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={120}>
                   <BarChart data={tenureData}>
                     <XAxis dataKey="tenure" fontSize={10} />
                     <YAxis fontSize={10} />
@@ -240,10 +266,12 @@ function AllEmployees() {
                 </ResponsiveContainer>
               </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Net Employees by Bonus</div>
-              <div style={{ width: 140, height: 120 }}>
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="card">
+              <div className="card-header red">
+                <h4>Net Employees by Bonus</h4>
+              </div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={120}>
                   <BarChart data={bonusData}>
                     <XAxis dataKey="bonus" fontSize={10} />
                     <YAxis fontSize={10} />
@@ -253,10 +281,12 @@ function AllEmployees() {
                 </ResponsiveContainer>
               </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Net Employees by Department</div>
-              <div style={{ width: 140, height: 120 }}>
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="card">
+              <div className="card-header green">
+                <h4>Net Employees by Department</h4>
+              </div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={120}>
                   <BarChart data={departmentData}>
                     <XAxis dataKey="dept" fontSize={10} />
                     <YAxis fontSize={10} />
@@ -270,10 +300,12 @@ function AllEmployees() {
 
           {/* Analytic Cards Row 3 */}
           <div className="stat-cards-row">
-            <div className="stat-card">
-              <div className="stat-label">Employees by Gender</div>
-              <div style={{ width: 120, height: 120 }}>
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="card">
+              <div className="card-header amber">
+                <h4>Employees by Gender</h4>
+              </div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={120}>
                   <PieChart>
                     <Pie
                       data={genderData}
@@ -293,9 +325,11 @@ function AllEmployees() {
                 </ResponsiveContainer>
               </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Annual Hires by Gender</div>
-              <div style={{ width: 180, height: 120 }}>
+            <div className="card">
+              <div className="card-header red">
+                <h4>Annual Hires by Gender</h4>
+              </div>
+              <div className="card-body">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={hiresByGenderData}>
                     <XAxis dataKey="year" fontSize={10} />
@@ -307,9 +341,11 @@ function AllEmployees() {
                 </ResponsiveContainer>
               </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-label">Net Employees by Country</div>
-              <div style={{ width: 180, height: 120 }}>
+            <div className="card">
+              <div className="card-header blue">
+                <h4>Net Employees by Country</h4>
+              </div>
+              <div className="card-body" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <ComposableMap
                   projectionConfig={{ scale: 60 }}
                   width={180}

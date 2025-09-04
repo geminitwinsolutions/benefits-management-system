@@ -62,20 +62,22 @@ function TierManagement() {
       <div className="tier-cards-container">
         {tiers.map(tier => (
           <div className="tier-card" key={tier.level}>
-            <h3>{tier.name} Tier</h3>
-            <div className="tier-benefits">
-              <h4>Included Benefits</h4>
-              <ul>
-                {/* Removed JSON.parse() here */}
-                {tier.benefits.map(benefit => <li key={benefit}>{benefit}</li>)}
-              </ul>
+            <div className="card-header blue">
+              <h3>{tier.name} Tier</h3>
             </div>
-            <div className="tier-features">
-              <h4>Plan Features</h4>
-              <ul>
-                {/* Removed JSON.parse() here */}
-                {tier.features.map(feature => <li key={feature}>{feature}</li>)}
-              </ul>
+            <div className="card-body">
+              <div className="tier-benefits">
+                <h4>Included Benefits</h4>
+                <ul>
+                  {tier.benefits.map(benefit => <li key={benefit}>{benefit}</li>)}
+                </ul>
+              </div>
+              <div className="tier-features">
+                <h4>Plan Features</h4>
+                <ul>
+                  {tier.features.map(feature => <li key={feature}>{feature}</li>)}
+                </ul>
+              </div>
             </div>
           </div>
         ))}
@@ -84,7 +86,7 @@ function TierManagement() {
       {showAddForm && (
         <Modal onClose={() => setShowAddForm(false)}>
           <h3>Add New Tier</h3>
-          <form className="add-tier-form" onSubmit={handleSubmit}>
+          <form className="add-employee-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Tier Name</label>
               <input type="text" name="name" value={newTier.name} onChange={handleInputChange} required />
