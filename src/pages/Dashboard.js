@@ -106,8 +106,8 @@ function Dashboard() {
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
         rowHeight={100}
-        margin={[24, 24]}
-        containerPadding={[0, 0]}
+        margin={[50, 50]}
+        containerPadding={[1, 1]}
       >
         <div key="employees" className="widget stat-widget-1">
           <h2>Total Employees</h2><p>{dashboardData.totalEmployees}</p>
