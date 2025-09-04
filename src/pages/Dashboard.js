@@ -25,40 +25,56 @@ const lineChartData = [
 ];
 
 const initialLayouts = {
-  lg: [ // Desktop layout (12 columns) - Matches the screenshot
-    // Top Row
+  lg: [ // Desktop layout (12 columns) - Corrected to match the screenshot without overlaps
     { i: 'overview', x: 0, y: 0, w: 2, h: 3 },
-    { i: 'approvals', x: 2, y: 0, w: 2, h: 1 },
+    { i: 'pendingApprovals', x: 2, y: 0, w: 2, h: 1 },
     { i: 'rate', x: 4, y: 0, w: 2, h: 1 },
     { i: 'enrolled', x: 6, y: 0, w: 2, h: 1 },
     { i: 'deadlines', x: 8, y: 0, w: 4, h: 2 },
 
     // Second Row
     { i: 'employees', x: 0, y: 2, w: 2, h: 1 },
-    { i: 'pie', x: 2, y: 1, w: 2, h: 3 },
-    { i: 'bar', x: 4, y: 1, w: 4, h: 3 },
+    { i: 'pie', x: 2, y: 1, w: 2, h: 2 },
+    { i: 'bar', x: 4, y: 1, w: 4, h: 2 },
 
     // Bottom Section
-    { i: 'tiers', x: 0, y: 4, w: 1, h: 1 },
-    { i: 'services', x: 1, y: 4, w: 1, h: 1 },
-    { i: 'trends', x: 2, y: 4, w: 6, h: 2 },
+    { i: 'tiers', x: 0, y: 3, w: 1, h: 1 },
+    { i: 'services', x: 1, y: 3, w: 1, h: 1 },
+    { i: 'trends', x: 2, y: 3, w: 6, h: 2 },
     { i: 'actions', x: 8, y: 2, w: 4, h: 4 },
   ],
   md: [ // Tablet layout (10 columns)
-    { i: 'employees', x: 0, y: 0, w: 2, h: 1 }, { i: 'enrolled', x: 2, y: 0, w: 2, h: 1 },
-    { i: 'rate', x: 4, y: 0, w: 2, h: 1 }, { i: 'approvals', x: 6, y: 0, w: 2, h: 1 },
-    { i: 'trends', x: 0, y: 1, w: 10, h: 2 },
-    { i: 'pie', x: 0, y: 3, w: 5, h: 2 }, { i: 'bar', x: 5, y: 3, w: 5, h: 2 },
-    { i: 'actions', x: 0, y: 5, w: 10, h: 3 },
-    { i: 'overview', x: 0, y: 8, w: 5, h: 2 }, { i: 'deadlines', x: 5, y: 8, w: 5, h: 2 },
+    // Stack stat cards in two rows
+    { i: 'overview', x: 0, y: 0, w: 3, h: 2 },
+    { i: 'pendingApprovals', x: 3, y: 0, w: 2, h: 1 },
+    { i: 'rate', x: 5, y: 0, w: 2, h: 1 },
+    { i: 'enrolled', x: 7, y: 0, w: 3, h: 1 },
+    { i: 'employees', x: 3, y: 1, w: 2, h: 1 },
+    { i: 'tiers', x: 5, y: 1, w: 2, h: 1 },
+    { i: 'services', x: 7, y: 1, w: 3, h: 1 },
+
+    // Charts below the stat cards
+    { i: 'pie', x: 0, y: 2, w: 5, h: 2 },
+    { i: 'bar', x: 5, y: 2, w: 5, h: 2 },
+    { i: 'trends', x: 0, y: 4, w: 10, h: 2 },
+
+    // Sidebar cards at the bottom
+    { i: 'deadlines', x: 0, y: 6, w: 5, h: 2 },
+    { i: 'actions', x: 5, y: 6, w: 5, h: 3 },
   ],
   sm: [ // Mobile layout (6 columns)
-    { i: 'employees', x: 0, y: 0, w: 3, h: 1 }, { i: 'enrolled', x: 3, y: 0, w: 3, h: 1 },
-    { i: 'rate', x: 0, y: 1, w: 3, h: 1 }, { i: 'approvals', x: 3, y: 1, w: 3, h: 1 },
-    { i: 'actions', x: 0, y: 2, w: 6, h: 3 },
-    { i: 'trends', x: 0, y: 5, w: 6, h: 2 },
-    { i: 'pie', x: 0, y: 7, w: 6, h: 2 }, { i: 'bar', x: 0, y: 9, w: 6, h: 2 },
-    { i: 'overview', x: 0, y: 11, w: 6, h: 2 }, { i: 'deadlines', x: 0, y: 13, w: 6, h: 2 },
+    { i: 'overview', x: 0, y: 0, w: 6, h: 2 },
+    { i: 'pendingApprovals', x: 0, y: 2, w: 3, h: 1 },
+    { i: 'rate', x: 3, y: 2, w: 3, h: 1 },
+    { i: 'enrolled', x: 0, y: 3, w: 3, h: 1 },
+    { i: 'deadlines', x: 3, y: 3, w: 3, h: 2 },
+    { i: 'employees', x: 0, y: 5, w: 6, h: 1 },
+    { i: 'tiers', x: 0, y: 6, w: 3, h: 1 },
+    { i: 'services', x: 3, y: 6, w: 3, h: 1 },
+    { i: 'pie', x: 0, y: 7, w: 6, h: 2 },
+    { i: 'bar', x: 0, y: 9, w: 6, h: 2 },
+    { i: 'trends', x: 0, y: 11, w: 6, h: 2 },
+    { i: 'actions', x: 0, y: 13, w: 6, h: 3 },
   ],
 };
 function getFromLS(key) {
@@ -150,7 +166,7 @@ function Dashboard() {
           <div className="progress-bar"><div className="progress-bar-fill" style={{ width: '100%' }}></div></div>
         </div>
         <div key="services" className="widget stat-widget-6">
-          <h2>Services Offered</h2><p>{dashboardData.servicesOffered}</p>
+          <h2>Services</h2><p>{dashboardData.servicesOffered}</p>
           <div className="progress-bar"><div className="progress-bar-fill" style={{ width: '100%' }}></div></div>
         </div>
 
