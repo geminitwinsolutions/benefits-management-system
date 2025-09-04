@@ -1,23 +1,31 @@
-
+/* Final Consolidated Stylesheet */
 
 /* New Color Palette */
 :root {
-  --primary-color: #ab81dbcc;    /* Vibrant Purple */
-  --secondary-color: #cecfd7;  /* Slate Blue */
-  --accent-color: #3bd1c2;     /* Supporting Blue */
-  --text-dark: #38383f;         /* Darker shade for primary text */
+  --primary-color: #844FC1;    /* Vibrant Purple */
+  --secondary-color: #6C7293;  /* Slate Blue */
+  --accent-color: #3B86D1;     /* Supporting Blue */
+  --text-dark: #3a3b45;         /* Darker shade for primary text */
   --text-light: #6C7293;       /* Slate Blue for secondary text */
-  --bg-light: #dededf;         /* Off-white page background */
+  --bg-light: #f0f2f5;         /* Light page background */
   --bg-white: #ffffff;         /* Pure white for cards */
-  --border-color: #bbc8d5;     /* Slightly darker than bg-light */
+  --border-color: #e9ecef;     /* Slightly darker than bg-light */
   --success-color: #21BF06;    /* Bright Green */
   --warning-color: #ffc107;    /* Standard Yellow for warnings */
-  --danger-color: #96587f;      /* A complementary red */
-  --gradient-1: linear-gradient(to right, #ff8177 0%, #ff867a 0%, #ff8c7f 21%, #f99185 52%, #cf556c 78%, #b12a5b 100%);
+  --danger-color: #e74c3c;      /* A complementary red */
+
+  /* New themed colors for cards */
+  --benefits-blue: #4facfe;
+  --reconciliation-green: #21BF06;
+  --employee-red: #ff8177;
+  --company-orange: #ff8008;
+
+  /* Gradients mapped to color scheme */
+  --gradient-1: linear-gradient(to right, var(--employee-red) 0%, #ff867a 0%, #ff8c7f 21%, #f99185 52%, #cf556c 78%, #b12a5b 100%);
   --gradient-2: linear-gradient(to right, #84fab0 0%, #8fd3f4 100%);
   --gradient-3: linear-gradient(to right, #a18cd1 0%, #fbc2eb 100%);
-  --gradient-4: linear-gradient(to right, #ff8008 0%, #ffc837 100%);
-  --gradient-5: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+  --gradient-4: linear-gradient(to right, var(--company-orange) 0%, #ffc837 100%);
+  --gradient-5: linear-gradient(to right, var(--benefits-blue) 0%, #00f2fe 100%);
   --gradient-6: linear-gradient(to right, #fa709a 0%, #fee140 100%);
 }
 
@@ -106,21 +114,90 @@ code {
   transition: all 200ms ease;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.08);
-  padding: 1.5rem;
   transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-color);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.card:hover,
-.info-card:hover,
-.tier-card:hover,
-.contact-card:hover,
-.communication-log:hover,
-.kpi-card:hover,
-.chart-container:hover,
-.widget:hover {
+.react-grid-item:not(.react-draggable-dragging):hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  z-index: 1;
 }
+.react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+.react-grid-item.resizing {
+  z-index: 2;
+  will-change: width, height;
+}
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  will-change: transform;
+  cursor: grabbing;
+  opacity: 0.8;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+.react-grid-item .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pg08IS0tIEdlbmVyYXRvcjogQWRvYmUgRmlyZXdvcmtzIENTNiwgRXhwb3J0IFNWRyBFeHRlbnNpb24gYnkgQWFyb24gQmVhbGwgKGh0dHA6Ly9maXJld29ya3MuYWJlYWxsLmNvbSkgLiBWZXJzaW9uOiAwLjYuMSAgLS0+DTwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DTxzdmcgaWQ9IlVudGl0bGVkLVBhZ2UlMjAxIiB2aWV3Qm94PSIwIDAgNiA2IiBzdHlsZT0iYmFja2dyb3VuZC1jb2xvcjojZmZmZmZmMDAiIHZlcnNpb249IjEuMSINCXhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbDpzcGFjZT0icHJlc2VydmUiDQl4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjZweCIgaGVpZ2h0PSI2cHgiDT4NCTxnIG9wYWNpdHk9IjAuMzAyIj4NCQk8cGF0aCBkPSJNIDYgNiBMIDAgNiBMIDAgNC4yIEwgNCA0LjIgTCA0LjIgNC4yIEwgNC4yIDAgTCA2IDAgTCA2IDYgTCA2IDYgWiIgZmlsbD0iIzAwMDAwMCIvPg0JPC9nPg08L3N2Zz4=');
+  background-position: bottom right;
+  padding: 0 3px 3px 0;
+  background-repeat: no-repeat;
+  background-origin: content-box;
+  box-sizing: border-box;
+  cursor: se-resize;
+}
+.react-grid-item > .card,
+.react-grid-item > .chart-container,
+.react-grid-item > .widget {
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  cursor: grab;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--bg-white);
+}
+
+/* --- Two-Part Card Structure (New) --- */
+.card-header {
+  border-radius: 8px 8px 0 0;
+  padding: 1rem 1.5rem;
+  color: var(--bg-white);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.card-header h2, .card-header h3 {
+  color: white;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.card-body {
+  padding: 1.5rem;
+  flex: 1;
+  min-height: 1px; /* Corrects the height issue for charts */
+}
+
+/* Specific header colors */
+.card-header.blue { background-color: var(--benefits-blue); }
+.card-header.green { background-color: var(--reconciliation-green); }
+.card-header.amber { background-color: var(--company-orange); }
+.card-header.red { background-color: var(--employee-red); }
+
 
 /* --- Dashboard Specific Styles --- */
 .dashboard-grid {
@@ -138,6 +215,7 @@ code {
 .widget {
   text-align: center;
 }
+
 .widget h2 { 
   font-size: 1.1rem; 
   margin-top: 0; 
@@ -277,283 +355,95 @@ tr:hover {
   background-color: rgba(60, 30, 90, 0.03);
 }
 
-.action-button-small {
-  background-color: var(--accent-color);
+/* --- Buttons --- */
+.add-button, .submit-button {
+  background-color: var(--success-color);
   color: white;
   border: none;
-  padding: 0.3rem 0.8rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
-.action-button-small:hover {
-  background-color: #2a76bb;
+.add-button:hover, .submit-button:hover {
+  background-color: #1a9e05;
 }
 
-.float-right {
-  float: right;
-  margin-top: 1rem;
+.action-button,
+.action-button-approve,
+.action-button-flag,
+.action-button-delete,
+.action-button-small {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
 }
 
-.employees-analytics-layout {
+.action-button { background-color: var(--accent-color); color: white; }
+.action-button:hover { background-color: #2a76bb; }
+.action-button-approve { background-color: var(--success-color); color: white; }
+.action-button-approve:hover { background-color: #1a9e05; }
+.action-button-flag { background-color: var(--danger-color); color: white; }
+.action-button-flag:hover { background-color: #c0392b; }
+.action-button-delete { background-color: var(--border-color); color: var(--text-light); border-color: #d1d5db; }
+.action-button-delete:hover { background-color: #e5e7eb; }
+.action-button-small { background-color: var(--accent-color); color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 4px; }
+.action-button-small:hover { background-color: #2a76bb; }
+
+/* --- Form and Modal Styles --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  gap: 2rem;
-  align-items: flex-start;
-}
-
-.employees-table-col {
-  flex: 2 1 0;
-  min-width: 350px;
-}
-
-.analytics-cards-col {
-  flex: 3 1 0;
-  min-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.stat-cards-row {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.stat-card {
-  background: var(--bg-white);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(60,30,90,0.07);
-  padding: 1.25rem 1.5rem;
-  min-width: 160px;
-  min-height: 90px;
-  display: flex;
-  flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
-  flex: 1 1 0;
+  align-items: center;
+  z-index: 1000;
 }
-
-.stat-label {
+.modal-content {
+  background-color: var(--bg-white);
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.modal-close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
   color: var(--text-light);
-  font-size: 1rem;
+}
+
+.add-employee-form .form-group {
+  margin-bottom: 1rem;
+}
+.add-employee-form label {
+  display: block;
+  font-weight: bold;
   margin-bottom: 0.5rem;
-  font-weight: 500;
 }
-
-.stat-value {
-  color: var(--primary-color);
-  font-size: 1.6rem;
-  font-weight: 700;
-}
-
-/* Chart Card Styles */
-.chart-card {
-  background: var(--bg-white, #f5f5f5);
-  border-radius: 14px;
-  box-shadow: 0 2px 12px rgba(60,30,90,0.07);
-  padding: 1rem;
-  margin-top: 0.5rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 120px;
-}
-
-/* Specific style for the stat card containing the chart */
-.stat-card.chart-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 1rem;
-  border-radius: 12px;
-  background: var(--bg-white, #f5f5f5);
-  box-shadow: 0 4px 16px rgba(60, 30, 90, 0.08), 0 1.5px 6px rgba(60, 30, 90, 0.04);
-  position: relative;
-}
-
-.stat-card.chart-container .stat-label {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--text-dark);
-}
-
-.stat-card.chart-container .chart-card {
+.add-employee-form input,
+.add-employee-form select,
+.add-employee-form textarea {
   width: 100%;
-  height: 120px;
-  margin-top: 0.5rem;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.stat-card.chart-container .chart-card svg {
-  width: 100% !important;
-  height: auto !important;
-}
-
-.stat-card.chart-container .chart-card .recharts-surface {
-  overflow: visible !important;
-}
-
-.stat-card.chart-container .chart-card .recharts-bar-rectangle {
-  transition: all 0.3s ease;
-}
-
-.stat-card.chart-container .chart-card .recharts-bar-rectangle:hover {
-  transform: scale(1.1);
-  opacity: 0.8;
-}
-
-.stat-card.chart-container .chart-card .recharts-tooltip {
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  padding: 0.5rem;
-  font-size: 0.8rem;
-  opacity: 0.9;
-}
-
-.stat-card.chart-container .chart-card .recharts-tooltip:before {
-  border-color: rgba(0, 0, 0, 0.7);
-}
-
-.stat-card.chart-container .chart-card .recharts-tooltip:after {
-  border-color: rgba(0, 0, 0, 0.7);
-}
-
-/* Additional style for the specific chart card in question */
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 1rem;
-  border-radius: 12px;
-  background: var(--bg-white, #f5f5f5);
-  box-shadow: 0 4px 16px rgba(60, 30, 90, 0.08), 0 1.5px 6px rgba(60, 30, 90, 0.04);
-  position: relative;
-}
-
-.stat-card .stat-label {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--text-dark);
-}
-
-.chart-card {
-  width: 100%;
-  height: 120px;
-  margin-top: 0.5rem;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.chart-card svg {
-  width: 100% !important;
-  height: auto !important;
-}
-
-.chart-card .recharts-surface {
-  overflow: visible !important;
-}
-
-.chart-card .recharts-bar-rectangle {
-  transition: all 0.3s ease;
-}
-
-.chart-card .recharts-bar-rectangle:hover {
-  transform: scale(1.1);
-  opacity: 0.8;
-}
-
-.chart-card .recharts-tooltip {
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  border-radius: 4px;
-  padding: 0.5rem;
-  font-size: 0.8rem;
-  opacity: 0.9;
-}
-
-.chart-card .recharts-tooltip:before {
-  border-color: rgba(0, 0, 0, 0.7);
-}
-
-.chart-card .recharts-tooltip:after {
-  border-color: rgba(0, 0, 0, 0.7);
-}
-
-/* Example for one card */
-.stat-card.example-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 1rem;
-  border-radius: 12px;
-  background: var(--bg-white, #f5f5f5);
-  box-shadow: 0 4px 16px rgba(60, 30, 90, 0.08), 0 1.5px 6px rgba(60, 30, 90, 0.04);
-  position: relative;
-}
-
-.stat-card.example-card .stat-label {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--text-dark);
-}
-
-.stat-card.example-card .chart-card {
-  width: 100%;
-  height: 120px;
-  margin-top: 0.5rem;
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.stat-card.example-card .chart-card svg {
-  width: 100% !important;
-  height: auto !important;
-}
-
-.stat-card.example-card .chart-card .recharts-surface {
-  overflow: visible !important;
-}
-
-.stat-card.example-card .chart-card .recharts-bar-rectangle {
-  transition: all 0.3s ease;
-}
-
-.stat-card.example-card .chart-card .recharts-bar-rectangle:hover {
-  transform: scale(1.1);
-  opacity: 0.8;
-}
-
-.stat-card.example-card .chart-card .recharts-tooltip {
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  box-sizing: border-box;
 }
