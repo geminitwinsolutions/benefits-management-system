@@ -29,25 +29,6 @@
   --gradient-6: linear-gradient(to right, #fa709a 0%, #fee140 100%);
 }
 
-.card-header.blue { background-color: var(--benefits-blue); }
-.card-header.green { background-color: var(--reconciliation-green); }
-.card-header.amber { background-color: var(--company-orange); }
-.card-header.red { background-color: var(--employee-red); }
-
-/* This is the key style that makes the card bodies appear correctly */
-.card-body {
-  padding: 1.5rem;
-  flex: 1;
-  min-height: 1px;
-  overflow-y: auto;
-}
-/* Specific adjustments for tables and lists inside the card body */
-.card-body .simple-table,
-.card-body .deadline-list {
-  height: auto;
-  width: auto;
-}
-
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
