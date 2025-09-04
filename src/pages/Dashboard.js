@@ -243,11 +243,28 @@ function Dashboard() {
             <h2>Upcoming Deadlines</h2>
           </div>
           <div className="card-body">
-            <ul className="deadline-list">
-              <li><span>Sep 15</span> Open Enrollment Ends</li>
-              <li><span>Oct 01</span> Q4 Invoices Due</li>
-              <li><span>Oct 10</span> Compliance Docs Submission</li>
-            </ul>
+            <table className="simple-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span className="deadline-date">Sep 15</span></td>
+                  <td>Open Enrollment Ends</td>
+                </tr>
+                <tr>
+                  <td><span className="deadline-date">Oct 01</span></td>
+                  <td>Q4 Invoices Due</td>
+                </tr>
+                <tr>
+                  <td><span className="deadline-date">Oct 10</span></td>
+                  <td>Compliance Docs Submission</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </ResponsiveGridLayout>

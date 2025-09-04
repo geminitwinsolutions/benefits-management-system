@@ -13,7 +13,7 @@
   --success-color: #21BF06;    /* Bright Green */
   --warning-color: #ffc107;    /* Standard Yellow for warnings */
   --danger-color: #e74c3c;      /* A complementary red */
-
+  
   /* New themed colors for cards */
   --benefits-blue: #4facfe;
   --reconciliation-green: #21BF06;
@@ -27,6 +27,25 @@
   --gradient-4: linear-gradient(to right, var(--company-orange) 0%, #ffc837 100%);
   --gradient-5: linear-gradient(to right, var(--benefits-blue) 0%, #00f2fe 100%);
   --gradient-6: linear-gradient(to right, #fa709a 0%, #fee140 100%);
+}
+
+.card-header.blue { background-color: var(--benefits-blue); }
+.card-header.green { background-color: var(--reconciliation-green); }
+.card-header.amber { background-color: var(--company-orange); }
+.card-header.red { background-color: var(--employee-red); }
+
+/* This is the key style that makes the card bodies appear correctly */
+.card-body {
+  padding: 1.5rem;
+  flex: 1;
+  min-height: 1px;
+  overflow-y: auto;
+}
+/* Specific adjustments for tables and lists inside the card body */
+.card-body .simple-table,
+.card-body .deadline-list {
+  height: auto;
+  width: auto;
 }
 
 body {
@@ -180,24 +199,11 @@ code {
 }
 
 .card-header h2, .card-header h3 {
-  color: white;
+  color: rgb(51, 47, 47);
   margin: 0;
   font-size: 1.25rem;
   font-weight: bold;
 }
-
-.card-body {
-  padding: 1.5rem;
-  flex: 1;
-  min-height: 1px; /* Corrects the height issue for charts */
-}
-
-/* Specific header colors */
-.card-header.blue { background-color: var(--benefits-blue); }
-.card-header.green { background-color: var(--reconciliation-green); }
-.card-header.amber { background-color: var(--company-orange); }
-.card-header.red { background-color: var(--employee-red); }
-
 
 /* --- Dashboard Specific Styles --- */
 .dashboard-grid {
@@ -438,12 +444,12 @@ tr:hover {
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
-.add-employee-form input,
-.add-employee-form select,
-.add-employee-form textarea {
+
+.stat-card.example-card .chart-card {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   box-sizing: border-box;
 }
+
