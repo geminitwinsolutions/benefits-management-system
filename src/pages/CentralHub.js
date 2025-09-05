@@ -16,6 +16,7 @@ function CentralHub() {
           <div className="sidebar-group">
             <h4>Benefits</h4>
             <NavLink to="/central-hub/tier-management">Tier Management</NavLink>
+            <NavLink to="/central-hub/plan-management">Plan Management</NavLink>
             <NavLink to="/central-hub/reconciliation">Reconciliation</NavLink>
             <NavLink to="/central-hub/service-library">Service Library</NavLink>
           </div>

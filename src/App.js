@@ -20,6 +20,7 @@ import StatsAndReports from './pages/StatsAndReports';
 import CentralHub from './pages/CentralHub';
 import NotFound from './pages/NotFound';
 import ServiceLibrary from './pages/ServiceLibrary';
+import PlanManagement from './pages/PlanManagement'; // Import the new page
 
 import './App.css';
 

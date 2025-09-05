@@ -238,9 +238,23 @@ export const updateEnrollmentPeriod = async (id, updatedPeriodData) => {
   return data[0];
 };
 
+// This function submits a new enrollment record
+export const submitEnrollment = async (enrollmentData) => {
+  const { data, error } = await supabase
+    .from('enrollments') // Assuming the table is named 'enrollments'
+    .insert([enrollmentData])
+    .select();
+  
+  if (error) {
+    console.error('Error submitting enrollment:', error);
+    return null;
+  }
+  
+  return data[0];
+};
 // --- NEW FUNCTIONS FOR ENROLLMENT AND RECONCILIATION ---
 
-// This function fetches all benefit plans
+// --- NEW AND UPDATED BENEFIT PLAN FUNCTIONS ---
 export const getBenefitPlans = async () => {
   const { data, error } = await supabase.from('benefits').select('*');
   if (error) {
@@ -250,18 +264,22 @@ export const getBenefitPlans = async () => {
   return data;
 };
 
-// This function submits a completed enrollment
-export const submitEnrollment = async (enrollmentData) => {
-  const { data, error } = await supabase
-    .from('enrollments')
-    .insert([enrollmentData])
-    .select();
-  
-  if (error) {
-    console.error('Error submitting enrollment:', error);
-    return null;
-  }
-  return data[0];
+export const addBenefitPlan = async (planData) => {
+  const { data, error } = await supabase.from('benefits').insert([planData]).select();
+  if (error) console.error('Error adding benefit plan:', error);
+  return data ? data[0] : null;
+};
+
+export const updateBenefitPlan = async (id, planData) => {
+  const { data, error } = await supabase.from('benefits').update(planData).eq('id', id).select();
+  if (error) console.error('Error updating benefit plan:', error);
+  return data ? data[0] : null;
+};
+
+export const deleteBenefitPlan = async (id) => {
+  const { error } = await supabase.from('benefits').delete().eq('id', id);
+  if (error) console.error('Error deleting benefit plan:', error);
+  return !error;
 };
 
 // Fetches all completed enrollments with employee names
@@ -348,4 +366,32 @@ export const updateEmployee = async (id, employeeData) => {
   }
   return data[0];
 };
+
+// --- NEW CARRIER FUNCTIONS ---
+export const getCarriers = async () => {
+  const { data, error } = await supabase.from('carriers').select('*');
+  if (error) console.error('Error fetching carriers:', error);
+  return data || [];
+};
+
+export const addCarrier = async (carrierData) => {
+  const { data, error } = await supabase.from('carriers').insert([carrierData]).select();
+  if (error) console.error('Error adding carrier:', error);
+  return data ? data[0] : null;
+};
+
+export const updateCarrier = async (id, carrierData) => {
+  const { data, error } = await supabase.from('carriers').update(carrierData).eq('id', id).select();
+  if (error) console.error('Error updating carrier:', error);
+  return data ? data[0] : null;
+};
+
+export const deleteCarrier = async (id) => {
+  const { error } = await supabase.from('carriers').delete().eq('id', id);
+  if (error) console.error('Error deleting carrier:', error);
+  return !error;
+};
+
+
+
 
