@@ -1,25 +1,5 @@
 import { supabase } from '../supabase';
 
-// This function fetches all benefit plans
-export const getBenefitPlans = async () => {
-  const { data, error } = await supabase.from('benefits').select('*');
-  if (error) {
-    console.error('Error fetching benefit plans:', error);
-    return [];
-  }
-  
-  // Re-organize data by type for easier use in the UI
-  const plansByType = {};
-  data.forEach(plan => {
-    if (!plansByType[plan.type.toLowerCase()]) {
-      plansByType[plan.type.toLowerCase()] = [];
-    }
-    plansByType[plan.type.toLowerCase()].push(plan);
-  });
-  
-  return plansByType;
-};
-
 // This function fetches all client tiers
 export const getTiers = async () => {
   const { data, error } = await supabase.from('tiers').select('*');
@@ -240,3 +220,71 @@ export const updateEnrollmentPeriod = async (id, updatedPeriodData) => {
   }
   return data[0];
 };
+
+// --- NEW FUNCTIONS FOR ENROLLMENT AND RECONCILIATION ---
+
+// This function fetches all benefit plans
+export const getBenefitPlans = async () => {
+  const { data, error } = await supabase.from('benefits').select('*');
+  if (error) {
+    console.error('Error fetching benefit plans:', error);
+    return [];
+  }
+  return data;
+};
+
+// This function submits a completed enrollment
+export const submitEnrollment = async (enrollmentData) => {
+  const { data, error } = await supabase
+    .from('enrollments')
+    .insert([enrollmentData])
+    .select();
+  
+  if (error) {
+    console.error('Error submitting enrollment:', error);
+    return null;
+  }
+  return data[0];
+};
+
+// Fetches all completed enrollments with employee names
+export const getEnrollmentsWithEmployeeData = async () => {
+  // --- THIS LINE IS NOW CORRECTED ---
+  const { data, error } = await supabase.from('enrollments').select('*, employees(name)');
+  
+  if (error) {
+    console.error('Error fetching enrollments:', error);
+    return [];
+  }
+  return data;
+};
+
+// Fetches carrier invoice data for a specific month
+export const getInvoicesForMonth = async (month) => { // month should be in 'YYYY-MM-DD' format
+  const { data, error } = await supabase
+    .from('carrier_invoices')
+    .select('*')
+    .eq('billing_month', month);
+
+  if (error) {
+    console.error('Error fetching invoices for month:', error);
+    return [];
+  }
+  return data;
+};
+
+// Updates the status of a single carrier invoice item
+export const updateInvoiceStatus = async (invoiceId, newStatus) => {
+  const { data, error } = await supabase
+    .from('carrier_invoices')
+    .update({ status: newStatus })
+    .eq('id', invoiceId)
+    .select();
+
+  if (error) {
+    console.error('Error updating invoice status:', error);
+    return null;
+  }
+  return data[0];
+};
+

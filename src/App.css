@@ -452,3 +452,12 @@ tr:hover {
   align-items: center;
   min-height: 120px;
 }
+
+/* Add this to the end of your App.css */
+.employees-table .row-error {
+  background-color: #fffbe6; /* A light yellow to indicate a warning */
+}
+
+.employees-table .row-error:hover {
+  background-color: #fff8d8;
+}
