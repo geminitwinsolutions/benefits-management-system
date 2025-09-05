@@ -1,7 +1,7 @@
 // src/components/OpenEnrollmentForm.js
 import React, { useState, useEffect, useMemo } from 'react';
 import Modal from '../components/Modal';
-import { getBenefitPlans, submitEnrollment } from '../services/benefitService'; // Import submitEnrollment
+import { getBenefitPlans, submitEnrollment } from '../services/benefitService';
 
 function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
     const [selections, setSelections] = useState({ plans: {} });
@@ -21,7 +21,14 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
     // Group plans by type using useMemo for efficiency
     const organizedPlans = useMemo(() => {
         return benefitPlans.reduce((acc, plan) => {
+            // --- THIS IS THE FIX ---
+            // Ensure the plan has a valid plan_type before processing
+            if (!plan || !plan.plan_type) {
+                return acc;
+            }
+
             (acc[plan.plan_type] = acc[plan.plan_type] || []).push(plan);
+            
             // Add a "Waive" option for each benefit type
             if (!acc[plan.plan_type].some(p => p.plan_name === 'Waive')) {
                 acc[plan.plan_type].unshift({
@@ -37,7 +44,6 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
     }, [benefitPlans]);
 
     const handleSelectPlan = (planType, plan) => {
-        // Simple logic assuming no complex dependent rules for now
         const isSelected = selections.plans[planType]?.id === plan.id;
 
         if (isSelected) {
@@ -61,7 +67,6 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
     
     const calculateTotals = () => {
         const monthlyTotal = Object.values(selections.plans).reduce((acc, plan) => acc + plan.cost, 0);
-        // Assuming bi-weekly for now
         const perPayPeriodTotal = monthlyTotal / 2;
         return { monthlyTotal, perPayPeriodTotal };
     };
