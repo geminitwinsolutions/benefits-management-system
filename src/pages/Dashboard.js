@@ -34,8 +34,8 @@ const initialLayouts = {
     // Left Sidebar (Starts below the header)
     { i: 'overview',  x: 0, y: 1, w: 2, h: 3 },
     { i: 'employees', x: 0, y: 4, w: 2, h: 1 },
-    { i: 'tiers',     x: 0, y: 5, w: 2, h: 1 },
-    { i: 'services',  x: 0, y: 6, w: 2, h: 1 },
+    { i: 'tiers',     x: 0, y: 5, w: 1, h: 1 },
+    { i: 'services',  x: 1, y: 5, w: 1, h: 1 },
 
     // Main Content Charts (Starts below the header)
     { i: 'pie',       x: 2, y: 1, w: 2, h: 2 },

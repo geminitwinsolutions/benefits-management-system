@@ -226,19 +226,19 @@ code {
 /* --- Dashboard Specific Styles --- */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.0rem;
 }
 
 .widgets-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  gap: 1.0rem;
 }
 
 .widget {
   text-align: center;
-  padding: 1.5rem; /* Padded for content */
+  padding: 1.0rem; /* Padded for content */
 }
 
 .widget h2 { 
