@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid
@@ -23,68 +23,54 @@ const lineChartData = [
   { name: 'Mar', employees: 135 }, { name: 'Apr', employees: 138 },
   { name: 'May', employees: 142 }, { name: 'Jun', employees: 150 },
 ];
-
 const initialLayouts = {
-  lg: [ // Desktop layout (12 columns) - Corrected for consistent card size
+  // --- THIS SECTION IS NOW FIXED ---
+  lg: [
     // Left Sidebar Cards
-    { i: 'overview', x: 0, y: 0, w: 2, h: 3 },
+    { i: 'overview',  x: 0, y: 0, w: 2, h: 3 },
     { i: 'employees', x: 0, y: 3, w: 2, h: 1 },
-    { i: 'tiers', x: 0, y: 4, w: 2, h: 1 }, // Corrected width to 2
-    { i: 'services', x: 0, y: 5, w: 2, h: 1 }, // Corrected position and width to 2
-    
-    // Top-Middle Stat Cards
-    { i: 'pendingApprovals', x: 2, y: 0, w: 2, h: 1 },
-    { i: 'rate', x: 4, y: 0, w: 2, h: 1 },
-    { i: 'enrolled', x: 6, y: 0, w: 2, h: 1 },
+    { i: 'tiers',     x: 0, y: 4, w: 2, h: 1 },
+    { i: 'services',  x: 0, y: 5, w: 2, h: 1 },
 
-    // Main Content Charts
-    { i: 'pie', x: 2, y: 2, w: 2, h: 1 },
-    { i: 'bar', x: 4, y: 1, w: 4, h: 2 },
-    { i: 'trends', x: 2, y: 4, w: 6, h: 2 },
-    
+    // Top-Middle Stat Cards (FIXED POSITIONS)
+    { i: 'approvals', x: 2, y: 0, w: 2, h: 1 },
+    { i: 'rate',      x: 4, y: 0, w: 2, h: 1 },
+    { i: 'enrolled',  x: 6, y: 0, w: 2, h: 1 },
+
+    // Main Content Charts (FIXED POSITIONS & SIZES)
+    { i: 'pie',       x: 2, y: 1, w: 2, h: 2 }, // Starts on row 1, height is now 2
+    { i: 'bar',       x: 4, y: 1, w: 4, h: 2 }, // Aligned next to pie chart
+    { i: 'trends',    x: 2, y: 3, w: 6, h: 2 }, // Sits below the pie and bar charts
+
     // Right Sidebar Cards
     { i: 'deadlines', x: 8, y: 0, w: 4, h: 2 },
-    { i: 'actions', x: 8, y: 2, w: 4, h: 4 },
+    { i: 'actions',   x: 8, y: 2, w: 4, h: 4 },
   ],
-  md: [ // Tablet layout (10 columns)
-    { i: 'overview', x: 0, y: 0, w: 3, h: 2 },
-    { i: 'pendingApprovals', x: 3, y: 0, w: 2, h: 1 },
-    { i: 'rate', x: 5, y: 0, w: 2, h: 1 },
-    { i: 'enrolled', x: 7, y: 0, w: 3, h: 1 },
-    { i: 'employees', x: 3, y: 1, w: 2, h: 1 },
-    { i: 'tiers', x: 5, y: 1, w: 2, h: 1 },
-    { i: 'services', x: 7, y: 1, w: 3, h: 1 },
-    { i: 'pie', x: 0, y: 2, w: 5, h: 2 },
-    { i: 'bar', x: 5, y: 2, w: 5, h: 2 },
-    { i: 'trends', x: 0, y: 4, w: 10, h: 2 },
-    { i: 'deadlines', x: 0, y: 6, w: 5, h: 2 },
-    { i: 'actions', x: 5, y: 6, w: 5, h: 3 },
+  md: [ // This layout was already correct
+    { i: 'overview', x: 0, y: 0, w: 3, h: 2 }, { i: 'approvals', x: 3, y: 0, w: 2, h: 1 },
+    { i: 'rate', x: 5, y: 0, w: 2, h: 1 }, { i: 'enrolled', x: 7, y: 0, w: 3, h: 1 },
+    { i: 'employees', x: 3, y: 1, w: 2, h: 1 }, { i: 'tiers', x: 5, y: 1, w: 2, h: 1 },
+    { i: 'services', x: 7, y: 1, w: 3, h: 1 }, { i: 'pie', x: 0, y: 2, w: 5, h: 2 },
+    { i: 'bar', x: 5, y: 2, w: 5, h: 2 }, { i: 'trends', x: 0, y: 4, w: 10, h: 2 },
+    { i: 'deadlines', x: 0, y: 6, w: 5, h: 2 }, { i: 'actions', x: 5, y: 6, w: 5, h: 3 },
   ],
-  sm: [ // Mobile layout (6 columns)
-    { i: 'overview', x: 0, y: 0, w: 6, h: 2 },
-    { i: 'pendingApprovals', x: 0, y: 2, w: 3, h: 1 },
-    { i: 'rate', x: 3, y: 2, w: 3, h: 1 },
-    { i: 'enrolled', x: 0, y: 3, w: 3, h: 1 },
-    { i: 'deadlines', x: 3, y: 3, w: 3, h: 2 },
-    { i: 'employees', x: 0, y: 5, w: 6, h: 1 },
-    { i: 'tiers', x: 0, y: 6, w: 3, h: 1 },
-    { i: 'services', x: 3, y: 6, w: 3, h: 1 },
-    { i: 'pie', x: 0, y: 7, w: 6, h: 2 },
-    { i: 'bar', x: 0, y: 9, w: 6, h: 2 },
-    { i: 'trends', x: 0, y: 11, w: 6, h: 2 },
-    { i: 'actions', x: 0, y: 13, w: 6, h: 3 },
+  sm: [ // This layout had a collision which we fixed previously
+    { i: 'overview', x: 0, y: 0, w: 6, h: 2 }, { i: 'approvals', x: 0, y: 2, w: 3, h: 1 },
+    { i: 'rate', x: 3, y: 2, w: 3, h: 1 }, { i: 'enrolled', x: 0, y: 3, w: 3, h: 1 },
+    { i: 'deadlines', x: 3, y: 3, w: 3, h: 2 }, { i: 'employees', x: 0, y: 5, w: 6, h: 1 },
+    { i: 'tiers', x: 0, y: 6, w: 3, h: 1 }, { i: 'services', x: 3, y: 6, w: 3, h: 1 },
+    { i: 'pie', x: 0, y: 7, w: 6, h: 2 }, { i: 'bar', x: 0, y: 9, w: 6, h: 2 },
+    { i: 'trends', x: 0, y: 11, w: 6, h: 2 }, { i: 'actions', x: 0, y: 13, w: 6, h: 3 },
   ],
+  // You should also add the xs and xxs layouts here if you need them
 };
+
 function getFromLS(key) {
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
       const stored = window.localStorage.getItem(key);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (e) {
-      console.error("Could not parse layouts from localStorage", e);
-    }
+      if (stored) { return JSON.parse(stored); }
+    } catch (e) { console.error("Could not parse layouts from localStorage", e); }
   }
   return null;
 }
@@ -111,12 +97,29 @@ function Dashboard() {
     const savedLayouts = getFromLS('lg');
     return savedLayouts ? { lg: savedLayouts } : initialLayouts;
   });
+
+  const [margin, setMargin] = useState([20, 20]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setMargin([50, 50]);
+      } else {
+        setMargin([50, 50]);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleLayoutChange = (layout, allLayouts) => {
     saveToLS('lg', layout);
     setLayouts({ lg: layout });
   };
   const handleResetLayout = () => {
-    // Here we clear the layout from local storage and set the initial layouts
     saveToLS('lg', initialLayouts.lg);
     setLayouts(initialLayouts);
   };
@@ -140,7 +143,7 @@ function Dashboard() {
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
         rowHeight={100}
-        margin={[50, 50]}
+        margin={margin}
         containerPadding={[0, 0]}
       >
         <div key="employees" className="widget stat-widget-1">
@@ -167,7 +170,6 @@ function Dashboard() {
           <h2>Services</h2><p>{dashboardData.servicesOffered}</p>
           <div className="progress-bar"><div className="progress-bar-fill" style={{ width: '100%' }}></div></div>
         </div>
-
         <div key="trends" className="card">
           <div className="card-header blue">
             <h2>Monthly Enrollment Trends</h2>
@@ -184,7 +186,6 @@ function Dashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-
         <div key="pie" className="card">
           <div className="card-header green">
             <h2>Reconciliation Status</h2>
@@ -203,7 +204,6 @@ function Dashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-
         <div key="bar" className="card">
           <div className="card-header amber">
             <h2>Enrollment by Department</h2>
@@ -220,7 +220,6 @@ function Dashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-
         <div key="actions" className="card">
           <div className="card-header">
             <h2>Action Items</h2>
@@ -240,7 +239,6 @@ function Dashboard() {
             </table>
           </div>
         </div>
-
         <div key="overview" className="card">
           <div className="card-header">
             <h2>Client Overview</h2>
@@ -251,7 +249,6 @@ function Dashboard() {
             <p><strong>Last Login:</strong> {clientData.lastLogin}</p>
           </div>
         </div>
-
         <div key="deadlines" className="card">
           <div className="card-header">
             <h2>Upcoming Deadlines</h2>
