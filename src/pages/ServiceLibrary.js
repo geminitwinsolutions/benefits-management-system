@@ -65,54 +65,65 @@ function ServiceLibrary() {
             
             <p>Manage all available services and their a la carte fees.</p>
 
-            <table className="employees-table">
-                <thead>
-                    <tr>
-                        <th>Service</th>
-                        <th>Category</th>
-                        <th>Price</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {services.map(service => (
-                        <tr key={service.id}>
-                            <td>
-                                <strong className="block">{service.name}</strong>
-                                <span className="text-sm text-gray-500">{service.description}</span>
-                            </td>
-                            <td>{service.category}</td>
-                            <td>${service.price}</td>
-                            <td>
-                                <button className="action-button" onClick={() => handleDelete(service.id)}>Delete</button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            <div className="card">
+                <div className="card-header blue">
+                    <h2>Service List</h2>
+                </div>
+                <div className="card-body">
+                    <table className="employees-table">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {services.map(service => (
+                                <tr key={service.id}>
+                                    <td>
+                                        <strong className="block">{service.name}</strong>
+                                        <span className="text-sm text-gray-500">{service.description}</span>
+                                    </td>
+                                    <td>{service.category}</td>
+                                    <td>${service.price}</td>
+                                    <td>
+                                        <button className="action-button-delete" onClick={() => handleDelete(service.id)}>Delete</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
             {showForm && (
                 <Modal onClose={() => setShowForm(false)}>
-                    <h3>Add New Service</h3>
-                    <form className="add-employee-form" onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label>Service Name</label>
-                            <input type="text" name="name" value={newService.name} onChange={handleInputChange} required />
-                        </div>
-                        <div className="form-group">
-                            <label>Description</label>
-                            <textarea name="description" value={newService.description} onChange={handleInputChange} required />
-                        </div>
-                        <div className="form-group">
-                            <label>Category</label>
-                            <input type="text" name="category" value={newService.category} onChange={handleInputChange} required />
-                        </div>
-                        <div className="form-group">
-                            <label>Price ($)</label>
-                            <input type="number" name="price" value={newService.price} onChange={handleInputChange} required />
-                        </div>
-                        <button type="submit" className="submit-button">Save Service</button>
-                    </form>
+                    <div className="card-header">
+                        <h3>Add New Service</h3>
+                    </div>
+                    <div className="card-body">
+                        <form className="add-employee-form" onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label>Service Name</label>
+                                <input type="text" name="name" value={newService.name} onChange={handleInputChange} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Description</label>
+                                <textarea name="description" value={newService.description} onChange={handleInputChange} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Category</label>
+                                <input type="text" name="category" value={newService.category} onChange={handleInputChange} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Price ($)</label>
+                                <input type="number" name="price" value={newService.price} onChange={handleInputChange} required />
+                            </div>
+                            <button type="submit" className="submit-button">Save Service</button>
+                        </form>
+                    </div>
                 </Modal>
             )}
         </div>

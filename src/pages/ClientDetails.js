@@ -64,7 +64,7 @@ function ClientDetails() {
         <div className="card-header blue">
           <h2>Client List</h2>
         </div>
-        <div className="card-body" style={{padding: '0'}}>
+        <div className="card-body">
           <table className="employees-table">
             <thead>
               <tr>

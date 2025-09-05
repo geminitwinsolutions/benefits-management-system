@@ -1,9 +1,10 @@
 // src/App.js
-import { useState } from 'react'; // 'useEffect' has been removed
+import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-// 'supabase' import removed as it's not used in bypass mode
+import { supabase } from './supabase';
 
 // Import Components
+import Auth from './components/Auth';
 import Navbar from './components/Navbar';
 
 // Import Pages
@@ -18,6 +19,7 @@ import Communications from './pages/Communications';
 import StatsAndReports from './pages/StatsAndReports';
 import CentralHub from './pages/CentralHub';
 import NotFound from './pages/NotFound';
+import ServiceLibrary from './pages/ServiceLibrary';
 
 import './App.css';
 
@@ -29,51 +31,90 @@ function ProtectedRoute({ session, children }) {
   return children;
 }
 
+// ===============================================
+// === TEMPORARY AUTH BYPASS FOR DEVELOPMENT ===
+// ===============================================
+const BYPASS_AUTH = true; 
+// Set to 'false' to enable authentication and require login
+// ===============================================
+
 function App() {
-  const [session] = useState(true); // <-- TEMPORARY BYPASS
-  const [loading] = useState(false);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setLoading(false);
+    };
+
+    getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="page-container">
+        <h1>Loading...</h1>
+      </div>
+    );
   }
 
+  // Use the bypass for the root route logic
+  if (BYPASS_AUTH) {
+    return (
+      <>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/employees" element={<AllEmployees />} />
+          <Route path="/clients" element={<ClientDetails />} />
+          <Route path="/reports" element={<StatsAndReports />} />
+          
+          <Route path="/central-hub" element={<CentralHub />}>
+            <Route path="enrollment-management" element={<EnrollmentManagement />} />
+            <Route path="open-enrollment" element={<OpenEnrollment />} />
+            <Route path="tier-management" element={<TierManagement />} />
+            <Route path="reconciliation" element={<BenefitsReconciliation />} />
+            <Route path="service-library" element={<ServiceLibrary />} />
+            <Route index element={<Navigate to="enrollment-management" replace />} />
+          </Route>
+          
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </>
+    );
+  }
+
+  // Original authentication logic
   return (
     <>
       {session && <Navbar />}
-      <div className="container">
-        <Routes>
-          {/* The root path will now always navigate to the dashboard */}
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-          
-          <Route 
-            path="/dashboard" 
-            element={<ProtectedRoute session={session}><Dashboard /></ProtectedRoute>} 
-          />
-          <Route 
-            path="/employees" 
-            element={<ProtectedRoute session={session}><AllEmployees /></ProtectedRoute>} 
-          />
-          <Route 
-            path="/stats-and-reports" 
-            element={<ProtectedRoute session={session}><StatsAndReports /></ProtectedRoute>} 
-          />
+      <Routes>
+        <Route path="/" element={!session ? <Auth /> : <Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<ProtectedRoute session={session}><Dashboard /></ProtectedRoute>} />
+        <Route path="/employees" element={<ProtectedRoute session={session}><AllEmployees /></ProtectedRoute>} />
+        <Route path="/clients" element={<ProtectedRoute session={session}><ClientDetails /></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute session={session}><StatsAndReports /></ProtectedRoute>} />
+        
+        <Route path="/central-hub" element={<ProtectedRoute session={session}><CentralHub /></ProtectedRoute>}>
+          <Route path="enrollment-management" element={<EnrollmentManagement />} />
+          <Route path="open-enrollment" element={<OpenEnrollment />} />
+          <Route path="tier-management" element={<TierManagement />} />
+          <Route path="reconciliation" element={<BenefitsReconciliation />} />
+          <Route path="service-library" element={<ServiceLibrary />} />
+          <Route index element={<Navigate to="enrollment-management" replace />} />
+        </Route>
 
-          <Route 
-            path="/central-hub" 
-            element={<ProtectedRoute session={session}><CentralHub /></ProtectedRoute>}
-          >
-            <Route index element={<Navigate to="enrollment-management" replace />} /> 
-            <Route path="enrollment-management" element={<EnrollmentManagement />} />
-            <Route path="enrollment-periods" element={<OpenEnrollment />} />
-            <Route path="communications" element={<Communications />} />
-            <Route path="reconciliation" element={<BenefitsReconciliation />} />
-            <Route path="tier-management" element={<TierManagement />} />
-            <Route path="client-details" element={<ClientDetails />} />
-          </Route>
-
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
     </>
   );
 }

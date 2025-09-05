@@ -76,40 +76,48 @@ function BenefitsReconciliation() {
         </button>
       </div>
       <p>Review and resolve discrepancies between enrollment data and carrier invoices.</p>
-      <table className="employees-table">
-        <thead>
-          <tr>
-            <th>Employee</th>
-            <th>Plan Type</th>
-            <th>Discrepancy</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td>{item.employeeName}</td>
-              <td>{item.planType}</td>
-              <td>{item.discrepancy}</td>
-              <td>
-                <span className={`status-badge status-${item.status.toLowerCase()}`}>
-                  {item.status}
-                </span>
-              </td>
-              <td className="action-buttons-cell">
-                {item.status === 'Pending' && (
-                  <>
-                    <button onClick={() => handleApprove(item.id)} className="action-button-approve">Approve</button>
-                    <button onClick={() => handleFlag(item.id)} className="action-button-flag">Flag</button>
-                  </>
-                )}
-                <button onClick={() => handleDelete(item.id)} className="action-button-delete">Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      
+      <div className="card">
+        <div className="card-header green">
+          <h2>Reconciliation Table</h2>
+        </div>
+        <div className="card-body">
+          <table className="employees-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Plan Type</th>
+                <th>Discrepancy</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.employeeName}</td>
+                  <td>{item.planType}</td>
+                  <td>{item.discrepancy}</td>
+                  <td>
+                    <span className={`status-badge status-${item.status.toLowerCase()}`}>
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="action-buttons-cell">
+                    {item.status === 'Pending' && (
+                      <>
+                        <button onClick={() => handleApprove(item.id)} className="action-button-approve">Approve</button>
+                        <button onClick={() => handleFlag(item.id)} className="action-button-flag">Flag</button>
+                      </>
+                    )}
+                    <button onClick={() => handleDelete(item.id)} className="action-button-delete">Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
       
       {showAddForm && (
         <Modal onClose={() => setShowAddForm(false)}>
