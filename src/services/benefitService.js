@@ -76,6 +76,22 @@ export const addService = async (newServiceData) => {
     return data[0];
 };
 
+// --- THIS IS THE NEW FUNCTION ---
+// This function updates an existing service
+export const updateService = async (id, updatedServiceData) => {
+  const { data, error } = await supabase
+    .from('services')
+    .update(updatedServiceData)
+    .eq('id', id)
+    .select();
+  if (error) {
+    console.error('Error updating service:', error);
+    return null;
+  }
+  return data[0];
+};
+
+
 // This function deletes a service by its ID
 export const deleteService = async (id) => {
     const { error } = await supabase
@@ -88,6 +104,7 @@ export const deleteService = async (id) => {
     }
     return true;
 };
+
 
 // This function fetches all reconciliation items
 export const getReconciliationItems = async () => {

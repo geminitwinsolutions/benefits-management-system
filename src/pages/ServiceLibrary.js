@@ -1,11 +1,13 @@
+// src/pages/ServiceLibrary.js
 import React, { useState, useEffect } from 'react';
-import { getServices, addService, deleteService } from '../services/benefitService';
+import { getServices, addService, updateService, deleteService } from '../services/benefitService';
 import Modal from '../components/Modal';
 
 function ServiceLibrary() {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
+    const [editingService, setEditingService] = useState(null);
     const [newService, setNewService] = useState({ name: '', description: '', category: '', price: '' });
 
     useEffect(() => {
@@ -18,22 +20,38 @@ function ServiceLibrary() {
     }, []);
 
     const handleInputChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setNewService(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
+        const { name, value } = e.target;
+        setNewService(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleEditClick = (service) => {
+        setEditingService(service);
+        setNewService({
+            name: service.name,
+            description: service.description,
+            category: service.category,
+            price: service.price
+        });
+        setShowForm(true);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        const addedService = await addService(newService);
-        if (addedService) {
-            setServices(prevServices => [...prevServices, addedService]);
-            setShowForm(false);
-            setNewService({ name: '', description: '', category: '', price: '' });
+
+        if (editingService) {
+            const updated = await updateService(editingService.id, newService);
+            if (updated) {
+                setServices(prev => prev.map(s => s.id === updated.id ? updated : s));
+            }
+        } else {
+            const added = await addService(newService);
+            if (added) {
+                setServices(prev => [...prev, added]);
+            }
         }
+
+        handleCloseModal();
         setLoading(false);
     };
 
@@ -41,12 +59,20 @@ function ServiceLibrary() {
         if (window.confirm("Are you sure you want to delete this service?")) {
             const success = await deleteService(id);
             if (success) {
-                setServices(prevServices => prevServices.filter(service => service.id !== id));
+                setServices(prev => prev.filter(service => service.id !== id));
+            } else {
+                alert("Failed to delete the service.");
             }
         }
     };
 
-    if (loading) {
+    const handleCloseModal = () => {
+        setShowForm(false);
+        setEditingService(null);
+        setNewService({ name: '', description: '', category: '', price: '' });
+    };
+
+    if (loading && !showForm) {
         return (
             <div className="page-container">
                 <h1>Loading Services...</h1>
@@ -88,8 +114,9 @@ function ServiceLibrary() {
                                     </td>
                                     <td>{service.category}</td>
                                     <td>${service.price}</td>
-                                    <td>
-                                        <button className="action-button-delete" onClick={() => handleDelete(service.id)}>Delete</button>
+                                    <td className="action-buttons-cell">
+                                        <button className="action-button-small" onClick={() => handleEditClick(service)}>Edit</button>
+                                        <button className="action-button-delete action-button-small" onClick={() => handleDelete(service.id)}>Delete</button>
                                     </td>
                                 </tr>
                             ))}
@@ -99,9 +126,9 @@ function ServiceLibrary() {
             </div>
 
             {showForm && (
-                <Modal onClose={() => setShowForm(false)}>
+                <Modal onClose={handleCloseModal}>
                     <div className="card-header">
-                        <h3>Add New Service</h3>
+                        <h3>{editingService ? 'Edit Service' : 'Add New Service'}</h3>
                     </div>
                     <div className="card-body">
                         <form className="add-employee-form" onSubmit={handleSubmit}>
