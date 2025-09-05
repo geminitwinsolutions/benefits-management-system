@@ -25,26 +25,28 @@ const lineChartData = [
 ];
 
 const initialLayouts = {
-  lg: [ // Desktop layout (12 columns) - Corrected to match the screenshot without overlaps
+  lg: [ // Desktop layout (12 columns) - Corrected for consistent card size
+    // Left Sidebar Cards
     { i: 'overview', x: 0, y: 0, w: 2, h: 3 },
+    { i: 'employees', x: 0, y: 3, w: 2, h: 1 },
+    { i: 'tiers', x: 0, y: 4, w: 2, h: 1 }, // Corrected width to 2
+    { i: 'services', x: 0, y: 5, w: 2, h: 1 }, // Corrected position and width to 2
+    
+    // Top-Middle Stat Cards
     { i: 'pendingApprovals', x: 2, y: 0, w: 2, h: 1 },
     { i: 'rate', x: 4, y: 0, w: 2, h: 1 },
     { i: 'enrolled', x: 6, y: 0, w: 2, h: 1 },
-    { i: 'deadlines', x: 8, y: 0, w: 4, h: 2 },
 
-    // Second Row
-    { i: 'employees', x: 0, y: 2, w: 2, h: 1 },
-    { i: 'pie', x: 2, y: 1, w: 2, h: 2 },
+    // Main Content Charts
+    { i: 'pie', x: 2, y: 2, w: 2, h: 1 },
     { i: 'bar', x: 4, y: 1, w: 4, h: 2 },
-
-    // Bottom Section
-    { i: 'tiers', x: 0, y: 3, w: 1, h: 1 },
-    { i: 'services', x: 1, y: 3, w: 1, h: 1 },
-    { i: 'trends', x: 2, y: 3, w: 6, h: 2 },
+    { i: 'trends', x: 2, y: 4, w: 6, h: 2 },
+    
+    // Right Sidebar Cards
+    { i: 'deadlines', x: 8, y: 0, w: 4, h: 2 },
     { i: 'actions', x: 8, y: 2, w: 4, h: 4 },
   ],
   md: [ // Tablet layout (10 columns)
-    // Stack stat cards in two rows
     { i: 'overview', x: 0, y: 0, w: 3, h: 2 },
     { i: 'pendingApprovals', x: 3, y: 0, w: 2, h: 1 },
     { i: 'rate', x: 5, y: 0, w: 2, h: 1 },
@@ -52,13 +54,9 @@ const initialLayouts = {
     { i: 'employees', x: 3, y: 1, w: 2, h: 1 },
     { i: 'tiers', x: 5, y: 1, w: 2, h: 1 },
     { i: 'services', x: 7, y: 1, w: 3, h: 1 },
-
-    // Charts below the stat cards
     { i: 'pie', x: 0, y: 2, w: 5, h: 2 },
     { i: 'bar', x: 5, y: 2, w: 5, h: 2 },
     { i: 'trends', x: 0, y: 4, w: 10, h: 2 },
-
-    // Sidebar cards at the bottom
     { i: 'deadlines', x: 0, y: 6, w: 5, h: 2 },
     { i: 'actions', x: 5, y: 6, w: 5, h: 3 },
   ],
@@ -142,7 +140,7 @@ function Dashboard() {
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
         rowHeight={100}
-        margin={[24, 24]}
+        margin={[50, 50]}
         containerPadding={[0, 0]}
       >
         <div key="employees" className="widget stat-widget-1">

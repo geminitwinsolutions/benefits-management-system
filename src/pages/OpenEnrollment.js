@@ -11,6 +11,7 @@ function OpenEnrollment() {
     status: 'Upcoming' 
   });
   const [isDetailView, setIsDetailView] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false); // Fix: Added missing state for the add form
 
   useEffect(() => {
     async function fetchPeriods() {
@@ -51,7 +52,7 @@ function OpenEnrollment() {
       const addedPeriod = await addEnrollmentPeriod(newPeriod);
       if (addedPeriod) {
         setPeriods(prevPeriods => [...prevPeriods, addedPeriod]);
-        setShowForm(false);
+        setShowAddForm(false);
         setNewPeriod({ projected_start_date: '', status: 'Upcoming' });
       }
     };
@@ -68,21 +69,25 @@ function OpenEnrollment() {
   const upcomingEnrollments = periods.filter(p => p.status === 'Upcoming');
 
   return (
-    <div className={`page-container ${isDetailView ? 'open-enrollment-grid-detail' : 'open-enrollment-grid'}`}>
-      <div className="open-enrollment-main">
-        {isDetailView ? (
-          <div>
-            {/* The main content area is empty in detail view */}
-          </div>
-        ) : (
-          <>
-            <h1 class="text-3xl font-bold text-primary mb-6">Upcoming Enrollment Periods</h1>
-            <p class="text-gray-600 mb-6">These are future enrollments you can begin planning and tracking.</p>
+    <div className="page-container">
+      <div className="page-header">
+        <h1>Enrollment Periods</h1>
+        <button className="add-button" onClick={() => setShowAddForm(true)} disabled={!!activeEnrollment}>
+          Create New Enrollment
+        </button>
+      </div>
 
-            <div className="client-details-layout">
+      <div className="open-enrollment-layout">
+        <div className="card">
+          <div className="card-header blue">
+            <h2>Upcoming Enrollment Periods</h2>
+          </div>
+          <div className="card-body">
+            <p className="text-gray-600 mb-6">These are future enrollments you can begin planning and tracking.</p>
+            <div className="card-list-container">
               {upcomingEnrollments.map(period => (
                 <div className="info-card" key={period.id}>
-                  <h2>{period.status} Enrollment</h2>
+                  <h3>{period.status} Enrollment</h3>
                   <p><strong>Projected Start:</strong> {period.projected_start_date || 'N/A'}</p>
                   <p><strong>Status:</strong> <span className={`status-badge status-${period.status.toLowerCase()}`}>{period.status}</span></p>
                   <p><strong>Progress:</strong> {period.enrollment_progress}%</p>
@@ -94,12 +99,18 @@ function OpenEnrollment() {
                 </div>
               ))}
             </div>
-            
-            <h1 class="text-3xl font-bold text-primary mt-8 mb-6">Past Enrollment Periods</h1>
-            <div className="client-details-layout">
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header blue">
+            <h2>Past Enrollment Periods</h2>
+          </div>
+          <div className="card-body">
+            <div className="card-list-container">
               {periods.filter(p => p.status === 'Completed').map(period => (
                 <div className="info-card" key={period.id}>
-                  <h2>{period.status} Enrollment</h2>
+                  <h3>{period.status} Enrollment</h3>
                   <p><strong>Start Date:</strong> {period.start_date || 'N/A'}</p>
                   <p><strong>End Date:</strong> {period.end_date || 'N/A'}</p>
                   <p><strong>Status:</strong> <span className={`status-badge status-${period.status.toLowerCase()}`}>{period.status}</span></p>
@@ -107,52 +118,28 @@ function OpenEnrollment() {
                 </div>
               ))}
             </div>
-          </>
-        )}
-      </div>
-      <div className="open-enrollment-sidebar">
+          </div>
+        </div>
+        
         {activeEnrollment && (
-          <div className="info-card">
-            {isDetailView ? (
-              <>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-bold">Active Enrollment Details</h2>
-                  <button onClick={() => setIsDetailView(false)} className="text-gray-500 hover:text-primary transition-colors">
-                    &larr; Return to Overview
-                  </button>
-                </div>
-                {/* Detailed view content */}
-                <p><strong>Start Date:</strong> {activeEnrollment.start_date || 'N/A'}</p>
-                <p><strong>End Date:</strong> {activeEnrollment.end_date || 'N/A'}</p>
-                <p><strong>Status:</strong> <span className={`status-badge status-${activeEnrollment.status.toLowerCase()}`}>{activeEnrollment.status}</span></p>
-                <p><strong>Progress:</strong> {activeEnrollment.enrollment_progress}%</p>
-                <button className="add-button w-full mt-4 bg-red-500 hover:bg-red-600" onClick={() => handleEndEnrollment(activeEnrollment.id)}>
-                  End Enrollment
-                </button>
-              </>
-            ) : (
-              <>
-                <h2>Active Enrollment</h2>
-                <p><strong>Start Date:</strong> {activeEnrollment.start_date || 'N/A'}</p>
-                <p><strong>End Date:</strong> {activeEnrollment.end_date || 'N/A'}</p>
-                <button onClick={() => setIsDetailView(true)} className="add-button w-full mt-4">
-                  Show Details
-                </button>
-              </>
-            )}
+          <div className="card active-enrollment-card">
+            <div className="card-header green">
+              <h3>Active Enrollment</h3>
+            </div>
+            <div className="card-body">
+              <p><strong>Start Date:</strong> {activeEnrollment.start_date || 'N/A'}</p>
+              <p><strong>End Date:</strong> {activeEnrollment.end_date || 'N/A'}</p>
+              <button className="action-button-flag" onClick={() => handleEndEnrollment(activeEnrollment.id)}>
+                End Enrollment
+              </button>
+            </div>
           </div>
         )}
-        <div className="card p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Enrollment Setup</h2>
-          <button className="add-button w-full" onClick={() => setShowForm(true)} disabled={!!activeEnrollment}>
-            Create New Enrollment
-          </button>
-        </div>
       </div>
       
-      {showForm && (
-        <Modal onClose={() => setShowForm(false)}>
-          <h3>Set Enrollment Dates</h3>
+      {showAddForm && (
+        <Modal onClose={() => setShowAddForm(false)}>
+          <h3>Add New Enrollment</h3>
           <form className="add-employee-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Projected Start Date</label>
