@@ -473,3 +473,39 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; }
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
 }
+
+/* --- Communications Page --- */
+.contact-cards-container {
+  display: grid;
+  grid-template-columns: 1fr; /* Single column on small screens */
+  gap: 1rem;
+}
+
+.info-card {
+  background-color: var(--bg-light);
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.info-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.info-card p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.info-card a {
+  font-size: 0.9rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.info-card a:hover {
+  text-decoration: underline;
+}

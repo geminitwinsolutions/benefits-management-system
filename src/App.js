@@ -35,7 +35,7 @@ function ProtectedRoute({ session, children }) {
 // ===============================================
 // === TEMPORARY AUTH BYPASS FOR DEVELOPMENT ===
 // ===============================================
-const BYPASS_AUTH = true; 
+const BYPASS_AUTH = true;
 // Set to 'false' to enable authentication and require login
 // ===============================================
 
@@ -78,16 +78,18 @@ function App() {
           <Route path="/employees" element={<AllEmployees />} />
           <Route path="/clients" element={<ClientDetails />} />
           <Route path="/reports" element={<StatsAndReports />} />
-          
+          <Route path="/communications" element={<Communications />} />
           <Route path="/central-hub" element={<CentralHub />}>
             <Route path="enrollment-management" element={<EnrollmentManagement />} />
             <Route path="open-enrollment" element={<OpenEnrollment />} />
             <Route path="tier-management" element={<TierManagement />} />
+            <Route path="plan-management" element={<PlanManagement />} />
             <Route path="reconciliation" element={<BenefitsReconciliation />} />
             <Route path="service-library" element={<ServiceLibrary />} />
+
             <Route index element={<Navigate to="enrollment-management" replace />} />
           </Route>
-          
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </>
@@ -104,7 +106,7 @@ function App() {
         <Route path="/employees" element={<ProtectedRoute session={session}><AllEmployees /></ProtectedRoute>} />
         <Route path="/clients" element={<ProtectedRoute session={session}><ClientDetails /></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute session={session}><StatsAndReports /></ProtectedRoute>} />
-        
+        <Route path="/communications" element={<ProtectedRoute session={session}><Communications /></ProtectedRoute>} />
         <Route path="/central-hub" element={<ProtectedRoute session={session}><CentralHub /></ProtectedRoute>}>
           <Route path="enrollment-management" element={<EnrollmentManagement />} />
           <Route path="open-enrollment" element={<OpenEnrollment />} />

@@ -18,42 +18,58 @@ function Communications() {
 
   return (
     <div className="page-container">
-      <h1>Carrier & Broker Communications</h1>
-      <div className="communications-layout">
-        <div className="contact-list">
-          <h3>Contacts</h3>
-          <div className="contact-cards-container">
-            {contacts.map((contact, index) => (
-              <div className="contact-card" key={index}>
-                <strong>{contact.name}</strong>
-                <span>{contact.company} - {contact.role}</span>
-                <a href={`mailto:${contact.email}`}>{contact.email}</a>
-              </div>
-            ))}
+      <div className="page-header">
+        <h1>Carrier & Broker Communications</h1>
+        <button className="add-button">Log New Communication</button>
+      </div>
+      <p>A central place to track all interactions with external partners.</p>
+
+      <div className="plan-management-layout">
+        {/* Contacts Card */}
+        <div className="card">
+          <div className="card-header blue">
+            <h2>Contacts</h2>
+          </div>
+          <div className="card-body">
+            <div className="contact-cards-container">
+              {contacts.map((contact, index) => (
+                <div className="info-card" key={index}>
+                  <h3>{contact.name}</h3>
+                  <p>{contact.company} - {contact.role}</p>
+                  <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="communication-log">
-          <h3>Communication Log</h3>
-          <table className="employees-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Contact</th>
-                <th>Subject</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log, index) => (
-                <tr key={index}>
-                  <td>{log.date}</td>
-                  <td>{log.contact}</td>
-                  <td>{log.subject}</td>
-                  <td>{log.notes}</td>
+
+        {/* Communication Log Card */}
+        <div className="card">
+          <div className="card-header">
+            <h2>Communication Log</h2>
+          </div>
+          <div className="card-body">
+            <table className="employees-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Contact</th>
+                  <th>Subject</th>
+                  <th>Notes</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {logs.map((log, index) => (
+                  <tr key={index}>
+                    <td>{log.date}</td>
+                    <td>{log.contact}</td>
+                    <td>{log.subject}</td>
+                    <td>{log.notes}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 // src/pages/PlanManagement.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
+import {
     getCarriers, addCarrier, updateCarrier, deleteCarrier,
-    getBenefitPlans, addBenefitPlan, updateBenefitPlan, deleteBenefitPlan 
+    getBenefitPlans, addBenefitPlan, updateBenefitPlan, deleteBenefitPlan
 } from '../services/benefitService';
 import Modal from '../components/Modal';
 
