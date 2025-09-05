@@ -305,5 +305,33 @@ export const updateInvoiceStatus = async (invoiceId, newStatus) => {
   return data[0];
 };
 
+// Fetches all employees
+export const getEmployees = async () => {
+  const { data, error } = await supabase.from('employees').select('*');
+  if (error) {
+    console.error('Error fetching employees:', error);
+    return [];
+  }
+  return data;
+};
 
+// Adds a new employee
+export const addEmployee = async (employeeData) => {
+  const { data, error } = await supabase.from('employees').insert([employeeData]).select();
+  if (error) {
+    console.error('Error adding employee:', error);
+    return null;
+  }
+  return data[0];
+};
+
+// Deletes an employee by ID
+export const deleteEmployee = async (id) => {
+  const { error } = await supabase.from('employees').delete().eq('id', id);
+  if (error) {
+    console.error('Error deleting employee:', error);
+    return false;
+  }
+  return true;
+};
 

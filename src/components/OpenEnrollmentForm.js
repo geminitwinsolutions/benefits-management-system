@@ -1,35 +1,45 @@
-import React, { useState } from 'react';
+// src/components/OpenEnrollmentForm.js
+import React, { useState, useEffect, useMemo } from 'react';
 import Modal from '../components/Modal';
+import { getBenefitPlans, submitEnrollment } from '../services/benefitService'; // Import submitEnrollment
 
 function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
-    const [selections, setSelections] = useState({
-        plans: {},
-        dependents: employeeInfo.dependents.length
-    });
+    const [selections, setSelections] = useState({ plans: {} });
+    const [benefitPlans, setBenefitPlans] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock data for pay schedule
-    const paySchedule = 'bi-weekly';
-
-    const planCosts = {
-        'Gold PPO': 150,
-        'Silver HMO': 95,
-        'Standard Dental': 25,
-        'Vision Care': 10,
-        'Gold PPO + Spouse': 300,
-        'Gold PPO Family': 450,
-        'Standard Dental Family': 50,
-        'Vision Care Family': 20,
-        'Waive': 0
-    };
-
-    const handleSelectPlan = (planType, planName, cost, coverage) => {
-        const isFamilyPlan = coverage === 'family' || coverage === 'employee-plus-one';
-        if (isFamilyPlan && selections.dependents < 1) {
-            alert('Please add at least one dependent to select this plan.');
-            return;
+    useEffect(() => {
+        async function fetchPlans() {
+            setLoading(true);
+            const plans = await getBenefitPlans();
+            setBenefitPlans(plans);
+            setLoading(false);
         }
+        fetchPlans();
+    }, []);
 
-        const isSelected = selections.plans[planType]?.name === planName;
+    // Group plans by type using useMemo for efficiency
+    const organizedPlans = useMemo(() => {
+        return benefitPlans.reduce((acc, plan) => {
+            (acc[plan.plan_type] = acc[plan.plan_type] || []).push(plan);
+            // Add a "Waive" option for each benefit type
+            if (!acc[plan.plan_type].some(p => p.plan_name === 'Waive')) {
+                acc[plan.plan_type].unshift({
+                    id: `waive-${plan.plan_type}`,
+                    plan_type: plan.plan_type,
+                    plan_name: 'Waive',
+                    cost: 0,
+                    description: `I do not wish to enroll in a ${plan.plan_type.toLowerCase()} plan.`,
+                });
+            }
+            return acc;
+        }, {});
+    }, [benefitPlans]);
+
+    const handleSelectPlan = (planType, plan) => {
+        // Simple logic assuming no complex dependent rules for now
+        const isSelected = selections.plans[planType]?.id === plan.id;
+
         if (isSelected) {
             const newSelections = { ...selections.plans };
             delete newSelections[planType];
@@ -37,130 +47,92 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
         } else {
             setSelections(prev => ({
                 ...prev,
-                plans: { ...prev.plans, [planType]: { name: planName, cost, coverage } }
+                plans: {
+                    ...prev.plans,
+                    [planType]: {
+                        id: plan.id,
+                        name: plan.plan_name,
+                        cost: plan.cost
+                    }
+                }
             }));
         }
     };
-
+    
     const calculateTotals = () => {
-        let monthlyTotal = 0;
-        for (const plan in selections.plans) {
-            monthlyTotal += selections.plans[plan].cost;
-        }
-
-        let perPayPeriodTotal = 0;
-        if (paySchedule === 'weekly') {
-            perPayPeriodTotal = monthlyTotal / 4;
-        } else if (paySchedule === 'bi-weekly') {
-            perPayPeriodTotal = monthlyTotal / 2;
-        }
-
+        const monthlyTotal = Object.values(selections.plans).reduce((acc, plan) => acc + plan.cost, 0);
+        // Assuming bi-weekly for now
+        const perPayPeriodTotal = monthlyTotal / 2;
         return { monthlyTotal, perPayPeriodTotal };
     };
 
     const { monthlyTotal, perPayPeriodTotal } = calculateTotals();
 
-    const planOptions = [
-        { type: 'Medical', name: 'Waive', cost: 0, coverage: 'employee-only', description: 'I do not wish to enroll in a medical plan.' },
-        { type: 'Medical', name: 'Gold PPO Plan', cost: 150, coverage: 'employee-only', description: 'Comprehensive coverage with a wide network of doctors.' },
-        { type: 'Medical', name: 'Silver HMO Plan', cost: 95, coverage: 'employee-only', description: 'Lower premium option with in-network only coverage.' },
-        { type: 'Medical', name: 'Gold PPO + Spouse', cost: 300, coverage: 'employee-plus-one', description: 'Covers you and your spouse with premium benefits.' },
-        { type: 'Medical', name: 'Gold PPO Family', cost: 450, coverage: 'family', description: 'Covers the entire family with comprehensive benefits.' },
-        { type: 'Dental', name: 'Waive', cost: 0, coverage: 'employee-only', description: 'I do not wish to enroll in a dental plan.' },
-        { type: 'Dental', name: 'Standard Dental Plan', cost: 25, coverage: 'employee-only', description: 'Includes routine cleanings and basic restorative services.' },
-        { type: 'Dental', name: 'Standard Dental Family', cost: 50, coverage: 'family', description: 'Dental coverage for the entire family.' },
-        { type: 'Vision', name: 'Waive', cost: 0, coverage: 'employee-only', description: 'I do not wish to enroll in a vision plan.' },
-        { type: 'Vision', name: 'Vision Care Plan', cost: 10, coverage: 'employee-only', description: 'Covers annual eye exams and glasses or contacts.' },
-        { type: 'Vision', name: 'Vision Care Family', cost: 20, coverage: 'family', description: 'Vision coverage for the entire family.' },
-    ];
+    const handleFormSubmit = (e) => {
+        e.preventDefault();
+        const enrollmentData = {
+            employee_id: employeeInfo.employeeId,
+            selections: selections.plans,
+            total_cost: monthlyTotal
+        };
+        onSubmit(enrollmentData);
+    };
+
+    if (loading) {
+        return (
+            <Modal onClose={onClose}>
+                <h2>Loading benefit plans...</h2>
+            </Modal>
+        );
+    }
 
     return (
         <Modal onClose={onClose}>
             <div className="max-w-4xl mx-auto">
-                <h1 className="text-3xl font-bold text-center text-primary mb-2">Annual Open Enrollment</h1>
-                <p className="text-center text-gray-600 mb-8">Please review your benefit options and make your selections by October 31, 2025.</p>
+                <h1 className="text-3xl font-bold text-center mb-2">Annual Open Enrollment</h1>
+                <p className="text-center text-gray-600 mb-8">Please review your benefit options and make your selections.</p>
 
-                <form onSubmit={onSubmit} className="space-y-8">
-                    {/* Employee & Dependent Information Section */}
-                    <div className="container-card">
-                        <h2 className="text-2xl font-bold mb-4">Your Information</h2>
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                                <input type="text" value={employeeInfo.fullName} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-50" />
+                <form onSubmit={handleFormSubmit} className="space-y-8">
+                    {/* Employee Info Section */}
+                    <div className="card">
+                        <div className="card-header">
+                            <h2 className="text-xl font-bold">Your Information</h2>
+                        </div>
+                        <div className="card-body">
+                           <p><strong>Full Name:</strong> {employeeInfo.fullName}</p>
+                           <p><strong>Employee ID:</strong> {employeeInfo.employeeId}</p>
+                        </div>
+                    </div>
+                    
+                    {/* Dynamically Rendered Plan Sections */}
+                    {Object.entries(organizedPlans).map(([planType, plans]) => (
+                        <div className="card" key={planType}>
+                            <div className="card-header">
+                                <h2 className="text-2xl font-bold">{planType} Plans</h2>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Employee ID</label>
-                                <input type="text" value={employeeInfo.employeeId} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-50" />
+                            <div className="card-body grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {plans.map(plan => (
+                                    <div
+                                        key={plan.id}
+                                        onClick={() => handleSelectPlan(planType, plan)}
+                                        className={`plan-card ${selections.plans[planType]?.id === plan.id ? 'selected' : ''}`}
+                                    >
+                                        <h3 className="text-lg font-bold">{plan.plan_name}</h3>
+                                        <p className="text-sm text-gray-600 mb-2 flex-grow">{plan.description}</p>
+                                        <span className="text-lg font-semibold">${plan.cost}/mo</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
-
-                        {/* This section for dependents is simplified for the demo */}
-                        <div className="mt-6 form-section">
-                            <h3 className="text-xl font-semibold mb-3">Dependents</h3>
-                            <p className="text-sm text-gray-500 mb-4">You have {selections.dependents} dependent(s) on file. Please contact HR to make changes.</p>
-                        </div>
-                    </div>
-
-                    {/* Medical Plans Section */}
-                    <div className="container-card">
-                        <h2 className="text-2xl font-bold mb-4">Medical Plans</h2>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {planOptions.filter(p => p.type === 'Medical').map(plan => (
-                                <div 
-                                    key={plan.name}
-                                    onClick={() => handleSelectPlan(plan.type, plan.name, plan.cost, plan.coverage)}
-                                    className={`plan-card ${selections.plans[plan.type]?.name === plan.name ? 'selected' : ''}`}
-                                >
-                                    <h3 className="text-lg font-bold">{plan.name}</h3>
-                                    <p className="text-sm text-gray-600 mb-2">{plan.description}</p>
-                                    <span className="text-sm text-gray-500">${plan.cost}/mo</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Dental Plans Section */}
-                    <div className="container-card">
-                        <h2 className="text-2xl font-bold mb-4">Dental Plans</h2>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {planOptions.filter(p => p.type === 'Dental').map(plan => (
-                                <div 
-                                    key={plan.name}
-                                    onClick={() => handleSelectPlan(plan.type, plan.name, plan.cost, plan.coverage)}
-                                    className={`plan-card ${selections.plans[plan.type]?.name === plan.name ? 'selected' : ''}`}
-                                >
-                                    <h3 className="text-lg font-bold">{plan.name}</h3>
-                                    <p className="text-sm text-gray-600 mb-2">{plan.description}</p>
-                                    <span className="text-sm text-gray-500">${plan.cost}/mo</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Vision Plans Section */}
-                    <div className="container-card">
-                        <h2 className="text-2xl font-bold mb-4">Vision Plans</h2>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {planOptions.filter(p => p.type === 'Vision').map(plan => (
-                                <div 
-                                    key={plan.name}
-                                    onClick={() => handleSelectPlan(plan.type, plan.name, plan.cost, plan.coverage)}
-                                    className={`plan-card ${selections.plans[plan.type]?.name === plan.name ? 'selected' : ''}`}
-                                >
-                                    <h3 className="text-lg font-bold">{plan.name}</h3>
-                                    <p className="text-sm text-gray-600 mb-2">{plan.description}</p>
-                                    <span className="text-sm text-gray-500">${plan.cost}/mo</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    ))}
 
                     {/* Total Cost Summary & Submission */}
-                    <div className="container-card">
-                        <h2 className="text-2xl font-bold mb-4">Summary & Total Cost</h2>
-                        <div className="summary-box">
-                            <div id="summary-content" className="mb-4">
+                    <div className="card">
+                        <div className="card-header">
+                          <h2 className="text-2xl font-bold">Summary & Total Cost</h2>
+                        </div>
+                        <div className="card-body">
+                            <div className="summary-box">
                                 {Object.keys(selections.plans).length === 0 ? (
                                     <p className="text-center text-gray-500 italic">No selections made yet.</p>
                                 ) : (
@@ -173,23 +145,22 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
                                         ))}
                                     </ul>
                                 )}
-                            </div>
-                            <div className="mt-4 border-t border-gray-300 pt-4 flex justify-between items-center">
-                                <div>
-                                    <span className="text-lg font-bold block">Estimated Monthly Total:</span>
-                                    <span className="text-sm text-gray-500">Estimated Per-Pay-Period Total:</span>
+                                <div className="mt-4 border-t border-gray-300 pt-4 flex justify-between items-center">
+                                    <div>
+                                        <span className="text-lg font-bold block">Estimated Monthly Total:</span>
+                                        <span className="text-sm text-gray-500">Estimated Per-Pay-Period Total:</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-2xl font-bold text-green-600 block">${monthlyTotal.toFixed(2)}</span>
+                                        <span className="text-lg text-gray-600 block text-right">${perPayPeriodTotal.toFixed(2)}</span>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span id="monthly-total-cost" className="text-2xl font-bold text-green-600 block">${monthlyTotal.toFixed(2)}</span>
-                                    <span id="per-pay-period-total-cost" className="text-lg text-gray-600 block text-right">${perPayPeriodTotal.toFixed(2)}</span>
-                                </div>
                             </div>
-                        </div>
-
-                        <div className="mt-6 text-center">
-                            <button type="submit" className="bg-primary text-white font-bold py-3 px-8 rounded-full hover:bg-[#1a252f] transition">
-                                Submit Enrollment
-                            </button>
+                            <div className="mt-6 text-center">
+                                <button type="submit" className="submit-button">
+                                    Submit Enrollment
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </form>
