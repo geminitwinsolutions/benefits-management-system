@@ -171,18 +171,27 @@ code {
   box-sizing: border-box;
   cursor: se-resize;
 }
+/*
+ * Make cards and widgets fill their grid container
+ */
 .react-grid-item > .card,
-.react-grid-item > .chart-container,
 .react-grid-item > .widget {
-  height: 100%;
   width: 100%;
-  box-sizing: border-box;
+  height: 100%;
+  box-sizing: border-box; /* Ensures padding and borders are included in the size */
+  
+  /* Pro-tip: Use flexbox for a robust internal layout */
   display: flex;
   flex-direction: column;
-  cursor: grab;
-  overflow: hidden;
-  border-radius: 8px;
-  background-color: var(--bg-white);
+}
+
+/*
+ * This makes the main content area of a card (like a chart)
+ * expand to fill all available vertical space.
+ */
+.card .card-body {
+  flex-grow: 1;
+  overflow: auto; /* Adds scrollbar if content overflows */
 }
 
 /* --- Two-Part Card Structure (New) --- */
@@ -252,12 +261,9 @@ code {
 .widget.stat-widget-5 { background-image: var(--gradient-5); color: var(--bg-white); text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
 .widget.stat-widget-6 { background-image: var(--gradient-6); color: var(--bg-white); text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
 
-.widget.stat-widget-1 h2, .widget.stat-widget-1 p,
-.widget.stat-widget-2 h2, .widget.stat-widget-2 p,
-.widget.stat-widget-3 h2, .widget.stat-widget-3 p,
-.widget.stat-widget-4 h2, .widget.stat-widget-4 p,
-.widget.stat-widget-5 h2, .widget.stat-widget-5 p,
-.widget.stat-widget-6 h2, .widget.stat-widget-6 p {
+/* Target any h2 or p inside a widget that has a class containing "stat-widget-" */
+.widget[class*="stat-widget-"] h2,
+.widget[class*="stat-widget-"] p {
   color: white;
 }
 

@@ -24,29 +24,29 @@ const lineChartData = [
   { name: 'May', employees: 142 }, { name: 'Jun', employees: 150 },
 ];
 const initialLayouts = {
-  // --- THIS SECTION IS NOW FIXED ---
+  // --- THIS lg SECTION IS REDESIGNED FOR STABILITY ---
   lg: [
-    // Left Sidebar Cards
-    { i: 'overview',  x: 0, y: 0, w: 2, h: 3 },
-    { i: 'employees', x: 0, y: 3, w: 2, h: 1 },
-    { i: 'tiers',     x: 0, y: 4, w: 2, h: 1 },
-    { i: 'services',  x: 0, y: 5, w: 2, h: 1 },
-
-    // Top-Middle Stat Cards (FIXED POSITIONS)
+    // Header Row of Stat Cards
     { i: 'approvals', x: 2, y: 0, w: 2, h: 1 },
     { i: 'rate',      x: 4, y: 0, w: 2, h: 1 },
     { i: 'enrolled',  x: 6, y: 0, w: 2, h: 1 },
 
-    // Main Content Charts (FIXED POSITIONS & SIZES)
-    { i: 'pie',       x: 2, y: 1, w: 2, h: 2 }, // Starts on row 1, height is now 2
-    { i: 'bar',       x: 4, y: 1, w: 4, h: 2 }, // Aligned next to pie chart
-    { i: 'trends',    x: 2, y: 3, w: 6, h: 2 }, // Sits below the pie and bar charts
+    // Left Sidebar (Starts below the header)
+    { i: 'overview',  x: 0, y: 1, w: 2, h: 3 },
+    { i: 'employees', x: 0, y: 4, w: 2, h: 1 },
+    { i: 'tiers',     x: 0, y: 5, w: 2, h: 1 },
+    { i: 'services',  x: 0, y: 6, w: 2, h: 1 },
 
-    // Right Sidebar Cards
-    { i: 'deadlines', x: 8, y: 0, w: 4, h: 2 },
-    { i: 'actions',   x: 8, y: 2, w: 4, h: 4 },
+    // Main Content Charts (Starts below the header)
+    { i: 'pie',       x: 2, y: 1, w: 2, h: 2 },
+    { i: 'bar',       x: 4, y: 1, w: 4, h: 2 },
+    { i: 'trends',    x: 2, y: 3, w: 6, h: 2 },
+
+    // Right Sidebar (Starts below the header)
+    { i: 'deadlines', x: 8, y: 1, w: 4, h: 2 },
+    { i: 'actions',   x: 8, y: 3, w: 4, h: 4 },
   ],
-  md: [ // This layout was already correct
+  md: [ // This layout is correct
     { i: 'overview', x: 0, y: 0, w: 3, h: 2 }, { i: 'approvals', x: 3, y: 0, w: 2, h: 1 },
     { i: 'rate', x: 5, y: 0, w: 2, h: 1 }, { i: 'enrolled', x: 7, y: 0, w: 3, h: 1 },
     { i: 'employees', x: 3, y: 1, w: 2, h: 1 }, { i: 'tiers', x: 5, y: 1, w: 2, h: 1 },
@@ -54,7 +54,7 @@ const initialLayouts = {
     { i: 'bar', x: 5, y: 2, w: 5, h: 2 }, { i: 'trends', x: 0, y: 4, w: 10, h: 2 },
     { i: 'deadlines', x: 0, y: 6, w: 5, h: 2 }, { i: 'actions', x: 5, y: 6, w: 5, h: 3 },
   ],
-  sm: [ // This layout had a collision which we fixed previously
+  sm: [ // This layout is correct
     { i: 'overview', x: 0, y: 0, w: 6, h: 2 }, { i: 'approvals', x: 0, y: 2, w: 3, h: 1 },
     { i: 'rate', x: 3, y: 2, w: 3, h: 1 }, { i: 'enrolled', x: 0, y: 3, w: 3, h: 1 },
     { i: 'deadlines', x: 3, y: 3, w: 3, h: 2 }, { i: 'employees', x: 0, y: 5, w: 6, h: 1 },
@@ -62,7 +62,22 @@ const initialLayouts = {
     { i: 'pie', x: 0, y: 7, w: 6, h: 2 }, { i: 'bar', x: 0, y: 9, w: 6, h: 2 },
     { i: 'trends', x: 0, y: 11, w: 6, h: 2 }, { i: 'actions', x: 0, y: 13, w: 6, h: 3 },
   ],
-  // You should also add the xs and xxs layouts here if you need them
+  xs: [ // This layout is correct
+    { i: 'overview', x: 0, y: 0, w: 4, h: 2 }, { i: 'approvals', x: 0, y: 2, w: 4, h: 1 },
+    { i: 'rate', x: 0, y: 3, w: 4, h: 1 }, { i: 'enrolled', x: 0, y: 4, w: 4, h: 1 },
+    { i: 'deadlines', x: 0, y: 5, w: 4, h: 2 }, { i: 'employees', x: 0, y: 7, w: 4, h: 1 },
+    { i: 'tiers', x: 0, y: 8, w: 4, h: 1 }, { i: 'services', x: 0, y: 9, w: 4, h: 1 },
+    { i: 'pie', x: 0, y: 10, w: 4, h: 2 }, { i: 'bar', x: 0, y: 12, w: 4, h: 2 },
+    { i: 'trends', x: 0, y: 14, w: 4, h: 2 }, { i: 'actions', x: 0, y: 16, w: 4, h: 3 },
+  ],
+  xxs: [ // This layout is correct
+    { i: 'overview', x: 0, y: 0, w: 2, h: 2 }, { i: 'approvals', x: 0, y: 2, w: 2, h: 1 },
+    { i: 'rate', x: 0, y: 3, w: 2, h: 1 }, { i: 'enrolled', x: 0, y: 4, w: 2, h: 1 },
+    { i: 'deadlines', x: 0, y: 5, w: 2, h: 2 }, { i: 'employees', x: 0, y: 7, w: 2, h: 1 },
+    { i: 'tiers', x: 0, y: 8, w: 2, h: 1 }, { i: 'services', x: 0, y: 9, w: 2, h: 1 },
+    { i: 'pie', x: 0, y: 10, w: 2, h: 2 }, { i: 'bar', x: 0, y: 12, w: 2, h: 2 },
+    { i: 'trends', x: 0, y: 14, w: 2, h: 2 }, { i: 'actions', x: 0, y: 16, w: 2, h: 3 },
+  ],
 };
 
 function getFromLS(key) {
@@ -170,55 +185,43 @@ function Dashboard() {
           <h2>Services</h2><p>{dashboardData.servicesOffered}</p>
           <div className="progress-bar"><div className="progress-bar-fill" style={{ width: '100%' }}></div></div>
         </div>
-        <div key="trends" className="card">
-          <div className="card-header blue">
-            <h2>Monthly Enrollment Trends</h2>
-          </div>
-          <div className="card-body">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={lineChartData}>
-                <CartesianGrid />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="employees" stroke="var(--accent-color)" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+        <div key="trends" className="widget stat-widget-1 chart-widget">
+          <h2>Monthly Enrollment Trends</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={lineChartData}>
+              <CartesianGrid />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="employees" stroke="var(--accent-color)" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-        <div key="pie" className="card">
-          <div className="card-header green">
-            <h2>Reconciliation Status</h2>
-          </div>
-          <div className="card-body">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={dashboardData.chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
-                  {dashboardData.chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+        <div key="pie" className="widget stat-widget-2 chart-widget">
+          <h2>Reconciliation Status</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={dashboardData.chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
+                {dashboardData.chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
-        <div key="bar" className="card">
-          <div className="card-header amber">
-            <h2>Enrollment by Department</h2>
-          </div>
-          <div className="card-body">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barChartData} layout="vertical">
-                <CartesianGrid horizontal={false} />
-                <XAxis type="number" dataKey="enrolled" />
-                <YAxis type="category" dataKey="name" />
-                <Tooltip />
-                <Bar dataKey="enrolled" fill="var(--primary-color)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <div key="bar" className="widget stat-widget-3 chart-widget">
+          <h2>Enrollment by Department</h2>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={barChartData} layout="vertical">
+              <CartesianGrid horizontal={false} />
+              <XAxis type="number" dataKey="enrolled" />
+              <YAxis type="category" dataKey="name" />
+              <Tooltip />
+              <Bar dataKey="enrolled" fill="var(--primary-color)" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
         <div key="actions" className="card">
           <div className="card-header">
