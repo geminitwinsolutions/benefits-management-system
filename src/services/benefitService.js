@@ -335,3 +335,17 @@ export const deleteEmployee = async (id) => {
   return true;
 };
 
+// Updates an existing employee
+export const updateEmployee = async (id, employeeData) => {
+  const { data, error } = await supabase
+    .from('employees')
+    .update(employeeData)
+    .eq('id', id)
+    .select();
+  if (error) {
+    console.error('Error updating employee:', error);
+    return null;
+  }
+  return data[0];
+};
+

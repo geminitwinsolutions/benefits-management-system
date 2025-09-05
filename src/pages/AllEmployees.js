@@ -2,22 +2,22 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import OpenEnrollmentForm from '../components/OpenEnrollmentForm';
-import { getEmployees, addEmployee, deleteEmployee, submitEnrollment } from '../services/benefitService';
+import { getEmployees, addEmployee, deleteEmployee, updateEmployee, submitEnrollment } from '../services/benefitService';
 
 function AllEmployees() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newEmployee, setNewEmployee] = useState({ name: '', department: '', status: 'Active' });
-
-  // FIX: These state declarations were missing or out of scope
+  const [currentEmployee, setCurrentEmployee] = useState(null); 
+  const [isEditing, setIsEditing] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showEnrollmentForm, setShowEnrollmentForm] = useState(false);
 
+  // Uses getEmployees and setLoading
   async function fetchEmployees() {
     setLoading(true);
     const fetchedEmployees = await getEmployees();
-    setEmployees(fetchedEmployees);
+    setEmployees(fetchedEmployees.sort((a, b) => a.name.localeCompare(b.name)));
     setLoading(false);
   }
 
@@ -27,9 +27,22 @@ function AllEmployees() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewEmployee(prev => ({ ...prev, [name]: value }));
+    setCurrentEmployee(prev => ({ ...prev, [name]: value }));
+  };
+
+  const openAddModal = () => {
+    setIsEditing(false);
+    setCurrentEmployee({ name: '', department: '', status: 'Active' });
+    setShowAddForm(true);
   };
   
+  const openEditModal = (employee) => {
+    setIsEditing(true);
+    setCurrentEmployee(employee);
+    setShowAddForm(true);
+  };
+  
+  // Uses deleteEmployee
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this employee? This could affect historical records.")) {
         const success = await deleteEmployee(id);
@@ -41,28 +54,46 @@ function AllEmployees() {
     }
   };
 
+  // Uses addEmployee and updateEmployee
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const added = await addEmployee(newEmployee);
-    if (added) {
-      setEmployees(prev => [...prev, added].sort((a,b) => a.name.localeCompare(b.name)));
-      setShowAddForm(false);
-      setNewEmployee({ name: '', department: '', status: 'Active' });
+    let updatedEmployee = null;
+
+    if (isEditing) {
+      const originalEmployee = employees.find(emp => emp.id === currentEmployee.id);
+      updatedEmployee = await updateEmployee(currentEmployee.id, currentEmployee);
+      
+      if (updatedEmployee) {
+        setEmployees(prev => prev.map(emp => emp.id === updatedEmployee.id ? updatedEmployee : emp).sort((a, b) => a.name.localeCompare(b.name)));
+        // Check for a status change that triggers enrollment
+        if (originalEmployee.status !== 'Active' && updatedEmployee.status === 'Active') {
+          triggerEnrollment(updatedEmployee);
+        }
+      }
     } else {
-      alert("Failed to add employee.");
+      updatedEmployee = await addEmployee(currentEmployee);
+      if (updatedEmployee) {
+        setEmployees(prev => [...prev, updatedEmployee].sort((a,b) => a.name.localeCompare(b.name)));
+        triggerEnrollment(updatedEmployee);
+      }
     }
+    
+    setShowAddForm(false);
   };
   
+  const triggerEnrollment = (employee) => {
+    if (window.confirm(`${employee.name} now qualifies for benefits. Do you want to open a special enrollment period for them?`)) {
+      handleStartEnrollment(employee);
+    }
+  };
+
   const handleStartEnrollment = (employee) => {
-    const employeeWithDetails = {
-      ...employee,
-      fullName: employee.name,
-      employeeId: employee.id,
-    };
+    const employeeWithDetails = { ...employee, fullName: employee.name, employeeId: employee.id };
     setSelectedEmployee(employeeWithDetails);
     setShowEnrollmentForm(true);
   };
 
+  // Uses submitEnrollment
   const handleEnrollmentSubmit = async (enrollmentData) => {
     const result = await submitEnrollment(enrollmentData);
     if (result) {
@@ -73,6 +104,7 @@ function AllEmployees() {
     setShowEnrollmentForm(false);
   };
 
+  // Uses the 'loading' state variable
   if (loading) {
     return (
       <div className="page-container">
@@ -85,7 +117,7 @@ function AllEmployees() {
     <div className="page-container">
       <div className="page-header">
         <h1>All Employees</h1>
-        <button className="add-button" onClick={() => setShowAddForm(true)}>
+        <button className="add-button" onClick={openAddModal}>
           Add New Employee
         </button>
       </div>
@@ -95,10 +127,10 @@ function AllEmployees() {
             <table className="employees-table">
             <thead>
                 <tr>
-                <th>Name</th>
-                <th>Department</th>
-                <th>Status</th>
-                <th>Actions</th>
+                  <th>Name</th>
+                  <th>Department</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -107,24 +139,21 @@ function AllEmployees() {
                     <td>{employee.name}</td>
                     <td>{employee.department}</td>
                     <td>
-                    <span className={`status-badge status-${employee.status.toLowerCase().replace(' ', '-')}`}>
-                        {employee.status}
-                    </span>
+                      <span className={`status-badge status-${(employee.status || '').toLowerCase().replace(' ', '-')}`}>
+                          {employee.status}
+                      </span>
                     </td>
                     <td className="action-buttons-cell">
-                    <button
-                        className="action-button-small"
-                        onClick={() => handleStartEnrollment(employee)}
-                    >
-                        Enroll
-                    </button>
-                    <button
-                        className="action-button-delete action-button-small"
-                        onClick={() => handleDelete(employee.id)}
-                        aria-label={`Delete ${employee.name}`}
-                    >
-                        Delete
-                    </button>
+                      <button className="action-button-small" onClick={() => openEditModal(employee)}>
+                          Edit
+                      </button>
+                      <button
+                          className="action-button-delete action-button-small"
+                          onClick={() => handleDelete(employee.id)}
+                          aria-label={`Delete ${employee.name}`}
+                      >
+                          Delete
+                      </button>
                     </td>
                 </tr>
                 ))}
@@ -135,19 +164,19 @@ function AllEmployees() {
 
       {showAddForm && (
         <Modal onClose={() => setShowAddForm(false)}>
-            <h3>Add New Employee</h3>
+            <h3>{isEditing ? 'Edit Employee' : 'Add New Employee'}</h3>
             <form className="add-employee-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>Full Name</label>
-                    <input type="text" name="name" value={newEmployee.name} onChange={handleInputChange} required />
+                    <input type="text" name="name" value={currentEmployee.name} onChange={handleInputChange} required />
                 </div>
                 <div className="form-group">
                     <label>Department</label>
-                    <input type="text" name="department" value={newEmployee.department} onChange={handleInputChange} required />
+                    <input type="text" name="department" value={currentEmployee.department} onChange={handleInputChange} required />
                 </div>
                 <div className="form-group">
                     <label>Status</label>
-                    <select name="status" value={newEmployee.status} onChange={handleInputChange} required>
+                    <select name="status" value={currentEmployee.status} onChange={handleInputChange} required>
                         <option value="Active">Active</option>
                         <option value="On Leave">On Leave</option>
                         <option value="Terminated">Terminated</option>
