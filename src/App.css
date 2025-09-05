@@ -399,3 +399,58 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; }
     color: var(--primary-color);
 }
 
+/* --- Tier Management --- */
+.tier-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.tier-card {
+  background: var(--bg-white);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.08);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.tier-card .card-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.tier-card .card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+.tier-content {
+  flex-grow: 1;
+}
+
+.tier-benefits h4, .tier-features h4 {
+  font-size: 0.875rem;
+  color: var(--text-light);
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.tier-benefits ul, .tier-features ul {
+  margin: 0 0 1.5rem 0;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+}
+
+.tier-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
