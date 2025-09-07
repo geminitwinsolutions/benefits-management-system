@@ -1,13 +1,13 @@
-// src/pages/PlanManagement.js
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     getCarriers, addCarrier, updateCarrier, deleteCarrier,
-    getBenefitPlans, addBenefitPlan, updateBenefitPlan, deleteBenefitPlan
+    getBenefitPlans, addBenefitPlan, updateBenefitPlan, deleteBenefitPlan,
+    getEnrollmentPeriods
 } from '../services/benefitService';
 import Modal from '../components/Modal';
 
 // --- Carrier Management Component ---
-const CarrierManager = ({ carriers, onUpdate }) => {
+const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive }) => {
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentCarrier, setCurrentCarrier] = useState(null);
@@ -45,7 +45,12 @@ const CarrierManager = ({ carriers, onUpdate }) => {
         <div className="card">
             <div className="page-header">
                 <h2>Carriers</h2>
-                <button className="add-button action-button-small" onClick={() => handleOpenForm()}>Add Carrier</button>
+                <button 
+                  className="add-button action-button-small" 
+                  onClick={() => handleOpenForm()} 
+                  disabled={!isEnrollmentActive}>
+                    Add Carrier
+                </button>
             </div>
             <div className="card-body">
                 <table className="employees-table">
@@ -56,8 +61,18 @@ const CarrierManager = ({ carriers, onUpdate }) => {
                                 <td>{carrier.name}</td>
                                 <td>{carrier.contact_info}</td>
                                 <td className="action-buttons-cell">
-                                    <button className="action-button-small" onClick={() => handleOpenForm(carrier)}>Edit</button>
-                                    <button className="action-button-delete action-button-small" onClick={() => handleDelete(carrier.id)}>Delete</button>
+                                    <button 
+                                      className="action-button-small" 
+                                      onClick={() => handleOpenForm(carrier)} 
+                                      disabled={!isEnrollmentActive}>
+                                        Edit
+                                    </button>
+                                    <button 
+                                      className="action-button-delete action-button-small" 
+                                      onClick={() => handleDelete(carrier.id)}
+                                      disabled={!isEnrollmentActive}>
+                                        Delete
+                                    </button>
                                 </td>
                             </tr>
                         ))}
@@ -70,11 +85,11 @@ const CarrierManager = ({ carriers, onUpdate }) => {
                     <form className="add-employee-form" onSubmit={handleSubmit}>
                         <div className="form-group">
                             <label>Carrier Name</label>
-                            <input type="text" value={currentCarrier.name} onChange={(e) => setCurrentCarrier({...currentCarrier, name: e.target.value})} required />
+                            <input type="text" value={currentCarrier?.name || ''} onChange={(e) => setCurrentCarrier({...currentCarrier, name: e.target.value})} required />
                         </div>
                         <div className="form-group">
                             <label>Contact Info</label>
-                            <input type="text" value={currentCarrier.contact_info} onChange={(e) => setCurrentCarrier({...currentCarrier, contact_info: e.target.value})} />
+                            <input type="text" value={currentCarrier?.contact_info || ''} onChange={(e) => setCurrentCarrier({...currentCarrier, contact_info: e.target.value})} />
                         </div>
                         <button type="submit" className="submit-button">Save</button>
                     </form>
@@ -85,14 +100,21 @@ const CarrierManager = ({ carriers, onUpdate }) => {
 };
 
 // --- Benefit Plan Management Component ---
-const PlanManager = ({ plans, carriers, onUpdate }) => {
+const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentPlan, setCurrentPlan] = useState(null);
 
     const handleOpenForm = (plan = null) => {
         setIsEditing(!!plan);
-        setCurrentPlan(plan || { plan_name: '', plan_type: 'Medical', cost: 0, description: '', carrier_id: carriers[0]?.id || '' });
+        setCurrentPlan(plan || { 
+            plan_name: '', 
+            plan_type: 'Medical', 
+            carrier_rate: 0, 
+            client_margin: 0, 
+            description: '', 
+            carrier_id: carriers[0]?.id || '' 
+        });
         setShowForm(true);
     };
 
@@ -103,11 +125,20 @@ const PlanManager = ({ plans, carriers, onUpdate }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const finalCost = currentPlan.carrier_rate + (currentPlan.carrier_rate * (currentPlan.client_margin / 100));
+
+        const planToSave = {
+            ...currentPlan,
+            cost: finalCost,
+        };
+
         if (isEditing) {
-            await updateBenefitPlan(currentPlan.id, currentPlan);
+            await updateBenefitPlan(planToSave.id, planToSave);
         } else {
-            await addBenefitPlan(currentPlan);
+            await addBenefitPlan(planToSave);
         }
+
         onUpdate();
         handleCloseForm();
     };
@@ -123,7 +154,12 @@ const PlanManager = ({ plans, carriers, onUpdate }) => {
         <div className="card">
             <div className="page-header">
                 <h2>Benefit Plans</h2>
-                <button className="add-button action-button-small" onClick={() => handleOpenForm()}>Add Plan</button>
+                <button 
+                  className="add-button action-button-small" 
+                  onClick={() => handleOpenForm()} 
+                  disabled={!isEnrollmentActive}>
+                    Add Plan
+                </button>
             </div>
             <div className="card-body">
                 <table className="employees-table">
@@ -136,8 +172,18 @@ const PlanManager = ({ plans, carriers, onUpdate }) => {
                                 <td>{carriers.find(c => c.id === plan.carrier_id)?.name || 'N/A'}</td>
                                 <td>${plan.cost}</td>
                                 <td className="action-buttons-cell">
-                                    <button className="action-button-small" onClick={() => handleOpenForm(plan)}>Edit</button>
-                                    <button className="action-button-delete action-button-small" onClick={() => handleDelete(plan.id)}>Delete</button>
+                                    <button 
+                                      className="action-button-small" 
+                                      onClick={() => handleOpenForm(plan)}
+                                      disabled={!isEnrollmentActive}>
+                                        Edit
+                                    </button>
+                                    <button 
+                                      className="action-button-delete action-button-small" 
+                                      onClick={() => handleDelete(plan.id)}
+                                      disabled={!isEnrollmentActive}>
+                                        Delete
+                                    </button>
                                 </td>
                             </tr>
                         ))}
@@ -150,11 +196,11 @@ const PlanManager = ({ plans, carriers, onUpdate }) => {
                     <form className="add-employee-form" onSubmit={handleSubmit}>
                          <div className="form-group">
                             <label>Plan Name</label>
-                            <input type="text" value={currentPlan.plan_name} onChange={(e) => setCurrentPlan({...currentPlan, plan_name: e.target.value})} required />
+                            <input type="text" value={currentPlan?.plan_name || ''} onChange={(e) => setCurrentPlan({ ...currentPlan, plan_name: e.target.value })} required />
                         </div>
                          <div className="form-group">
                             <label>Plan Type</label>
-                            <select value={currentPlan.plan_type} onChange={(e) => setCurrentPlan({...currentPlan, plan_type: e.target.value})}>
+                            <select value={currentPlan?.plan_type || ''} onChange={(e) => setCurrentPlan({ ...currentPlan, plan_type: e.target.value })}>
                                 <option>Medical</option>
                                 <option>Dental</option>
                                 <option>Vision</option>
@@ -164,18 +210,27 @@ const PlanManager = ({ plans, carriers, onUpdate }) => {
                         </div>
                         <div className="form-group">
                             <label>Carrier</label>
-                            <select value={currentPlan.carrier_id} onChange={(e) => setCurrentPlan({...currentPlan, carrier_id: e.target.value})} required>
+                            <select value={currentPlan?.carrier_id || ''} onChange={(e) => setCurrentPlan({ ...currentPlan, carrier_id: e.target.value })} required>
                                 <option value="" disabled>Select a carrier</option>
                                 {carriers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                         </div>
                         <div className="form-group">
-                            <label>Monthly Cost</label>
-                            <input type="number" step="0.01" value={currentPlan.cost} onChange={(e) => setCurrentPlan({...currentPlan, cost: parseFloat(e.target.value)})} required />
+                            <label>Carrier's Monthly Rate</label>
+                            <input type="number" step="0.01" value={currentPlan?.carrier_rate || 0} onChange={(e) => setCurrentPlan({ ...currentPlan, carrier_rate: parseFloat(e.target.value) })} required />
+                        </div>
+                        <div className="form-group">
+                            <label>Client Margin (%)</label>
+                            <input type="number" step="0.01" value={currentPlan?.client_margin || 0} onChange={(e) => setCurrentPlan({ ...currentPlan, client_margin: parseFloat(e.target.value) })} required />
+                        </div>
+                        <div className="form-group">
+                            <label>Employee Monthly Cost</label>
+                            {/* Display the calculated cost here */}
+                            <input type="text" value={ (currentPlan?.carrier_rate + (currentPlan?.carrier_rate * (currentPlan?.client_margin / 100)))?.toFixed(2) || 0} readOnly />
                         </div>
                         <div className="form-group">
                             <label>Description</label>
-                            <textarea value={currentPlan.description} onChange={(e) => setCurrentPlan({...currentPlan, description: e.target.value})} />
+                            <textarea value={currentPlan?.description || ''} onChange={(e) => setCurrentPlan({ ...currentPlan, description: e.target.value })} />
                         </div>
                         <button type="submit" className="submit-button">Save</button>
                     </form>
@@ -190,12 +245,19 @@ function PlanManagement() {
     const [carriers, setCarriers] = useState([]);
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isEnrollmentActive, setIsEnrollmentActive] = useState(false);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
-        const [carrierData, planData] = await Promise.all([getCarriers(), getBenefitPlans()]);
+        const [carrierData, planData, enrollmentPeriods] = await Promise.all([getCarriers(), getBenefitPlans(), getEnrollmentPeriods()]);
+        
         setCarriers(carrierData);
         setPlans(planData);
+        
+        // Check if there is an active enrollment period
+        const activePeriod = enrollmentPeriods.find(p => p.status === 'Active');
+        setIsEnrollmentActive(!!activePeriod);
+        
         setLoading(false);
     }, []);
 
@@ -206,14 +268,23 @@ function PlanManagement() {
     if (loading) {
         return <div className="page-container"><h1>Loading...</h1></div>;
     }
-
+    
     return (
         <div>
             <h2>Plan & Carrier Management</h2>
-            <p>Manage insurance carriers and the benefit plans they offer.</p>
+            <p>
+                Manage insurance carriers and the benefit plans they offer. This section is only editable 
+                when an **Open Enrollment** period is active.
+            </p>
+            {!isEnrollmentActive && (
+              <div className="mt-4 p-4 text-center text-orange-700 bg-orange-100 border-l-4 border-orange-500">
+                <p className="font-bold">Plan management is locked.</p>
+                <p>Please activate an Open Enrollment period to add or edit plans and carriers.</p>
+              </div>
+            )}
             <div className="plan-management-layout">
-                <CarrierManager carriers={carriers} onUpdate={fetchData} />
-                <PlanManager plans={plans} carriers={carriers} onUpdate={fetchData} />
+                <CarrierManager carriers={carriers} onUpdate={fetchData} isEnrollmentActive={isEnrollmentActive} />
+                <PlanManager plans={plans} carriers={carriers} onUpdate={fetchData} isEnrollmentActive={isEnrollmentActive} />
             </div>
         </div>
     );

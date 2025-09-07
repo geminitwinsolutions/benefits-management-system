@@ -76,7 +76,6 @@ export const addService = async (newServiceData) => {
     return data[0];
 };
 
-// --- THIS IS THE NEW FUNCTION ---
 // This function updates an existing service
 export const updateService = async (id, updatedServiceData) => {
   const { data, error } = await supabase
@@ -90,7 +89,6 @@ export const updateService = async (id, updatedServiceData) => {
   }
   return data[0];
 };
-
 
 // This function deletes a service by its ID
 export const deleteService = async (id) => {
@@ -254,7 +252,7 @@ export const submitEnrollment = async (enrollmentData) => {
 };
 // --- NEW FUNCTIONS FOR ENROLLMENT AND RECONCILIATION ---
 
-// --- NEW AND UPDATED BENEFIT PLAN FUNCTIONS ---
+// This function fetches all benefit plans
 export const getBenefitPlans = async () => {
   const { data, error } = await supabase.from('benefits').select('*');
   if (error) {
@@ -264,13 +262,17 @@ export const getBenefitPlans = async () => {
   return data;
 };
 
+// This function adds a new benefit plan
 export const addBenefitPlan = async (planData) => {
+  // Assume planData now includes carrier_rate and client_margin
   const { data, error } = await supabase.from('benefits').insert([planData]).select();
   if (error) console.error('Error adding benefit plan:', error);
   return data ? data[0] : null;
 };
 
+// This function updates an existing benefit plan
 export const updateBenefitPlan = async (id, planData) => {
+  // Assume planData now includes carrier_rate and client_margin
   const { data, error } = await supabase.from('benefits').update(planData).eq('id', id).select();
   if (error) console.error('Error updating benefit plan:', error);
   return data ? data[0] : null;
@@ -391,7 +393,3 @@ export const deleteCarrier = async (id) => {
   if (error) console.error('Error deleting carrier:', error);
   return !error;
 };
-
-
-
-
