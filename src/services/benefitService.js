@@ -1,6 +1,6 @@
 import { supabase } from '../supabase';
 
-// This function fetches all client tiers
+// --- Tier Management ---
 export const getTiers = async () => {
   const { data, error } = await supabase.from('tiers').select('*');
   if (error) {
@@ -10,13 +10,12 @@ export const getTiers = async () => {
   return data;
 };
 
-// This function adds a new tier
 export const addTier = async (newTierData) => {
   const { data, error } = await supabase
     .from('tiers')
     .insert([newTierData])
     .select();
-  
+
   if (error) {
     console.error('Error adding new tier:', error);
     return null;
@@ -24,14 +23,13 @@ export const addTier = async (newTierData) => {
   return data[0];
 };
 
-// This function updates an existing tier
 export const updateTier = async (id, updatedTierData) => {
   const { data, error } = await supabase
     .from('tiers')
     .update(updatedTierData)
     .eq('id', id)
     .select();
-  
+
   if (error) {
     console.error('Error updating tier:', error);
     return null;
@@ -39,13 +37,12 @@ export const updateTier = async (id, updatedTierData) => {
   return data[0];
 };
 
-// This function deletes a tier by its ID
 export const deleteTier = async (id) => {
   const { error } = await supabase
     .from('tiers')
     .delete()
     .eq('id', id);
-  
+
   if (error) {
     console.error('Error deleting tier:', error);
     return false;
@@ -53,30 +50,28 @@ export const deleteTier = async (id) => {
   return true;
 };
 
-// This function fetches all services
+// --- Service & Fee Library ---
 export const getServices = async () => {
-    const { data, error } = await supabase.from('services').select('*');
-    if (error) {
-      console.error('Error fetching services:', error);
-      return [];
-    }
-    return data;
+  const { data, error } = await supabase.from('services').select('*');
+  if (error) {
+    console.error('Error fetching services:', error);
+    return [];
+  }
+  return data;
 };
 
-// This function adds a new service
 export const addService = async (newServiceData) => {
-    const { data, error } = await supabase
-      .from('services')
-      .insert([newServiceData])
-      .select();
-    if (error) {
-      console.error('Error adding new service:', error);
-      return null;
-    }
-    return data[0];
+  const { data, error } = await supabase
+    .from('services')
+    .insert([newServiceData])
+    .select();
+  if (error) {
+    console.error('Error adding new service:', error);
+    return null;
+  }
+  return data[0];
 };
 
-// This function updates an existing service
 export const updateService = async (id, updatedServiceData) => {
   const { data, error } = await supabase
     .from('services')
@@ -90,68 +85,19 @@ export const updateService = async (id, updatedServiceData) => {
   return data[0];
 };
 
-// This function deletes a service by its ID
 export const deleteService = async (id) => {
-    const { error } = await supabase
-      .from('services')
-      .delete()
-      .eq('id', id);
-    if (error) {
-      console.error('Error deleting service:', error);
-      return false;
-    }
-    return true;
-};
-
-
-// This function fetches all reconciliation items
-export const getReconciliationItems = async () => {
-  const { data, error } = await supabase.from('reconciliation_items').select('*');
+  const { error } = await supabase
+    .from('services')
+    .delete()
+    .eq('id', id);
   if (error) {
-    console.error('Error fetching reconciliation items:', error);
-    return [];
-  }
-  return data;
-};
-
-// This function adds a new reconciliation item
-export const addReconciliationItem = async (newItemData) => {
-  const { data, error } = await supabase
-    .from('reconciliation_items')
-    .insert([newItemData])
-    .select();
-  if (error) {
-    console.error('Error adding new item:', error);
-    return null;
-  }
-  return data[0];
-};
-
-// This function updates the status of a reconciliation item
-export const updateReconciliationItemStatus = async (itemId, newStatus) => {
-  const { data, error } = await supabase
-    .from('reconciliation_items')
-    .update({ status: newStatus })
-    .eq('id', itemId)
-    .select();
-  if (error) {
-    console.error('Error updating item status:', error);
-    return null;
-  }
-  return data[0];
-};
-
-// This function deletes a reconciliation item
-export const deleteReconciliationItem = async (itemId) => {
-  const { error } = await supabase.from('reconciliation_items').delete().eq('id', itemId);
-  if (error) {
-    console.error('Error deleting item:', error);
+    console.error('Error deleting service:', error);
     return false;
   }
   return true;
 };
 
-// This function fetches all clients
+// --- Client Management ---
 export const getClients = async () => {
   const { data, error } = await supabase.from('clients').select('*');
   if (error) {
@@ -161,7 +107,6 @@ export const getClients = async () => {
   return data;
 };
 
-// This function adds a new client
 export const addClient = async (newClientData) => {
   const { data, error } = await supabase
     .from('clients')
@@ -174,34 +119,66 @@ export const addClient = async (newClientData) => {
   return data[0];
 };
 
-// This function gets the open enrollment settings from the database
-export const getEnrollmentSettings = async () => {
-  const { data, error } = await supabase.from('enrollment_settings').select('*').limit(1);
-  if (error) {
-    console.error('Error fetching enrollment settings:', error);
-    return {
-      start_date: null,
-      end_date: null,
-      is_active: false
-    };
-  }
-  return data[0] || {};
-};
-
-// This function sets the open enrollment settings
-export const setEnrollmentSettings = async (settings) => {
+export const updateClient = async (id, updatedClientData) => {
   const { data, error } = await supabase
-    .from('enrollment_settings')
-    .upsert(settings, { onConflict: 'id' }) // Upsert ensures we update or create
+    .from('clients')
+    .update(updatedClientData)
+    .eq('id', id)
     .select();
   if (error) {
-    console.error('Error setting enrollment settings:', error);
+    console.error('Error updating client:', error);
     return null;
   }
   return data[0];
 };
 
-// New functions for our enrollment periods table
+export const deleteClient = async (id) => {
+  const { error } = await supabase.from('clients').delete().eq('id', id);
+  if (error) {
+    console.error('Error deleting client:', error);
+    return false;
+  }
+  return true;
+};
+
+// --- Communications ---
+export const getContacts = async () => {
+  const { data, error } = await supabase.from('contacts').select('*');
+  if (error) {
+    console.error('Error fetching contacts:', error);
+    return [];
+  }
+  return data;
+};
+
+export const addContact = async (newContactData) => {
+  const { data, error } = await supabase.from('contacts').insert([newContactData]).select();
+  if (error) {
+    console.error('Error adding contact:', error);
+    return null;
+  }
+  return data[0];
+};
+
+export const getCommunicationLogs = async () => {
+  const { data, error } = await supabase.from('communication_logs').select('*').order('date', { ascending: false });
+  if (error) {
+    console.error('Error fetching communication logs:', error);
+    return [];
+  }
+  return data;
+};
+
+export const addCommunicationLog = async (newLogData) => {
+  const { data, error } = await supabase.from('communication_logs').insert([newLogData]).select();
+  if (error) {
+    console.error('Error adding communication log:', error);
+    return null;
+  }
+  return data[0];
+};
+
+// --- Enrollment Periods ---
 export const getEnrollmentPeriods = async () => {
   const { data, error } = await supabase.from('enrollment_periods').select('*');
   if (error) {
@@ -236,25 +213,11 @@ export const updateEnrollmentPeriod = async (id, updatedPeriodData) => {
   return data[0];
 };
 
-// This function submits a new enrollment record
-export const submitEnrollment = async (enrollmentData) => {
-  const { data, error } = await supabase
-    .from('enrollments') // Assuming the table is named 'enrollments'
-    .insert([enrollmentData])
-    .select();
-  
-  if (error) {
-    console.error('Error submitting enrollment:', error);
-    return null;
-  }
-  
-  return data[0];
-};
-// --- NEW FUNCTIONS FOR ENROLLMENT AND RECONCILIATION ---
-
-// This function fetches all benefit plans
+// --- Benefit Plans & Carriers ---
 export const getBenefitPlans = async () => {
-  const { data, error } = await supabase.from('benefits').select('*');
+  const { data, error } = await supabase
+    .from('benefits')
+    .select('*, benefit_rates(*)');
   if (error) {
     console.error('Error fetching benefit plans:', error);
     return [];
@@ -262,20 +225,28 @@ export const getBenefitPlans = async () => {
   return data;
 };
 
-// This function adds a new benefit plan
-export const addBenefitPlan = async (planData) => {
-  // Assume planData now includes carrier_rate and client_margin
-  const { data, error } = await supabase.from('benefits').insert([planData]).select();
-  if (error) console.error('Error adding benefit plan:', error);
-  return data ? data[0] : null;
-};
+export const addBenefitPlanWithRates = async (planData, ratesData) => {
+  const { data: plan, error: planError } = await supabase
+    .from('benefits')
+    .insert([planData])
+    .select()
+    .single();
 
-// This function updates an existing benefit plan
-export const updateBenefitPlan = async (id, planData) => {
-  // Assume planData now includes carrier_rate and client_margin
-  const { data, error } = await supabase.from('benefits').update(planData).eq('id', id).select();
-  if (error) console.error('Error updating benefit plan:', error);
-  return data ? data[0] : null;
+  if (planError) {
+    console.error('Error adding benefit plan:', planError);
+    return null;
+  }
+
+  const ratesToInsert = ratesData.map(rate => ({ ...rate, benefit_id: plan.id }));
+  const { error: ratesError } = await supabase.from('benefit_rates').insert(ratesToInsert);
+
+  if (ratesError) {
+    console.error('Error adding benefit rates:', ratesError);
+    await supabase.from('benefits').delete().eq('id', plan.id);
+    return null;
+  }
+
+  return { ...plan, benefit_rates: ratesToInsert };
 };
 
 export const deleteBenefitPlan = async (id) => {
@@ -284,92 +255,36 @@ export const deleteBenefitPlan = async (id) => {
   return !error;
 };
 
-// Fetches all completed enrollments with employee names
-export const getEnrollmentsWithEmployeeData = async () => {
-  // --- THIS LINE IS NOW CORRECTED ---
-  const { data, error } = await supabase.from('enrollments').select('*, employees(name)');
+export const updateBenefitPlanWithRates = async (planId, planData, ratesData) => {
+  const { data: plan, error: planError } = await supabase
+    .from('benefits')
+    .update(planData)
+    .eq('id', planId)
+    .select()
+    .single();
   
-  if (error) {
-    console.error('Error fetching enrollments:', error);
-    return [];
+  if (planError) {
+      console.error('Error updating benefit plan:', planError);
+      return null;
   }
-  return data;
+
+  const { error: deleteError } = await supabase.from('benefit_rates').delete().eq('benefit_id', planId);
+  if (deleteError) {
+      console.error('Error deleting old rates:', deleteError);
+      return null;
+  }
+  
+  const ratesToInsert = ratesData.map(rate => ({ ...rate, benefit_id: planId }));
+  const { error: ratesError } = await supabase.from('benefit_rates').insert(ratesToInsert);
+
+  if (ratesError) {
+      console.error('Error inserting new rates:', ratesError);
+      return null;
+  }
+
+  return { ...plan, benefit_rates: ratesToInsert };
 };
 
-// Fetches carrier invoice data for a specific month
-export const getInvoicesForMonth = async (month) => { // month should be in 'YYYY-MM-DD' format
-  const { data, error } = await supabase
-    .from('carrier_invoices')
-    .select('*')
-    .eq('billing_month', month);
-
-  if (error) {
-    console.error('Error fetching invoices for month:', error);
-    return [];
-  }
-  return data;
-};
-
-// Updates the status of a single carrier invoice item
-export const updateInvoiceStatus = async (invoiceId, newStatus) => {
-  const { data, error } = await supabase
-    .from('carrier_invoices')
-    .update({ status: newStatus })
-    .eq('id', invoiceId)
-    .select();
-
-  if (error) {
-    console.error('Error updating invoice status:', error);
-    return null;
-  }
-  return data[0];
-};
-
-// Fetches all employees
-export const getEmployees = async () => {
-  const { data, error } = await supabase.from('employees').select('*');
-  if (error) {
-    console.error('Error fetching employees:', error);
-    return [];
-  }
-  return data;
-};
-
-// Adds a new employee
-export const addEmployee = async (employeeData) => {
-  const { data, error } = await supabase.from('employees').insert([employeeData]).select();
-  if (error) {
-    console.error('Error adding employee:', error);
-    return null;
-  }
-  return data[0];
-};
-
-// Deletes an employee by ID
-export const deleteEmployee = async (id) => {
-  const { error } = await supabase.from('employees').delete().eq('id', id);
-  if (error) {
-    console.error('Error deleting employee:', error);
-    return false;
-  }
-  return true;
-};
-
-// Updates an existing employee
-export const updateEmployee = async (id, employeeData) => {
-  const { data, error } = await supabase
-    .from('employees')
-    .update(employeeData)
-    .eq('id', id)
-    .select();
-  if (error) {
-    console.error('Error updating employee:', error);
-    return null;
-  }
-  return data[0];
-};
-
-// --- NEW CARRIER FUNCTIONS ---
 export const getCarriers = async () => {
   const { data, error } = await supabase.from('carriers').select('*');
   if (error) console.error('Error fetching carriers:', error);
@@ -393,3 +308,109 @@ export const deleteCarrier = async (id) => {
   if (error) console.error('Error deleting carrier:', error);
   return !error;
 };
+
+
+// --- Enrollments & Reconciliation ---
+export const submitEnrollment = async (enrollmentData) => {
+  const { data, error } = await supabase
+    .from('enrollments')
+    .insert([enrollmentData])
+    .select();
+  
+  if (error) {
+    console.error('Error submitting enrollment:', error);
+    return null;
+  }
+  
+  return data[0];
+};
+
+export const getEnrollmentsWithEmployeeData = async () => {
+  const { data, error } = await supabase.from('enrollments').select('*, employees(name)');
+  
+  if (error) {
+    console.error('Error fetching enrollments:', error);
+    return [];
+  }
+  return data;
+};
+
+export const getInvoicesForMonth = async (month) => {
+  const { data, error } = await supabase
+    .from('carrier_invoices')
+    .select('*')
+    .eq('billing_month', month);
+
+  if (error) {
+    console.error('Error fetching invoices for month:', error);
+    return [];
+  }
+  return data;
+};
+
+export const updateInvoiceStatus = async (invoiceId, newStatus) => {
+  const { data, error } = await supabase
+    .from('carrier_invoices')
+    .update({ status: newStatus })
+    .eq('id', invoiceId)
+    .select();
+
+  if (error) {
+    console.error('Error updating invoice status:', error);
+    return null;
+  }
+  return data[0];
+};
+
+
+// --- Employee Management ---
+export const getEmployees = async () => {
+  const { data, error } = await supabase.from('employees').select('*');
+  if (error) {
+    console.error('Error fetching employees:', error);
+    return [];
+  }
+  return data;
+};
+
+export const addEmployee = async (employeeData) => {
+  const { data, error } = await supabase.from('employees').insert([employeeData]).select();
+  if (error) {
+    console.error('Error adding employee:', error);
+    return null;
+  }
+  return data[0];
+};
+
+export const deleteEmployee = async (id) => {
+  const { error } = await supabase.from('employees').delete().eq('id', id);
+  if (error) {
+    console.error('Error deleting employee:', error);
+    return false;
+  }
+  return true;
+};
+
+export const updateEmployee = async (id, employeeData) => {
+  const { data, error } = await supabase
+    .from('employees')
+    .update(employeeData)
+    .eq('id', id)
+    .select();
+  if (error) {
+    console.error('Error updating employee:', error);
+    return null;
+  }
+  return data[0];
+};
+
+// --- Bulk Operations ---
+export const batchAddEmployees = async (employees) => {
+  const { error } = await supabase.from('employees').insert(employees);
+  if (error) {
+    console.error('Error batch adding employees:', error);
+    return false;
+  }
+  return true;
+};
+

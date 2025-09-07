@@ -6,16 +6,13 @@ import {
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { getEmployees, getTiers, getServices, getEnrollmentsWithEmployeeData } from '../services/benefitService';
+
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 // --- Static Data for Charts ---
 const COLORS = ['#844FC1', '#21BF06', '#e74c3c', '#3B86D1'];
-const barChartData = [
-  { name: 'Dept A', enrolled: 15 }, { name: 'Dept B', enrolled: 5 },
-  { name: 'Dept C', enrolled: 9 }, { name: 'Dept D', enrolled: 15 },
-  { name: 'Dept E', enrolled: 10 }, { name: 'Dept F', enrolled: 2 },
-];
 const lineChartData = [
   { name: 'Jan', employees: 120 }, { name: 'Feb', employees: 125 },
   { name: 'Mar', employees: 135 }, { name: 'Apr', employees: 138 },
@@ -31,7 +28,7 @@ const initialLayouts = {
     { i: 'bar', x: 4, y: 1, w: 4, h: 3 }, { i: 'trends', x: 2, y: 3, w: 6, h: 2 },
     { i: 'deadlines', x: 8, y: 1, w: 4, h: 3 }, { i: 'actions', x: 8, y: 3, w: 4, h: 3 },
   ],
-  md: [ 
+  md: [
     { i: 'overview', x: 0, y: 0, w: 3, h: 2 }, { i: 'approvals', x: 3, y: 0, w: 2, h: 1 },
     { i: 'rate', x: 5, y: 0, w: 2, h: 1 }, { i: 'enrolled', x: 7, y: 0, w: 3, h: 1 },
     { i: 'employees', x: 3, y: 1, w: 2, h: 1 }, { i: 'tiers', x: 5, y: 1, w: 2, h: 1 },
@@ -65,6 +62,7 @@ const initialLayouts = {
   ],
 };
 
+
 function getFromLS(key) {
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
@@ -84,11 +82,16 @@ function saveToLS(key, value) {
 }
 
 function Dashboard() {
-  const [dashboardData] = useState({
-    totalEmployees: 150, benefitsEnrolled: 125, enrollmentRate: '83%',
-    pendingApprovals: 3, totalTiers: 4, servicesOffered: 12,
+  const [dashboardData, setDashboardData] = useState({
+    totalEmployees: 0,
+    benefitsEnrolled: 0,
+    enrollmentRate: '0%',
+    pendingApprovals: 3, // This can be dynamic later
+    totalTiers: 0,
+    servicesOffered: 0,
     chartData: [{ name: 'Pending', value: 3 }, { name: 'Approved', value: 10 }, { name: 'Flagged', value: 2 }],
   });
+  const [barChartData, setBarChartData] = useState([]);
   const [actionItems, setActionItems] = useState([
     { id: 1, text: 'Confirm benefits enrollment for Jane Smith', completed: false },
     { id: 2, text: 'Terminate benefits for Peter Jones', completed: false },
@@ -96,10 +99,45 @@ function Dashboard() {
   ]);
   const [clientData] = useState({ name: 'The Premier Companies, Inc.', tier: 'Gold', lastLogin: '09/05/25' });
   const [layouts, setLayouts] = useState(() => getFromLS('dashboardLayouts') || initialLayouts);
-  
+
   const [margin, setMargin] = useState([20, 20]);
 
   useEffect(() => {
+    async function fetchData() {
+      const [employees, tiers, services, enrollments] = await Promise.all([
+        getEmployees(),
+        getTiers(),
+        getServices(),
+        getEnrollmentsWithEmployeeData()
+      ]);
+
+      const totalEmployees = employees.length;
+      const benefitsEnrolled = enrollments.length;
+      const enrollmentRate = totalEmployees > 0 ? ((benefitsEnrolled / totalEmployees) * 100).toFixed(0) + '%' : '0%';
+
+      const enrollmentByDept = employees.reduce((acc, emp) => {
+        const dept = emp.department || 'Unknown';
+        if (!acc[dept]) {
+          acc[dept] = { name: dept, enrolled: 0 };
+        }
+        if (enrollments.some(en => en.employee_id === emp.id)) {
+          acc[dept].enrolled++;
+        }
+        return acc;
+      }, {});
+
+      setDashboardData(prev => ({
+        ...prev,
+        totalEmployees,
+        benefitsEnrolled,
+        enrollmentRate,
+        totalTiers: tiers.length,
+        servicesOffered: services.length,
+      }));
+      setBarChartData(Object.values(enrollmentByDept));
+    }
+
+    fetchData();
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setMargin([15, 15]);
@@ -117,18 +155,18 @@ function Dashboard() {
     saveToLS('dashboardLayouts', allLayouts);
     setLayouts(allLayouts);
   };
-  
+
   const handleResetLayout = () => {
     localStorage.removeItem('dashboardLayouts');
     setLayouts(initialLayouts);
   };
-  
+
   const handleToggleComplete = (id) => {
     setActionItems(items => items.map(item =>
       item.id === id ? { ...item, completed: !item.completed } : item
     ));
   };
-  
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -261,4 +299,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-
