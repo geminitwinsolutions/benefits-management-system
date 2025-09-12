@@ -4,11 +4,14 @@ import Modal from '../components/Modal';
 import OpenEnrollmentForm from '../components/OpenEnrollmentForm';
 import { getEmployees, addEmployee, deleteEmployee, updateEmployee, submitEnrollment, getEnrollmentPeriods } from '../services/benefitService';
 
-// --- Helper to format date for input[type="date"] ---
+// Helper to format date for input[type="date"]
 const formatDateForInput = (dateStr) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
-  return date.toISOString().split('T')[0];
+  // Adjust for timezone offset to prevent the date from being off by one day
+  const timezoneOffset = date.getTimezoneOffset() * 60000;
+  const adjustedDate = new Date(date.getTime() + timezoneOffset);
+  return adjustedDate.toISOString().split('T')[0];
 };
 
 function AllEmployees() {
@@ -41,12 +44,13 @@ function AllEmployees() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setCurrentEmployee(prev => ({ ...prev, [name]: value || null })); // Send null for empty optional fields
+    // Send null for empty optional fields that are not required
+    const valueToSend = value === '' && name !== 'name' && name !== 'department' && name !== 'status' && name !== 'hire_date' ? null : value;
+    setCurrentEmployee(prev => ({ ...prev, [name]: valueToSend }));
   };
 
   const openAddModal = () => {
     setIsEditing(false);
-    // --- CHANGE START: Expanded initial state ---
     setCurrentEmployee({ 
       name: '', 
       department: '', 
@@ -58,7 +62,6 @@ function AllEmployees() {
       ssn: '',
       dependents: [] // Default to an empty array
     });
-    // --- CHANGE END ---
     setShowAddForm(true);
   };
   
@@ -154,10 +157,8 @@ function AllEmployees() {
             <thead>
                 <tr>
                   <th>Name</th>
-                  <th>Department</th>
-                  {/* --- CHANGE START: Added Hire Date column --- */}
+                  <th>Location / Dept #</th>
                   <th>Hire Date</th>
-                  {/* --- CHANGE END --- */}
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -167,9 +168,7 @@ function AllEmployees() {
                 <tr key={employee.id}>
                     <td>{employee.name}</td>
                     <td>{employee.department}</td>
-                    {/* --- CHANGE START: Display Hire Date --- */}
                     <td>{employee.hire_date}</td>
-                    {/* --- CHANGE END --- */}
                     <td>
                       <span className={`status-badge status-${(employee.status || '').toLowerCase().replace(' ', '-')}`}>
                           {employee.status}
@@ -198,14 +197,20 @@ function AllEmployees() {
         <Modal onClose={() => setShowAddForm(false)}>
             <h3>{isEditing ? 'Edit Employee' : 'Add New Employee'}</h3>
             <form className="add-employee-form" onSubmit={handleSubmit}>
-                {/* --- CHANGE START: Expanded form fields --- */}
                 <div className="form-group">
                     <label>Full Name</label>
-                    <input type="text" name="name" value={currentEmployee.name} onChange={handleInputChange} required />
+                    <input type="text" name="name" value={currentEmployee.name || ''} onChange={handleInputChange} required />
                 </div>
                 <div className="form-group">
-                    <label>Department</label>
-                    <input type="text" name="department" value={currentEmployee.department} onChange={handleInputChange} required />
+                    <label>Location / Department #</label>
+                    <input 
+                      type="text" 
+                      name="department" 
+                      value={currentEmployee.department || ''} 
+                      onChange={handleInputChange} 
+                      placeholder="e.g., 001"
+                      required 
+                    />
                 </div>
                  <div className="form-group">
                     <label>Address</label>
@@ -235,7 +240,6 @@ function AllEmployees() {
                     <label>Termination Date</label>
                     <input type="date" name="termination_date" value={formatDateForInput(currentEmployee.termination_date)} onChange={handleInputChange} />
                 </div>
-                {/* --- CHANGE END --- */}
                 <button type="submit" className="submit-button">Save Employee</button>
             </form>
         </Modal>

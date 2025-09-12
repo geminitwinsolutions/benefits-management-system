@@ -142,6 +142,50 @@ export const deleteClient = async (id) => {
   return true;
 };
 
+// --- Location Management ---
+export const getLocationsForClient = async (clientId) => {
+  const { data, error } = await supabase
+    .from('locations')
+    .select('*')
+    .eq('client_id', clientId);
+  if (error) {
+    console.error('Error fetching locations:', error);
+    return [];
+  }
+  return data;
+};
+
+export const addLocation = async (locationData) => {
+  const { data, error } = await supabase.from('locations').insert([locationData]).select();
+  if (error) {
+    console.error('Error adding location:', error);
+    return null;
+  }
+  return data[0];
+};
+
+export const updateLocation = async (id, locationData) => {
+  const { data, error } = await supabase
+    .from('locations')
+    .update(locationData)
+    .eq('id', id)
+    .select();
+  if (error) {
+    console.error('Error updating location:', error);
+    return null;
+  }
+  return data[0];
+};
+
+export const deleteLocation = async (id) => {
+  const { error } = await supabase.from('locations').delete().eq('id', id);
+  if (error) {
+    console.error('Error deleting location:', error);
+    return false;
+  }
+  return true;
+};
+
 // --- Communications ---
 export const getContacts = async () => {
   const { data, error } = await supabase.from('contacts').select('*');
