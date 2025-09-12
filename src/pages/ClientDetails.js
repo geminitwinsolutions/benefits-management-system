@@ -54,7 +54,7 @@ const LocationManager = ({ client, onLocationsUpdate }) => {
 
   const handleOpenForm = (location = null) => {
     setIsEditing(!!location);
-    setCurrentLocation(location || { location_number: '', location_name: '', address: '', client_id: client.id });
+    setCurrentLocation(location || { location_number: '', location_name: '', address: '', store_id: '', client_id: client.id });
     setShowForm(true);
   };
 
@@ -95,6 +95,7 @@ const LocationManager = ({ client, onLocationsUpdate }) => {
         <table className="employees-table">
           <thead>
             <tr>
+              <th>Store ID</th>
               <th>Location #</th>
               <th>Location Name</th>
               <th>Address</th>
@@ -104,6 +105,7 @@ const LocationManager = ({ client, onLocationsUpdate }) => {
           <tbody>
             {locations.map(loc => (
               <tr key={loc.id}>
+                <td>{loc.store_id}</td>
                 <td>{loc.location_number}</td>
                 <td>{loc.location_name}</td>
                 <td>{loc.address}</td>
@@ -124,6 +126,10 @@ const LocationManager = ({ client, onLocationsUpdate }) => {
             <div className="form-group">
               <label>Location Number</label>
               <input type="text" name="location_number" value={currentLocation.location_number || ''} onChange={(e) => setCurrentLocation(prev => ({ ...prev, location_number: e.target.value }))} required />
+            </div>
+            <div className="form-group">
+              <label>Store ID</label>
+              <input type="text" name="store_id" value={currentLocation.store_id || ''} onChange={(e) => setCurrentLocation(prev => ({ ...prev, store_id: e.target.value }))} required />
             </div>
             <div className="form-group">
               <label>Location Name</label>
