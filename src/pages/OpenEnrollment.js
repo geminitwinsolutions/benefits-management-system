@@ -6,10 +6,13 @@ function OpenEnrollment() {
   const [periods, setPeriods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newPeriod, setNewPeriod] = useState({ 
-    projected_start_date: '', 
-    status: 'Upcoming' 
+  // --- CHANGE START ---
+  const [newPeriod, setNewPeriod] = useState({
+    projected_start_date: '',
+    status: 'Upcoming',
+    waiting_period_days: '60' // Default to 60 as per the guide
   });
+  // --- CHANGE END ---
 
   useEffect(() => {
     async function fetchPeriods() {
@@ -32,7 +35,9 @@ function OpenEnrollment() {
     if (addedPeriod) {
       setPeriods(prevPeriods => [...prevPeriods, addedPeriod].sort((a, b) => new Date(a.projected_start_date) - new Date(b.projected_start_date)));
       setShowAddForm(false);
-      setNewPeriod({ projected_start_date: '', status: 'Upcoming' });
+      // --- CHANGE START ---
+      setNewPeriod({ projected_start_date: '', status: 'Upcoming', waiting_period_days: '60' });
+      // --- CHANGE END ---
     } else {
       alert("Failed to create the new enrollment period.");
     }
@@ -62,7 +67,6 @@ function OpenEnrollment() {
     }
   };
 
-  // Memoize the derived state to prevent re-calculation on every render
   const { activePeriod, upcomingPeriods, completedPeriods } = useMemo(() => {
     const active = periods.find(p => p.status === 'Active') || null;
     const upcoming = periods.filter(p => p.status === 'Upcoming').sort((a, b) => new Date(a.projected_start_date) - new Date(b.projected_start_date));
@@ -84,7 +88,6 @@ function OpenEnrollment() {
         </button>
       </div>
 
-      {/* Active Enrollment Section */}
       {activePeriod && (
         <div className="card active-enrollment-card">
           <div className="card-header green">
@@ -102,7 +105,6 @@ function OpenEnrollment() {
       )}
 
       <div className="open-enrollment-layout">
-        {/* Upcoming Enrollments */}
         <div className="card">
           <div className="card-header blue">
             <h2>Upcoming Periods</h2>
@@ -124,7 +126,6 @@ function OpenEnrollment() {
           </div>
         </div>
 
-        {/* Past Enrollments */}
         <div className="card">
           <div className="card-header">
             <h2>Past Periods</h2>
@@ -154,6 +155,19 @@ function OpenEnrollment() {
               <label>Projected Start Date</label>
               <input type="date" name="projected_start_date" value={newPeriod.projected_start_date} onChange={handleFormChange} required />
             </div>
+            {/* --- CHANGE START --- */}
+            <div className="form-group">
+              <label>Waiting Period (in days)</label>
+              <input 
+                type="number" 
+                name="waiting_period_days" 
+                value={newPeriod.waiting_period_days} 
+                onChange={handleFormChange} 
+                required 
+                placeholder="e.g., 60"
+              />
+            </div>
+            {/* --- CHANGE END --- */}
             <button type="submit" className="submit-button">
               Save Period
             </button>
