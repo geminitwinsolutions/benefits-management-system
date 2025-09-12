@@ -131,7 +131,7 @@ const LocationManager = ({ client, onLocationsUpdate }) => {
             </div>
             <div className="form-group">
               <label>Address</label>
-              <textarea name="address" value={currentLocation.address || ''} onChange={(e) => setCurrentLocation(prev => ({ ...prev, address: e.target.value }))} />
+              <textarea name="address" value={currentLocation.address || ''} onChange={(e) => setCurrentLocation(prev => ({ ...prev, address: e.target.value }))} autoComplete="street-address" />
             </div>
             <button type="submit" className="submit-button">Save Location</button>
           </form>
@@ -347,7 +347,7 @@ function ClientDetails() {
           <form className="add-employee-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Company Name</label>
-              <input type="text" name="company_name" value={currentClient.company_name || ''} onChange={handleInputChange} required />
+              <input type="text" name="company_name" value={currentClient.company_name || ''} onChange={handleInputChange} required autoComplete="organization" />
             </div>
             <div className="form-group">
                 <label>Franchisee / Owner(s)</label>
@@ -368,15 +368,15 @@ function ClientDetails() {
             </div>
             <div className="form-group">
               <label>Company Email</label>
-              <input type="email" name="company_email" value={currentClient.company_email || ''} onChange={handleInputChange} />
+              <input type="email" name="company_email" value={currentClient.company_email || ''} onChange={handleInputChange} autoComplete="email" />
             </div>
             <div className="form-group">
               <label>Website</label>
-              <input type="text" name="website" value={currentClient.website || ''} onChange={handleInputChange} />
+              <input type="text" name="website" value={currentClient.website || ''} onChange={handleInputChange} autoComplete="url" />
             </div>
             <div className="form-group">
               <label>EIN</label>
-              <input type="text" name="ein" value={currentClient.ein || ''} onChange={handleInputChange} required />
+              <input type="text" name="ein" value={currentClient.ein || ''} onChange={handleInputChange} required autoComplete="off" />
             </div>
             <div className="form-group">
               <label>Service Group</label>
@@ -394,11 +394,11 @@ function ClientDetails() {
             </div>
             <div className="form-group">
               <label>State Unemployment (SUI) Number</label>
-              <input type="text" name="tax_sui_number" value={currentClient.tax_info?.sui_number || ''} onChange={handleInputChange} />
+              <input type="text" name="tax_sui_number" value={currentClient.tax_info?.sui_number || ''} onChange={handleInputChange} autoComplete="off" />
             </div>
             <div className="form-group">
               <label>Local Tax Details</label>
-              <input type="text" name="tax_local_tax" placeholder="e.g., specific county or city tax info" value={currentClient.tax_info?.local_tax || ''} onChange={handleInputChange} />
+              <input type="text" name="tax_local_tax" placeholder="e.g., specific county or city tax info" value={currentClient.tax_info?.local_tax || ''} onChange={handleInputChange} autoComplete="off" />
             </div>
             <div className="form-group">
               <label>Notes</label>
