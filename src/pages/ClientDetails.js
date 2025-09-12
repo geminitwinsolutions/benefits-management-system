@@ -1,9 +1,5 @@
-// src/pages/ClientDetails.js
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  getClients, addClient, updateClient, deleteClient,
-  getLocationsForClient, addLocation, updateLocation, deleteLocation 
-} from '../services/benefitService';
+import React, { useState, useEffect } from 'react';
+import { getClients, addClient } from '../services/benefitService';
 import Modal from '../components/Modal';
 
 const serviceGroups = ['REIN Client', 'EIN Client', 'Payroll Only'];
@@ -116,12 +112,16 @@ const LocationManager = ({ client, onUpdate }) => {
 function ClientDetails() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentClient, setCurrentClient] = useState(null);
-  const [selectedClient, setSelectedClient] = useState(null); // To manage which client's locations are shown
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newClient, setNewClient] = useState({ 
+    company_name: '', 
+    ein: '', 
+    tax_info: '', 
+    service_group: '', 
+    notes: '' 
+  });
 
-  const fetchClients = useCallback(async () => {
+  async function fetchClients() {
     setLoading(true);
     const fetchedClients = await getClients();
     setClients(fetchedClients);
@@ -151,22 +151,11 @@ function ClientDetails() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isEditing) {
-      await updateClient(currentClient.id, currentClient);
-    } else {
-      await addClient(currentClient);
-    }
-    fetchClients();
-    handleCloseForm();
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this client?')) {
-      await deleteClient(id);
-      if (selectedClient && selectedClient.id === id) {
-        setSelectedClient(null); // Clear selection if deleted
-      }
-      fetchClients();
+    const addedClient = await addClient(newClient);
+    if (addedClient) {
+      setClients(prevClients => [...prevClients, addedClient]);
+      setShowAddForm(false);
+      setNewClient({ company_name: '', ein: '', tax_info: '', service_group: '', notes: '' });
     }
   };
 
@@ -208,9 +197,9 @@ function ClientDetails() {
                   <td>{client.company_name}</td>
                   <td>{client.ein}</td>
                   <td>{client.service_group}</td>
-                  <td className="action-buttons-cell">
-                    <button className="action-button-small" onClick={(e) => { e.stopPropagation(); handleOpenForm(client); }}>Edit</button>
-                    <button className="action-button-delete action-button-small" onClick={(e) => { e.stopPropagation(); handleDelete(client.id); }}>Delete</button>
+                  <td>{client.notes}</td>
+                  <td>
+                    <button className="action-button">View</button>
                   </td>
                 </tr>
               ))}
@@ -219,11 +208,9 @@ function ClientDetails() {
         </div>
       </div>
       
-      {selectedClient && <LocationManager client={selectedClient} onUpdate={fetchClients} />}
-
-      {showForm && (
-        <Modal onClose={handleCloseForm}>
-          <h3>{isEditing ? 'Edit Client' : 'Add New Client'}</h3>
+      {showAddForm && (
+        <Modal onClose={() => setShowAddForm(false)}>
+          <h3>Add New Client</h3>
           <form className="add-employee-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Company Name</label>

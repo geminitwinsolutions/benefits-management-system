@@ -1,14 +1,43 @@
-import React from 'react';
-
-// Placeholder data
-const enrollmentStats = {
-  totalEmployees: 150,
-  completed: 112,
-  notStarted: 38,
-};
+import React, { useState, useEffect } from 'react';
+import { getEmployees, getEnrollmentsWithEmployeeData } from '../services/benefitService';
 
 function EnrollmentManagement() {
-  const completionPercentage = Math.round((enrollmentStats.completed / enrollmentStats.totalEmployees) * 100);
+  const [enrollmentStats, setEnrollmentStats] = useState({
+    totalEmployees: 0,
+    completed: 0,
+    notStarted: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const [employees, enrollments] = await Promise.all([
+        getEmployees(),
+        getEnrollmentsWithEmployeeData()
+      ]);
+
+      const totalEmployees = employees.length;
+      const completed = enrollments.length;
+      const notStarted = totalEmployees - completed;
+
+      setEnrollmentStats({
+        totalEmployees,
+        completed,
+        notStarted,
+      });
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
+
+  const completionPercentage = enrollmentStats.totalEmployees > 0
+    ? Math.round((enrollmentStats.completed / enrollmentStats.totalEmployees) * 100)
+    : 0;
+
+  if (loading) {
+    return <h2>Loading Enrollment Data...</h2>
+  }
 
   return (
     <div>
