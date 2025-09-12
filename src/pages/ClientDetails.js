@@ -68,7 +68,7 @@ const LocationManager = ({ client }) => {
     if (isEditing) {
       await updateLocation(currentLocation.id, currentLocation);
     } else {
-      await addLocation(currentLocation);
+      await addLocation({ ...currentLocation, client_id: client.id });
     }
     fetchLocations();
     handleCloseForm();
@@ -244,54 +244,66 @@ function ClientDetails() {
       </div>
       <p>Manage all client information, including tax and service details.</p>
 
-      <ServiceGroupGlossary />
-
-      <div className="client-accordion-container">
-        {clients.map(client => (
-          <div key={client.id} className="client-accordion-item">
-            <div className="client-header" onClick={() => handleToggleAccordion(client.id)}>
-              <strong>{client.company_name}</strong>
-              <span>{client.ein}</span>
-              <span>{client.service_group}</span>
-              <div className="action-buttons-cell" style={{ justifyContent: 'flex-end' }}>
-                <button className="action-button-small" onClick={(e) => { e.stopPropagation(); handleOpenForm(client); }}>Edit</button>
-                <button className="action-button-delete action-button-small" onClick={(e) => { e.stopPropagation(); handleDelete(client.id); }}>Delete</button>
-              </div>
-            </div>
-            {expandedClientId === client.id && (
-              <div className="client-details-content">
-                <div className="client-details-grid">
-                  <div>
-                    <strong>Franchisee/Owner:</strong>
-                    <p>{client.franchisee_owner || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <strong>Company Email:</strong>
-                    <p>{client.company_email || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <strong>Website:</strong>
-                    <p><a href={client.website} target="_blank" rel="noopener noreferrer">{client.website || 'N/A'}</a></p>
-                  </div>
-                  <div>
-                    <strong>State:</strong>
-                    <p>{client.tax_info?.state || 'N/A'}</p>
-                  </div>
-                   <div>
-                    <strong>SUI Number:</strong>
-                    <p>{client.tax_info?.sui_number || 'N/A'}</p>
-                  </div>
-                   <div>
-                    <strong>Local Tax Info:</strong>
-                    <p>{client.tax_info?.local_tax || 'N/A'}</p>
+      <div className="client-dashboard-layout">
+        <div>
+          <div className="kpi-container">
+              <StatCard title="Total Clients" value={stats.total_clients || 0} />
+              <StatCard title="Total Locations" value={stats.total_locations || 0} />
+              <StatCard title="REIN Clients" value={stats.rein_clients || 0} />
+              <StatCard title="EIN Clients" value={stats.ein_clients || 0} />
+          </div>
+        </div>
+        <div>
+          <ServiceGroupGlossary />
+          <div className="client-accordion-container">
+            {clients.map(client => (
+              <div key={client.id} className="client-accordion-item">
+                <div className="client-header" onClick={() => handleToggleAccordion(client.id)}>
+                  <strong>{client.company_name}</strong>
+                  <span>{client.ein}</span>
+                  <span>{client.service_group}</span>
+                  <div className="action-buttons-cell" style={{ justifyContent: 'flex-end' }}>
+                    <button className="action-button-small" onClick={(e) => { e.stopPropagation(); handleOpenForm(client); }}>Edit</button>
+                    <button className="action-button-delete action-button-small" onClick={(e) => { e.stopPropagation(); handleDelete(client.id); }}>Delete</button>
                   </div>
                 </div>
-                <LocationManager client={client} />
+                {expandedClientId === client.id && (
+                  <div className="client-details-content">
+                    <div className="client-details-grid">
+                      <div>
+                        <strong>Franchisee/Owner:</strong>
+                        <p>{client.franchisee_owner || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <strong>Company Email:</strong>
+                        <p>{client.company_email || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <strong>Website:</strong>
+                        <p><a href={client.website} target="_blank" rel="noopener noreferrer">{client.website || 'N/A'}</a></p>
+                      </div>
+                      <div>
+                        <strong>State:</strong>
+                        <p>{client.tax_info?.state || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <strong>SUI Number:</strong>
+                        <p>{client.tax_info?.sui_number || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <strong>Local Tax Info:</strong>
+                        <p>{client.tax_info?.local_tax || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <LocationManager client={client} />
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
-        ))}
+        </div>
       </div>
+
 
       {showForm && (
         <Modal onClose={handleCloseForm}>

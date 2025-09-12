@@ -465,17 +465,11 @@ export const batchAddEmployees = async (employees) => {
 };
 // Fetches the client dashboard statistics
 export const getClientStats = async () => {
-  const { data, error } = await supabase.from('client_stats').select('*').limit(1).single();
+  const { data, error } = await supabase.rpc('get_client_stats');
+
   if (error) {
     console.error('Error fetching client stats:', error);
     return {};
   }
-  return data;
-};
-
-// This function can be used to periodically update the stats
-export const updateClientStats = async (stats) => {
-  const { data, error } = await supabase.from('client_stats').update(stats).eq('id', 1);
-  if (error) console.error('Error updating client stats:', error);
   return data;
 };

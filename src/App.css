@@ -573,11 +573,17 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; }
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 @media (min-width: 1024px) {
   .client-dashboard-layout {
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 3fr;
+  }
+  .client-dashboard-layout > .kpi-container {
+    grid-template-columns: 1fr;
+    align-content: start;
+    margin-bottom: 0;
   }
 }
 
