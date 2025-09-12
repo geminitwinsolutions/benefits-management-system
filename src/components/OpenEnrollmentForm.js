@@ -1,11 +1,11 @@
 // src/components/OpenEnrollmentForm.js
 import React, { useState, useEffect, useMemo } from 'react';
 import Modal from '../components/Modal';
-// --- CHANGE START: Removed unused 'submitEnrollment' import ---
+// --- CHANGE: Removed unused 'submitEnrollment' import ---
 import { getBenefitPlans } from '../services/benefitService';
-// --- CHANGE END ---
 
 function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
+    // ... the rest of this file is correct and does not need changes
     const [selections, setSelections] = useState({ plans: {} });
     const [benefitPlans, setBenefitPlans] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -20,18 +20,14 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
         fetchPlans();
     }, []);
 
-    // Group plans by type using useMemo for efficiency
     const organizedPlans = useMemo(() => {
         return benefitPlans.reduce((acc, plan) => {
-            // --- THIS IS THE FIX ---
-            // Ensure the plan has a valid plan_type before processing
             if (!plan || !plan.plan_type) {
                 return acc;
             }
 
             (acc[plan.plan_type] = acc[plan.plan_type] || []).push(plan);
             
-            // Add a "Waive" option for each benefit type
             if (!acc[plan.plan_type].some(p => p.plan_name === 'Waive')) {
                 acc[plan.plan_type].unshift({
                     id: `waive-${plan.plan_type}`,
@@ -100,7 +96,6 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
                 <p className="text-center text-gray-600 mb-8">Please review your benefit options and make your selections.</p>
 
                 <form onSubmit={handleFormSubmit} className="space-y-8">
-                    {/* Employee Info Section */}
                     <div className="card">
                         <div className="card-header">
                             <h2 className="text-xl font-bold">Your Information</h2>
@@ -111,7 +106,6 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
                         </div>
                     </div>
                     
-                    {/* Dynamically Rendered Plan Sections */}
                     {Object.entries(organizedPlans).map(([planType, plans]) => (
                         <div className="card" key={planType}>
                             <div className="card-header">
@@ -133,7 +127,6 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
                         </div>
                     ))}
 
-                    {/* Total Cost Summary & Submission */}
                     <div className="card">
                         <div className="card-header">
                           <h2 className="text-2xl font-bold">Summary & Total Cost</h2>
@@ -175,5 +168,4 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
         </Modal>
     );
 }
-
 export default OpenEnrollmentForm;

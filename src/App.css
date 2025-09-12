@@ -591,3 +591,85 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; }
 .client-details-grid p {
   margin: 0.25rem 0;
 }
+/* --- Adds a background to the expanded accordion for better separation --- */
+.client-details-content {
+  background-color: #f9fafb; /* Lighter than the main page background */
+  border-radius: 0 0 8px 8px;
+}
+/* --- Adds a background to the expanded accordion for better separation --- */
+.client-details-content {
+  background-color: #f9fafb; /* Lighter than the main page background */
+  border-radius: 0 0 8px 8px;
+}
+
+/* --- Styles for Collapsible Glossary --- */
+.collapsible-header {
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  background-color: #f9fafb;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  width: fit-content; /* Makes the container only as wide as its content */
+}
+
+.collapsible-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  user-select: none; /* Prevents text selection on click */
+}
+
+.collapsible-content {
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  margin-top: -1.5rem; /* Pulls the content up to the header */
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+/* --- Styles for Client Accordion --- */
+.client-accordion-item {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background-color: var(--bg-white);
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.client-accordion-item:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.client-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  align-items: center;
+}
+
+.client-details-content {
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background-color: #f9fafb; /* Slight background color for separation */
+  border-radius: 0 0 8px 8px;
+}
+
+.client-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.client-details-grid p {
+  margin: 0.25rem 0;
+  color: var(--text-light);
+}
+
+.client-details-grid strong {
+    color: var(--text-dark);
+}
