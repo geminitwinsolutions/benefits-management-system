@@ -1,7 +1,9 @@
 // src/components/OpenEnrollmentForm.js
 import React, { useState, useEffect, useMemo } from 'react';
 import Modal from '../components/Modal';
-import { getBenefitPlans, submitEnrollment } from '../services/benefitService';
+// --- CHANGE START: Removed unused import ---
+import { getBenefitPlans } from '../services/benefitService';
+// --- CHANGE END ---
 
 function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
     const [selections, setSelections] = useState({ plans: {} });

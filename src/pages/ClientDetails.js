@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { getClients, addClient } from '../services/benefitService';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  getClients, addClient, updateClient, deleteClient,
+  getLocationsForClient, addLocation, updateLocation, deleteLocation
+} from '../services/benefitService';
 import Modal from '../components/Modal';
 
 const serviceGroups = ['REIN Client', 'EIN Client', 'Payroll Only'];
 
-// --- Location Manager Component (New) ---
-const LocationManager = ({ client, onUpdate }) => {
+// --- Location Manager Component ---
+const LocationManager = ({ client }) => {
   const [locations, setLocations] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -40,7 +43,7 @@ const LocationManager = ({ client, onUpdate }) => {
     } else {
       await addLocation(currentLocation);
     }
-    fetchLocations(); // Refetch locations for the client
+    fetchLocations();
     handleCloseForm();
   };
 
@@ -51,11 +54,15 @@ const LocationManager = ({ client, onUpdate }) => {
     }
   };
 
+  if (!client) return null;
+
   return (
     <div className="card mt-4">
-      <div className="page-header">
-        <h3>Locations for {client.company_name}</h3>
-        <button className="add-button action-button-small" onClick={() => handleOpenForm()}>Add Location</button>
+      <div className="card-header">
+        <div className="page-header" style={{border: 'none', padding: 0, margin: 0}}>
+            <h3>Locations for {client.company_name}</h3>
+            <button className="add-button action-button-small" onClick={() => handleOpenForm()}>Add Location</button>
+        </div>
       </div>
       <div className="card-body">
         <table className="employees-table">
@@ -108,20 +115,16 @@ const LocationManager = ({ client, onUpdate }) => {
 };
 
 
-// --- Main Client Details Component (Updated) ---
+// --- Main Client Details Component ---
 function ClientDetails() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newClient, setNewClient] = useState({ 
-    company_name: '', 
-    ein: '', 
-    tax_info: '', 
-    service_group: '', 
-    notes: '' 
-  });
+  const [showForm, setShowForm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentClient, setCurrentClient] = useState(null);
+  const [selectedClient, setSelectedClient] = useState(null);
 
-  async function fetchClients() {
+  const fetchClients = useCallback(async () => {
     setLoading(true);
     const fetchedClients = await getClients();
     setClients(fetchedClients);
@@ -151,11 +154,22 @@ function ClientDetails() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const addedClient = await addClient(newClient);
-    if (addedClient) {
-      setClients(prevClients => [...prevClients, addedClient]);
-      setShowAddForm(false);
-      setNewClient({ company_name: '', ein: '', tax_info: '', service_group: '', notes: '' });
+    if (isEditing) {
+      await updateClient(currentClient.id, currentClient);
+    } else {
+      await addClient(currentClient);
+    }
+    fetchClients();
+    handleCloseForm();
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this client?')) {
+      await deleteClient(id);
+      if (selectedClient && selectedClient.id === id) {
+        setSelectedClient(null);
+      }
+      fetchClients();
     }
   };
 
@@ -197,9 +211,9 @@ function ClientDetails() {
                   <td>{client.company_name}</td>
                   <td>{client.ein}</td>
                   <td>{client.service_group}</td>
-                  <td>{client.notes}</td>
-                  <td>
-                    <button className="action-button">View</button>
+                  <td className="action-buttons-cell">
+                    <button className="action-button-small" onClick={(e) => { e.stopPropagation(); handleOpenForm(client); }}>Edit</button>
+                    <button className="action-button-delete action-button-small" onClick={(e) => { e.stopPropagation(); handleDelete(client.id); }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -208,9 +222,11 @@ function ClientDetails() {
         </div>
       </div>
       
-      {showAddForm && (
-        <Modal onClose={() => setShowAddForm(false)}>
-          <h3>Add New Client</h3>
+      {selectedClient && <LocationManager client={selectedClient} />}
+
+      {showForm && (
+        <Modal onClose={handleCloseForm}>
+          <h3>{isEditing ? 'Edit Client' : 'Add New Client'}</h3>
           <form className="add-employee-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Company Name</label>

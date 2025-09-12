@@ -89,7 +89,14 @@ const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive }) => {
                         </div>
                         <div className="form-group">
                             <label>Contact Info</label>
-                            <input type="text" value={currentCarrier.contact_info} onChange={(e) => setCurrentCarrier({...currentCarrier, contact_info: e.target.value})} />
+                            <input type="text" value={currentCarrier?.contact_info || ''} onChange={(e) => setCurrentCarrier({ ...currentCarrier, contact_info: e.target.value })} />
+                        </div>
+                        <div className="form-group">
+                            <label>Billing Schedule</label>
+                            <select name="billing_schedule" value={currentCarrier?.billing_schedule || 'Cross-Month'} onChange={(e) => setCurrentCarrier({ ...currentCarrier, billing_schedule: e.target.value })}>
+                                <option value="Cross-Month">Cross-Month</option>
+                                <option value="Same-Month">Same-Month</option>
+                            </select>
                         </div>
                         <button type="submit" className="submit-button">Save</button>
                     </form>
@@ -109,7 +116,29 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
 
     const handleOpenForm = (plan = null) => {
         setIsEditing(!!plan);
-        setCurrentPlan(plan || { plan_name: '', plan_type: 'Medical', cost: 0, description: '', carrier_id: carriers[0]?.id || '' });
+        if (plan) {
+            setCurrentPlan({
+                id: plan.id,
+                plan_name: plan.plan_name,
+                plan_type: plan.plan_type,
+                carrier_id: plan.carrier_id,
+                description: plan.description,
+                rate_model: plan.rate_model,
+                client_margin: plan.client_margin,
+            });
+            const rates = Array.isArray(plan.benefit_rates) ? plan.benefit_rates : [];
+            setCurrentRates(rates.map(({ id, benefit_id, ...rate }) => rate));
+        } else {
+            setCurrentPlan({
+                plan_name: '',
+                plan_type: 'Medical',
+                carrier_id: carriers[0]?.id || '',
+                description: '',
+                rate_model: 'FLAT',
+                client_margin: 0,
+            });
+            setCurrentRates([{ coverage_level: 'Employee Only', carrier_rate: 0 }]);
+        }
         setShowForm(true);
     };
 
@@ -118,6 +147,34 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
         setCurrentPlan(null);
         setCurrentRates([]);
     };
+
+    const handlePlanChange = (e) => {
+        const { name, value } = e.target;
+        setCurrentPlan(prev => ({ ...prev, [name]: value }));
+        if (name === 'rate_model') {
+            if (value === 'FLAT') setCurrentRates([{ coverage_level: '', carrier_rate: '' }]);
+            if (value === 'AGE_BANDED') setCurrentRates([{ min_age: '', max_age: '', carrier_rate: '' }]);
+            if (value === 'COVERAGE_TIER') setCurrentRates([{ min_age: '', max_age: '', carrier_rate: '', rate_per_thousand: false }]);
+        }
+    };
+
+    const handleRateChange = (index, e) => {
+        const { name, value, type, checked } = e.target;
+        const newRates = [...currentRates];
+        newRates[index][name] = type === 'checkbox' ? checked : value;
+        setCurrentRates(newRates);
+    };
+
+    const addRateRow = () => {
+        if (currentPlan.rate_model === 'FLAT') setCurrentRates([...currentRates, { coverage_level: '', carrier_rate: '' }]);
+        if (currentPlan.rate_model === 'AGE_BANDED') setCurrentRates([...currentRates, { min_age: '', max_age: '', carrier_rate: '' }]);
+        if (currentPlan.rate_model === 'COVERAGE_TIER') setCurrentRates([...currentRates, { min_age: '', max_age: '', carrier_rate: '', rate_per_thousand: false }]);
+    };
+    
+    const removeRateRow = (index) => {
+        setCurrentRates(currentRates.filter((_, i) => i !== index));
+    };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -282,6 +339,10 @@ function PlanManagement() {
         
         setCarriers(carrierData);
         setPlans(planData);
+        
+        const activePeriod = enrollmentPeriods.find(p => p.status === 'Active');
+        setIsEnrollmentActive(!!activePeriod);
+        
         setLoading(false);
     }, []);
 
@@ -294,9 +355,18 @@ function PlanManagement() {
     }
     
     return (
-        <div>
-            <h2>Plan & Carrier Management</h2>
-            <p>Manage insurance carriers and the benefit plans they offer.</p>
+        <div className="page-container">
+            <h1>Plan & Carrier Management</h1>
+            <p>
+                Manage insurance carriers and the benefit plans they offer. This section is only editable 
+                when an **Open Enrollment** period is active.
+            </p>
+            {!isEnrollmentActive && (
+              <div className="mt-4 p-4 text-center text-orange-700 bg-orange-100 border-l-4 border-orange-500">
+                <p className="font-bold">Plan management is locked.</p>
+                <p>Please activate an Open Enrollment period to add or edit plans and carriers.</p>
+              </div>
+            )}
             <div className="plan-management-layout">
                 <CarrierManager carriers={carriers} onUpdate={fetchData} isEnrollmentActive={isEnrollmentActive} />
                 <PlanManager plans={plans} carriers={carriers} onUpdate={fetchData} isEnrollmentActive={isEnrollmentActive} />
@@ -306,4 +376,3 @@ function PlanManagement() {
 }
 
 export default PlanManagement;
-
