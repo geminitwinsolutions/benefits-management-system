@@ -246,7 +246,7 @@ function ClientDetails() {
     fetchData();
     handleCloseForm();
   };
-
+  
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this client?')) {
       await deleteClient(id);
