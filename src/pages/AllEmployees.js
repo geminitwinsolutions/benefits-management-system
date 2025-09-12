@@ -2,7 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import OpenEnrollmentForm from '../components/OpenEnrollmentForm';
-import { getEmployees, addEmployee, deleteEmployee, updateEmployee, submitEnrollment } from '../services/benefitService';
+import { getEmployees, addEmployee, deleteEmployee, updateEmployee, submitEnrollment, getEnrollmentPeriods } from '../services/benefitService';
+
+// --- Helper to format date for input[type="date"] ---
+const formatDateForInput = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toISOString().split('T')[0];
+};
 
 function AllEmployees() {
   const [employees, setEmployees] = useState([]);
@@ -12,11 +19,18 @@ function AllEmployees() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showEnrollmentForm, setShowEnrollmentForm] = useState(false);
+  const [activeEnrollmentPeriodId, setActiveEnrollmentPeriodId] = useState(null);
 
-  // Uses getEmployees and setLoading
   async function fetchEmployees() {
     setLoading(true);
-    const fetchedEmployees = await getEmployees();
+    const [fetchedEmployees, enrollmentPeriods] = await Promise.all([
+      getEmployees(),
+      getEnrollmentPeriods()
+    ]);
+    const activePeriod = enrollmentPeriods.find(p => p.status === 'Active');
+    if (activePeriod) {
+      setActiveEnrollmentPeriodId(activePeriod.id);
+    }
     setEmployees(fetchedEmployees.sort((a, b) => a.name.localeCompare(b.name)));
     setLoading(false);
   }
@@ -27,12 +41,24 @@ function AllEmployees() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setCurrentEmployee(prev => ({ ...prev, [name]: value }));
+    setCurrentEmployee(prev => ({ ...prev, [name]: value || null })); // Send null for empty optional fields
   };
 
   const openAddModal = () => {
     setIsEditing(false);
-    setCurrentEmployee({ name: '', department: '', status: 'Active' });
+    // --- CHANGE START: Expanded initial state ---
+    setCurrentEmployee({ 
+      name: '', 
+      department: '', 
+      status: 'Active',
+      date_of_birth: null,
+      hire_date: new Date().toISOString().split('T')[0], // Default hire date to today
+      termination_date: null,
+      address: '',
+      ssn: '',
+      dependents: [] // Default to an empty array
+    });
+    // --- CHANGE END ---
     setShowAddForm(true);
   };
   
@@ -42,7 +68,6 @@ function AllEmployees() {
     setShowAddForm(true);
   };
   
-  // Uses deleteEmployee
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this employee? This could affect historical records.")) {
         const success = await deleteEmployee(id);
@@ -54,7 +79,6 @@ function AllEmployees() {
     }
   };
 
-  // Uses addEmployee and updateEmployee
   const handleSubmit = async (e) => {
     e.preventDefault();
     let updatedEmployee = null;
@@ -65,7 +89,6 @@ function AllEmployees() {
       
       if (updatedEmployee) {
         setEmployees(prev => prev.map(emp => emp.id === updatedEmployee.id ? updatedEmployee : emp).sort((a, b) => a.name.localeCompare(b.name)));
-        // Check for a status change that triggers enrollment
         if (originalEmployee.status !== 'Active' && updatedEmployee.status === 'Active') {
           triggerEnrollment(updatedEmployee);
         }
@@ -93,9 +116,13 @@ function AllEmployees() {
     setShowEnrollmentForm(true);
   };
 
-  // Uses submitEnrollment
   const handleEnrollmentSubmit = async (enrollmentData) => {
-    const result = await submitEnrollment(enrollmentData);
+    const dataToSubmit = {
+      ...enrollmentData,
+      enrollment_period_id: activeEnrollmentPeriodId
+    };
+
+    const result = await submitEnrollment(dataToSubmit);
     if (result) {
       alert(`Successfully submitted enrollment for ${selectedEmployee.name}!`);
     } else {
@@ -104,7 +131,6 @@ function AllEmployees() {
     setShowEnrollmentForm(false);
   };
 
-  // Uses the 'loading' state variable
   if (loading) {
     return (
       <div className="page-container">
@@ -129,6 +155,9 @@ function AllEmployees() {
                 <tr>
                   <th>Name</th>
                   <th>Department</th>
+                  {/* --- CHANGE START: Added Hire Date column --- */}
+                  <th>Hire Date</th>
+                  {/* --- CHANGE END --- */}
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -138,6 +167,9 @@ function AllEmployees() {
                 <tr key={employee.id}>
                     <td>{employee.name}</td>
                     <td>{employee.department}</td>
+                    {/* --- CHANGE START: Display Hire Date --- */}
+                    <td>{employee.hire_date}</td>
+                    {/* --- CHANGE END --- */}
                     <td>
                       <span className={`status-badge status-${(employee.status || '').toLowerCase().replace(' ', '-')}`}>
                           {employee.status}
@@ -166,6 +198,7 @@ function AllEmployees() {
         <Modal onClose={() => setShowAddForm(false)}>
             <h3>{isEditing ? 'Edit Employee' : 'Add New Employee'}</h3>
             <form className="add-employee-form" onSubmit={handleSubmit}>
+                {/* --- CHANGE START: Expanded form fields --- */}
                 <div className="form-group">
                     <label>Full Name</label>
                     <input type="text" name="name" value={currentEmployee.name} onChange={handleInputChange} required />
@@ -173,6 +206,22 @@ function AllEmployees() {
                 <div className="form-group">
                     <label>Department</label>
                     <input type="text" name="department" value={currentEmployee.department} onChange={handleInputChange} required />
+                </div>
+                 <div className="form-group">
+                    <label>Address</label>
+                    <input type="text" name="address" value={currentEmployee.address || ''} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                    <label>SSN</label>
+                    <input type="text" name="ssn" value={currentEmployee.ssn || ''} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" name="date_of_birth" value={formatDateForInput(currentEmployee.date_of_birth)} onChange={handleInputChange} />
+                </div>
+                 <div className="form-group">
+                    <label>Hire Date</label>
+                    <input type="date" name="hire_date" value={formatDateForInput(currentEmployee.hire_date)} onChange={handleInputChange} required/>
                 </div>
                 <div className="form-group">
                     <label>Status</label>
@@ -182,6 +231,11 @@ function AllEmployees() {
                         <option value="Terminated">Terminated</option>
                     </select>
                 </div>
+                 <div className="form-group">
+                    <label>Termination Date</label>
+                    <input type="date" name="termination_date" value={formatDateForInput(currentEmployee.termination_date)} onChange={handleInputChange} />
+                </div>
+                {/* --- CHANGE END --- */}
                 <button type="submit" className="submit-button">Save Employee</button>
             </form>
         </Modal>
