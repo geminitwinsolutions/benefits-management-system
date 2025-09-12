@@ -35,7 +35,7 @@ const ServiceGroupGlossary = () => {
   );
 };
 
-const LocationManager = ({ client }) => {
+const LocationManager = ({ client, onLocationsUpdate }) => {
   const [locations, setLocations] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -68,9 +68,10 @@ const LocationManager = ({ client }) => {
     if (isEditing) {
       await updateLocation(currentLocation.id, currentLocation);
     } else {
-      await addLocation({ ...currentLocation, client_id: client.id });
+      await addLocation(currentLocation);
     }
     fetchLocations();
+    onLocationsUpdate();
     handleCloseForm();
   };
 
@@ -78,18 +79,19 @@ const LocationManager = ({ client }) => {
     if (window.confirm('Are you sure you want to delete this location?')) {
       await deleteLocation(id);
       fetchLocations();
+      onLocationsUpdate();
     }
   };
 
   if (!client) return null;
 
   return (
-    <div className="card mt-4">
-      <div className="card-header">
-        <h3>Locations for {client.company_name}</h3>
+    <div className="location-manager-container">
+      <div className="location-manager-header">
+        <h4>Locations for {client.company_name}</h4>
         <button className="add-button action-button-small" onClick={() => handleOpenForm()}>Add Location</button>
       </div>
-      <div className="card-body">
+      <div className="card-body" style={{ padding: 0 }}>
         <table className="employees-table">
           <thead>
             <tr>
@@ -186,12 +188,40 @@ function ClientDetails() {
     }
   };
 
+  const handleOwnerChange = (index, value) => {
+    const updatedOwners = [...(currentClient.franchisee_owner || [])];
+    updatedOwners[index] = value;
+    setCurrentClient(prev => ({ ...prev, franchisee_owner: updatedOwners }));
+  };
+
+  const addOwnerField = () => {
+    setCurrentClient(prev => ({ ...prev, franchisee_owner: [...(prev.franchisee_owner || []), ''] }));
+  };
+
+  const removeOwnerField = (index) => {
+    const updatedOwners = (currentClient.franchisee_owner || []).filter((_, i) => i !== index);
+    setCurrentClient(prev => ({ ...prev, franchisee_owner: updatedOwners }));
+  };
+
   const handleOpenForm = (client = null) => {
     setIsEditing(!!client);
-    setCurrentClient(client || {
-      company_name: '', ein: '', service_group: '', notes: '', franchisee_owner: '', company_email: '', website: '',
-      tax_info: { state: '', sui_number: '', local_tax: '' }
-    });
+
+    if (client) {
+      let ownerArray = Array.isArray(client.franchisee_owner)
+        ? client.franchisee_owner
+        : [client.franchisee_owner || ''];
+      
+      if (ownerArray.length === 0 || (ownerArray.length === 1 && !ownerArray[0])) {
+        ownerArray = [''];
+      }
+      setCurrentClient({ ...client, franchisee_owner: ownerArray });
+    } else {
+      setCurrentClient({
+        company_name: '', ein: '', service_group: '', notes: '', franchisee_owner: [''], company_email: '', website: '',
+        tax_info: { state: '', sui_number: '', local_tax: '' }
+      });
+    }
+    
     setShowForm(true);
   };
 
@@ -203,10 +233,15 @@ function ClientDetails() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const clientToSubmit = {
+      ...currentClient,
+      franchisee_owner: (currentClient.franchisee_owner || []).filter(owner => owner && owner.trim() !== '')
+    };
+
     if (isEditing) {
-      await updateClient(currentClient.id, currentClient);
+      await updateClient(clientToSubmit.id, clientToSubmit);
     } else {
-      await addClient(currentClient);
+      await addClient(clientToSubmit);
     }
     fetchData();
     handleCloseForm();
@@ -271,8 +306,10 @@ function ClientDetails() {
                   <div className="client-details-content">
                     <div className="client-details-grid">
                       <div>
-                        <strong>Franchisee/Owner:</strong>
-                        <p>{client.franchisee_owner || 'N/A'}</p>
+                        <strong>Franchisee/Owner(s):</strong>
+                        {Array.isArray(client.franchisee_owner) && client.franchisee_owner.filter(o => o).length > 0 ? (
+                            client.franchisee_owner.map((owner, index) => <p key={index}>{owner}</p>)
+                        ) : <p>N/A</p>}
                       </div>
                       <div>
                         <strong>Company Email:</strong>
@@ -295,7 +332,7 @@ function ClientDetails() {
                         <p>{client.tax_info?.local_tax || 'N/A'}</p>
                       </div>
                     </div>
-                    <LocationManager client={client} />
+                    <LocationManager client={client} onLocationsUpdate={fetchData} />
                   </div>
                 )}
               </div>
@@ -304,8 +341,7 @@ function ClientDetails() {
         </div>
       </div>
 
-
-      {showForm && (
+      {showForm && currentClient && (
         <Modal onClose={handleCloseForm}>
           <h3>{isEditing ? 'Edit Client' : 'Add New Client'}</h3>
           <form className="add-employee-form" onSubmit={handleSubmit}>
@@ -314,8 +350,21 @@ function ClientDetails() {
               <input type="text" name="company_name" value={currentClient.company_name || ''} onChange={handleInputChange} required />
             </div>
             <div className="form-group">
-              <label>Franchisee / Owner</label>
-              <input type="text" name="franchisee_owner" value={currentClient.franchisee_owner || ''} onChange={handleInputChange} />
+                <label>Franchisee / Owner(s)</label>
+                {Array.isArray(currentClient.franchisee_owner) && currentClient.franchisee_owner.map((owner, index) => (
+                    <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                        <input
+                            type="text"
+                            value={owner}
+                            onChange={(e) => handleOwnerChange(index, e.target.value)}
+                            style={{ flexGrow: 1, marginRight: '5px' }}
+                        />
+                        {currentClient.franchisee_owner.length > 1 && (
+                            <button type="button" onClick={() => removeOwnerField(index)} className="action-button-delete action-button-small">-</button>
+                        )}
+                    </div>
+                ))}
+                <button type="button" onClick={addOwnerField} className="action-button-small" style={{ marginTop: '5px' }}>+ Add Owner</button>
             </div>
             <div className="form-group">
               <label>Company Email</label>

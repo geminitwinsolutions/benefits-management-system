@@ -333,10 +333,13 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; }
 .modal-content {
   background: white;
   padding: 2rem;
+  padding-bottom: 3rem; /* Extra space for the button */
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
   width: 90%;
   max-width: 500px;
+  max-height: 90vh; /* Set a max height */
+  overflow-y: auto; /* Enable vertical scrolling */
   position: relative;
 }
 .modal-close-button {
@@ -678,4 +681,21 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; }
 
 .client-details-grid strong {
     color: var(--text-dark);
+}
+
+.location-manager-container {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+.location-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.location-manager-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
