@@ -509,3 +509,85 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; }
 .info-card a:hover {
   text-decoration: underline;
 }
+/* Add this at the end of your App.css file */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+/* src/App.css */
+
+/* --- Styles for Collapsible Glossary --- */
+.collapsible-header {
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  background-color: #f9fafb;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.collapsible-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.collapsible-content {
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  margin-top: -1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+/* --- Styles for Client Accordion --- */
+.client-accordion-item {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background-color: var(--bg-white);
+}
+
+.client-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  align-items: center;
+}
+
+.client-header:hover {
+  background-color: #f9fafb;
+}
+
+.client-details-content {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* --- Layout for KPI cards and Main Content --- */
+.client-dashboard-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .client-dashboard-layout {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+/* --- Accordion Details --- */
+.client-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.client-details-grid p {
+  margin: 0.25rem 0;
+}

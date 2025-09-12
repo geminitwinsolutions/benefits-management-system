@@ -1,7 +1,7 @@
 // src/components/OpenEnrollmentForm.js
 import React, { useState, useEffect, useMemo } from 'react';
 import Modal from '../components/Modal';
-// --- CHANGE START: Removed unused import ---
+// --- CHANGE START: Removed unused 'submitEnrollment' import ---
 import { getBenefitPlans } from '../services/benefitService';
 // --- CHANGE END ---
 
