@@ -1,10 +1,12 @@
+// src/components/Modal.js
 import React from 'react';
 
+function Modal({ children, onClose, size }) {
+  const contentClassName = size === 'large' ? 'modal-content modal-content-large' : 'modal-content';
 
-function Modal({ children, onClose }) {
   return (
     <div className="modal-backdrop">
-      <div className="modal-content">
+      <div className={contentClassName}>
         <button className="modal-close-button" onClick={onClose}>
           &times;
         </button>

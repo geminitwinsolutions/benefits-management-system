@@ -1,13 +1,16 @@
-// src/pages/ClientDetails.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   getClients, addClient, updateClient, deleteClient,
   getLocationsForClient, addLocation, updateLocation, deleteLocation,
-  getClientStats
+  getEmployees, getAllLocations
 } from '../services/benefitService';
 import Modal from '../components/Modal';
 
+// --- CONSTANTS ---
 const serviceGroups = ['REIN Client', 'EIN Client', 'Payroll Only'];
+const clientStatuses = ['Active', 'Pending Active', 'Pending Close', 'Inactive'];
+const locationStatuses = ['Active', 'Inactive'];
+const payPeriods = ['Weekly', 'Bi-Weekly 1', 'Bi-Weekly 2', 'Semi-Monthly', 'Monthly'];
 const usStates = [
     'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia',
     'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland',
@@ -15,6 +18,8 @@ const usStates = [
     'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina',
     'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
 ];
+
+// --- HELPER COMPONENTS ---
 
 const ServiceGroupGlossary = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,115 +41,158 @@ const ServiceGroupGlossary = () => {
 };
 
 const LocationManager = ({ client, onLocationsUpdate }) => {
-  const [locations, setLocations] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState(null);
+    const [locations, setLocations] = useState([]);
+    const [showForm, setShowForm] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentLocation, setCurrentLocation] = useState(null);
+    const [clientEmployees, setClientEmployees] = useState([]);
 
-  const fetchLocations = useCallback(async () => {
-    if (client) {
-      const clientLocations = await getLocationsForClient(client.id);
-      setLocations(clientLocations);
+    const fetchLocationsAndEmployees = useCallback(async () => {
+      if (client) {
+        const [clientLocations, allEmployees] = await Promise.all([
+          getLocationsForClient(client.id),
+          getEmployees(),
+        ]);
+        setLocations(clientLocations);
+        setClientEmployees(allEmployees.filter(emp => emp.client_id === client.id));
+      }
+    }, [client]);
+
+    useEffect(() => {
+      fetchLocationsAndEmployees();
+    }, [fetchLocationsAndEmployees]);
+
+    const handleOpenForm = (location = null) => {
+      setIsEditing(!!location);
+      setCurrentLocation(location || {
+          location_number: '',
+          location_name: '',
+          address: '',
+          store_id: '',
+          client_id: client.id,
+          store_manager: '',
+          status: 'Active'
+      });
+      setShowForm(true);
+    };
+
+    const handleCloseForm = () => {
+      setShowForm(false);
+      setCurrentLocation(null);
+    };
+
+    const handleLocationInputChange = (e) => {
+      const { name, value } = e.target;
+      setCurrentLocation(prev => ({...prev, [name]: value}));
     }
-  }, [client]);
 
-  useEffect(() => {
-    fetchLocations();
-  }, [fetchLocations]);
-
-  const handleOpenForm = (location = null) => {
-    setIsEditing(!!location);
-    setCurrentLocation(location || { location_number: '', location_name: '', address: '', store_id: '', client_id: client.id });
-    setShowForm(true);
-  };
-
-  const handleCloseForm = () => {
-    setShowForm(false);
-    setCurrentLocation(null);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (isEditing) {
-      await updateLocation(currentLocation.id, currentLocation);
-    } else {
-      await addLocation(currentLocation);
-    }
-    fetchLocations();
-    onLocationsUpdate();
-    handleCloseForm();
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this location?')) {
-      await deleteLocation(id);
-      fetchLocations();
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      if (isEditing) {
+        await updateLocation(currentLocation.id, currentLocation);
+      } else {
+        await addLocation(currentLocation);
+      }
+      fetchLocationsAndEmployees();
       onLocationsUpdate();
-    }
-  };
+      handleCloseForm();
+    };
 
-  if (!client) return null;
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this location?')) {
+            await deleteLocation(id);
+            fetchLocationsAndEmployees();
+            onLocationsUpdate();
+        }
+    };
 
-  return (
-    <div className="location-manager-container">
-      <div className="location-manager-header">
-        <h4>Locations for {client.company_name}</h4>
-        <button className="add-button action-button-small" onClick={() => handleOpenForm()}>Add Location</button>
-      </div>
-      <div className="card-body" style={{ padding: 0 }}>
-        <table className="employees-table">
-          <thead>
-            <tr>
-              <th>Store ID</th>
-              <th>Location #</th>
-              <th>Location Name</th>
-              <th>Address</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {locations.map(loc => (
-              <tr key={loc.id}>
-                <td>{loc.store_id}</td>
-                <td>{loc.location_number}</td>
-                <td>{loc.location_name}</td>
-                <td>{loc.address}</td>
-                <td className="action-buttons-cell">
-                  <button className="action-button-small" onClick={() => handleOpenForm(loc)}>Edit</button>
-                  <button className="action-button-delete action-button-small" onClick={() => handleDelete(loc.id)}>Delete</button>
-                </td>
+    if (!client) return null;
+
+    return (
+      <div className="location-manager-container">
+        <div className="location-manager-header">
+          <h4>Locations for {client.company_name}</h4>
+          <button className="add-button action-button-small" onClick={() => handleOpenForm()}>Add Location</button>
+        </div>
+        <div className="card-body" style={{ padding: 0 }}>
+          <table className="employees-table">
+            <thead>
+              <tr>
+                <th>Store ID</th>
+                <th>Location #</th>
+                <th>Location Name</th>
+                <th>Store Manager</th>
+                <th>Status</th>
+                <th>Address</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {locations.map(loc => (
+                <tr key={loc.id}>
+                  <td>{loc.store_id}</td>
+                  <td>{loc.location_number}</td>
+                  <td>{loc.location_name}</td>
+                  <td>{loc.store_manager}</td>
+                  <td><span className={`status-badge status-${(loc.status || '').toLowerCase()}`}>{loc.status}</span></td>
+                  <td>{loc.address}</td>
+                  <td className="action-buttons-cell">
+                    <button className="action-button action-button-small" onClick={() => handleOpenForm(loc)}>Edit</button>
+                    <button className="action-button-delete action-button-small" onClick={() => handleDelete(loc.id)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      {showForm && (
-        <Modal onClose={handleCloseForm}>
-          <h3>{isEditing ? 'Edit Location' : 'Add Location'}</h3>
-          <form className="add-employee-form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Location Number</label>
-              <input type="text" name="location_number" value={currentLocation.location_number || ''} onChange={(e) => setCurrentLocation(prev => ({ ...prev, location_number: e.target.value }))} required />
-            </div>
-            <div className="form-group">
-              <label>Store ID</label>
-              <input type="text" name="store_id" value={currentLocation.store_id || ''} onChange={(e) => setCurrentLocation(prev => ({ ...prev, store_id: e.target.value }))} required />
-            </div>
-            <div className="form-group">
-              <label>Location Name</label>
-              <input type="text" name="location_name" value={currentLocation.location_name || ''} onChange={(e) => setCurrentLocation(prev => ({ ...prev, location_name: e.target.value }))} />
-            </div>
-            <div className="form-group">
-              <label>Address</label>
-              <textarea name="address" value={currentLocation.address || ''} onChange={(e) => setCurrentLocation(prev => ({ ...prev, address: e.target.value }))} autoComplete="street-address" />
-            </div>
-            <button type="submit" className="submit-button">Save Location</button>
-          </form>
-        </Modal>
-      )}
-    </div>
-  );
+        {showForm && (
+          <Modal onClose={handleCloseForm}>
+            <h3>{isEditing ? 'Edit Location' : 'Add Location'}</h3>
+            <form className="add-employee-form" onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Location Number</label>
+                <input type="text" name="location_number" value={currentLocation.location_number || ''} onChange={handleLocationInputChange} required />
+              </div>
+              <div className="form-group">
+                <label>Store ID</label>
+                <input type="text" name="store_id" value={currentLocation.store_id || ''} onChange={handleLocationInputChange} required />
+              </div>
+              <div className="form-group">
+                <label>Location Name</label>
+                <input type="text" name="location_name" value={currentLocation.location_name || ''} onChange={handleLocationInputChange} />
+              </div>
+              <div className="form-group">
+                  <label>Store Manager</label>
+                  <select
+                      name="store_manager"
+                      value={currentLocation.store_manager || ''}
+                      onChange={handleLocationInputChange}
+                  >
+                      <option value="">Select a Manager</option>
+                      {clientEmployees.map(employee => (
+                          <option key={employee.id} value={employee.name}>
+                              {employee.name}
+                          </option>
+                      ))}
+                  </select>
+              </div>
+               <div className="form-group">
+                  <label>Status</label>
+                  <select name="status" value={currentLocation.status || ''} onChange={handleLocationInputChange}>
+                      {locationStatuses.map(status => <option key={status} value={status}>{status}</option>)}
+                  </select>
+              </div>
+              <div className="form-group">
+                <label>Address</label>
+                <textarea name="address" value={currentLocation.address || ''} onChange={handleLocationInputChange} autoComplete="street-address" />
+              </div>
+              <button type="submit" className="submit-button">Save Location</button>
+            </form>
+          </Modal>
+        )}
+      </div>
+    );
 };
 
 const StatCard = ({ title, value }) => (
@@ -154,6 +202,8 @@ const StatCard = ({ title, value }) => (
     </div>
 );
 
+// --- MAIN COMPONENT ---
+
 function ClientDetails() {
   const [clients, setClients] = useState([]);
   const [stats, setStats] = useState({});
@@ -161,22 +211,75 @@ function ClientDetails() {
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentClient, setCurrentClient] = useState(null);
-  const [expandedClientId, setExpandedClientId] = useState(null);
+  const [viewingClient, setViewingClient] = useState(null);
+  const [canDelete, setCanDelete] = useState(false);
+  const [activeTab, setActiveTab] = useState('REIN Client');
+  const [locationCounts, setLocationCounts] = useState({});
+
+  const tabs = ['REIN Client', 'EIN Client', 'Payroll Only', 'Other Statuses'];
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [fetchedClients, fetchedStats] = await Promise.all([
-      getClients(),
-      getClientStats()
+    const [fetchedClients, allLocations] = await Promise.all([
+        getClients(),
+        getAllLocations()
     ]);
+
+    const counts = allLocations.reduce((acc, loc) => {
+        acc[loc.client_id] = (acc[loc.client_id] || 0) + 1;
+        return acc;
+    }, {});
+    setLocationCounts(counts);
+
     setClients(fetchedClients);
-    setStats(fetchedStats);
+
+    const totalClients = fetchedClients.length;
+    const totalLocations = allLocations.length;
+    const activeClients = fetchedClients.filter(c => c.status === 'Active');
+    const reinClients = activeClients.filter(c => c.service_group === 'REIN Client').length;
+    const einClients = activeClients.filter(c => c.service_group === 'EIN Client').length;
+    const payrollClients = activeClients.filter(c => c.service_group === 'Payroll Only').length;
+
+    let activeReinLocations = 0;
+    let activeEinLocations = 0;
+
+    activeClients.forEach(client => {
+      const count = counts[client.id] || 0;
+      if (client.service_group === 'REIN Client') activeReinLocations += count;
+      if (client.service_group === 'EIN Client') activeEinLocations += count;
+    });
+
+    let biWeekly1Locations = 0;
+    let biWeekly2Locations = 0;
+
+    fetchedClients.forEach(client => {
+      const count = counts[client.id] || 0;
+      if (client.pay_period === 'Weekly') {
+        biWeekly1Locations += count;
+        biWeekly2Locations += count;
+      } else if (client.pay_period === 'Bi-Weekly 1') {
+        biWeekly1Locations += count;
+      } else if (client.pay_period === 'Bi-Weekly 2') {
+        biWeekly2Locations += count;
+      }
+    });
+
+    setStats({ totalClients, totalLocations, activeReinLocations, activeEinLocations, rein_clients: reinClients, ein_clients: einClients, payroll_clients: payrollClients, biWeekly1Locations, biWeekly2Locations });
+
     setLoading(false);
   }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const filteredClients = useMemo(() => {
+    const sortedClients = [...clients].sort((a, b) => a.company_name.localeCompare(b.company_name));
+    if (activeTab === 'Other Statuses') {
+      return sortedClients.filter(client => client.status !== 'Active');
+    }
+    return sortedClients.filter(client => client.service_group === activeTab && client.status === 'Active');
+  }, [clients, activeTab]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -201,7 +304,7 @@ function ClientDetails() {
   };
 
   const addOwnerField = () => {
-    setCurrentClient(prev => ({ ...prev, franchisee_owner: [...(prev.franchisee_owner || []), ''] }));
+    setCurrentClient(prev => ({ ...prev, franchisee_owner: [...(currentClient.franchisee_owner || []), ''] }));
   };
 
   const removeOwnerField = (index) => {
@@ -209,25 +312,32 @@ function ClientDetails() {
     setCurrentClient(prev => ({ ...prev, franchisee_owner: updatedOwners }));
   };
 
-  const handleOpenForm = (client = null) => {
+  const handleOpenForm = async (client = null) => {
     setIsEditing(!!client);
 
     if (client) {
       let ownerArray = Array.isArray(client.franchisee_owner)
         ? client.franchisee_owner
         : [client.franchisee_owner || ''];
-      
+
       if (ownerArray.length === 0 || (ownerArray.length === 1 && !ownerArray[0])) {
         ownerArray = [''];
       }
       setCurrentClient({ ...client, franchisee_owner: ownerArray });
+      const locations = await getLocationsForClient(client.id);
+      const employees = await getEmployees();
+      const clientEmployees = employees.filter(employee => employee.client_id === client.id);
+      setCanDelete(locations.length === 0 && clientEmployees.length === 0);
+
     } else {
       setCurrentClient({
-        company_name: '', ein: '', service_group: '', notes: '', franchisee_owner: [''], company_email: '', website: '',
+        company_name: '', ein: '', service_group: 'REIN Client', notes: '', franchisee_owner: [''], company_email: '', website: '', status: 'Active',
+        pay_period: 'Weekly',
         tax_info: { state: '', sui_number: '', local_tax: '' }
       });
+      setCanDelete(false);
     }
-    
+
     setShowForm(true);
   };
 
@@ -252,22 +362,19 @@ function ClientDetails() {
     fetchData();
     handleCloseForm();
   };
-  
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this client?')) {
-      await deleteClient(id);
-      if (expandedClientId === id) {
-        setExpandedClientId(null);
-      }
-      fetchData();
-    }
-  };
 
-  const handleToggleAccordion = (clientId) => {
-    if (expandedClientId === clientId) {
-      setExpandedClientId(null);
-    } else {
-      setExpandedClientId(clientId);
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
+        if (window.confirm('This will permanently delete the client and all associated data. Are you absolutely sure?')) {
+            const success = await deleteClient(id);
+            if (success) {
+                setViewingClient(null);
+                fetchData();
+                handleCloseForm();
+            } else {
+                alert("Failed to delete client.");
+            }
+        }
     }
   };
 
@@ -288,70 +395,104 @@ function ClientDetails() {
       <div className="client-dashboard-layout">
         <div>
           <div className="kpi-container">
-              <StatCard title="Total Clients" value={stats.total_clients || 0} />
-              <StatCard title="Total Locations" value={stats.total_locations || 0} />
-              <StatCard title="REIN Clients" value={stats.rein_clients || 0} />
-              <StatCard title="EIN Clients" value={stats.ein_clients || 0} />
+              <StatCard title="Total Clients" value={stats.totalClients || 0} />
+              <StatCard title="Total Locations" value={stats.totalLocations || 0} />
+              <StatCard title="Active REIN Locations" value={stats.activeReinLocations || 0} />
+              <StatCard title="Active EIN Locations" value={stats.activeEinLocations || 0} />
+              <StatCard title="Bi-Weekly 1 Locations" value={stats.biWeekly1Locations || 0} />
+              <StatCard title="Bi-Weekly 2 Locations" value={stats.biWeekly2Locations || 0} />
           </div>
+          <ServiceGroupGlossary />
         </div>
         <div>
-          <ServiceGroupGlossary />
-          <div className="client-accordion-container">
-            {clients.map(client => (
-              <div key={client.id} className="client-accordion-item">
-                <div className="client-header" onClick={() => handleToggleAccordion(client.id)}>
-                  <strong>{client.company_name}</strong>
-                  <span>{client.ein}</span>
-                  <span>{client.service_group}</span>
-                  <div className="action-buttons-cell" style={{ justifyContent: 'flex-end' }}>
-                    <button className="action-button-small" onClick={(e) => { e.stopPropagation(); handleOpenForm(client); }}>Edit</button>
-                    <button className="action-button-delete action-button-small" onClick={(e) => { e.stopPropagation(); handleDelete(client.id); }}>Delete</button>
-                  </div>
-                </div>
-                {expandedClientId === client.id && (
-                  <div className="client-details-content">
-                    <div className="client-details-grid">
-                      <div>
-                        <strong>Franchisee/Owner(s):</strong>
-                        {Array.isArray(client.franchisee_owner) && client.franchisee_owner.filter(o => o).length > 0 ? (
-                            client.franchisee_owner.map((owner, index) => <p key={index}>{owner}</p>)
-                        ) : <p>N/A</p>}
-                      </div>
-                      <div>
-                        <strong>Company Email:</strong>
-                        <p>{client.company_email || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <strong>Website:</strong>
-                        <p><a href={client.website} target="_blank" rel="noopener noreferrer">{client.website || 'N/A'}</a></p>
-                      </div>
-                      <div>
-                        <strong>State:</strong>
-                        <p>{client.tax_info?.state || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <strong>SUI Number:</strong>
-                        <p>{client.tax_info?.sui_number || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <strong>Local Tax Info:</strong>
-                        <p>{client.tax_info?.local_tax || 'N/A'}</p>
-                      </div>
-                    </div>
-                    <LocationManager client={client} onLocationsUpdate={fetchData} />
-                  </div>
-                )}
+          <div className="tabs-container">
+            {tabs.map(tab => (
+              <button
+                key={tab}
+                className={`tab-button ${activeTab === tab ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="client-cards-container">
+            {filteredClients.map(client => (
+              <div key={client.id} className="client-card">
+                <h3>{client.company_name}</h3>
+                <p>
+                  <strong>Owner(s): </strong>
+                  {(client.franchisee_owner && client.franchisee_owner.length > 0) ? client.franchisee_owner.join(', ') : 'N/A'}
+                </p>
+                <p><strong>Locations:</strong> {locationCounts[client.id] || 0}</p>
+                <button className="action-button-small" onClick={() => setViewingClient(client)}>
+                  View Details
+                </button>
               </div>
             ))}
+            {filteredClients.length === 0 && (
+              <p>No clients match the current filter.</p>
+            )}
           </div>
         </div>
       </div>
 
+      {viewingClient && (
+        <Modal onClose={() => setViewingClient(null)} size="large">
+          <div className="client-details-header">
+              <h4>{viewingClient.company_name}</h4>
+              <button className="action-button action-button-small" onClick={() => {
+                setViewingClient(null);
+                handleOpenForm(viewingClient);
+              }}>Edit Client</button>
+          </div>
+          <div className="client-details-grid">
+            <div>
+              <strong>Service Group:</strong>
+              <p>{viewingClient.service_group || 'N/A'}</p>
+            </div>
+            <div>
+              <strong>EIN:</strong>
+              <p>{viewingClient.ein || 'N/A'}</p>
+            </div>
+            <div>
+              <strong>Status:</strong>
+              <p>{viewingClient.status || 'N/A'}</p>
+            </div>
+            <div>
+              <strong>State:</strong>
+              <p>{viewingClient.tax_info?.state || 'N/A'}</p>
+            </div>
+            <div>
+              <strong>SUI Number:</strong>
+              <p>{viewingClient.tax_info?.sui_number || 'N/A'}</p>
+            </div>
+            <div>
+              <strong>Pay Period:</strong>
+              <p>{viewingClient.pay_period || 'N/A'}</p>
+            </div>
+          </div>
+          <LocationManager client={viewingClient} onLocationsUpdate={fetchData} />
+        </Modal>
+      )}
+
       {showForm && currentClient && (
         <Modal onClose={handleCloseForm}>
-          <h3>{isEditing ? 'Edit Client' : 'Add New Client'}</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3>{isEditing ? 'Edit Client' : 'Add New Client'}</h3>
+            {isEditing && canDelete && (
+                <button
+                  className="action-button-delete"
+                  onClick={() => handleDelete(currentClient.id)}
+                  style={{ marginLeft: 'auto' }}
+                >
+                  Delete Client
+                </button>
+            )}
+          </div>
           <form className="add-employee-form" onSubmit={handleSubmit}>
-            <div className="form-group">
+             <div className="form-group">
               <label>Company Name</label>
               <input type="text" name="company_name" value={currentClient.company_name || ''} onChange={handleInputChange} required autoComplete="organization" />
             </div>
@@ -384,12 +525,25 @@ function ClientDetails() {
               <label>EIN</label>
               <input type="text" name="ein" value={currentClient.ein || ''} onChange={handleInputChange} required autoComplete="off" />
             </div>
+             <div className="form-group">
+              <label>Status</label>
+              <select name="status" value={currentClient.status || ''} onChange={handleInputChange} required>
+                <option value="" disabled>Select Status</option>
+                {clientStatuses.map(status => <option key={status} value={status}>{status}</option>)}
+              </select>
+            </div>
             <div className="form-group">
               <label>Service Group</label>
               <select name="service_group" value={currentClient.service_group || ''} onChange={handleInputChange} required>
                 <option value="" disabled>Select Service Group</option>
                 {serviceGroups.map(group => <option key={group} value={group}>{group}</option>)}
               </select>
+            </div>
+            <div className="form-group">
+                <label>Pay Period</label>
+                <select name="pay_period" value={currentClient.pay_period || ''} onChange={handleInputChange} required>
+                    {payPeriods.map(period => <option key={period} value={period}>{period}</option>)}
+                </select>
             </div>
             <div className="form-group">
               <label>State</label>

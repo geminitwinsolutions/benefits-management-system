@@ -473,3 +473,11 @@ export const getClientStats = async () => {
   }
   return data;
 };
+export const getAllLocations = async () => {
+  const { data, error } = await supabase.from('locations').select('id, client_id');
+  if (error) {
+    console.error('Error fetching all locations:', error);
+    return [];
+  }
+  return data;
+};
