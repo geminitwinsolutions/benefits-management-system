@@ -1,5 +1,6 @@
 // src/services/benefitService.js
 import { supabase } from '../supabase';
+import toast from 'react-hot-toast';
 
 // --- Tier Management ---
 export const getTiers = async () => {
@@ -463,6 +464,27 @@ export const batchAddEmployees = async (employees) => {
   }
   return true;
 };
+
+// --- Primary Organization & Dashboard ---
+export const getPrimaryOrganization = async () => {
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('is_primary_organization', true)
+    .limit(1)
+    .single(); // Use single to get one object, not an array
+
+  if (error) {
+    console.error('Error fetching primary organization:', error);
+    // It's okay if it's null, but not other errors
+    if (error.code !== 'PGRST116') { 
+        toast.error('Could not fetch primary company details.');
+    }
+    return null;
+  }
+  return data;
+};
+
 // Fetches the client dashboard statistics
 export const getClientStats = async () => {
   const { data, error } = await supabase.rpc('get_client_stats');
@@ -621,4 +643,41 @@ export const isSuperAdmin = async () => {
 
     if (error) return false;
     return data.roles.name === 'Super Admin';
+};
+
+// --- Bank Account Management ---
+export const getBankAccounts = async () => {
+  const { data, error } = await supabase.from('bank_accounts').select('*');
+  if (error) {
+    console.error('Error fetching bank accounts:', error);
+    return [];
+  }
+  return data;
+};
+
+export const addBankAccount = async (accountData) => {
+  const { data, error } = await supabase.from('bank_accounts').insert([accountData]).select();
+  if (error) {
+    console.error('Error adding bank account:', error);
+    return null;
+  }
+  return data[0];
+};
+
+export const updateBankAccount = async (id, accountData) => {
+  const { data, error } = await supabase.from('bank_accounts').update(accountData).eq('id', id).select();
+  if (error) {
+    console.error('Error updating bank account:', error);
+    return null;
+  }
+  return data[0];
+};
+
+export const deleteBankAccount = async (id) => {
+  const { error } = await supabase.from('bank_accounts').delete().eq('id', id);
+  if (error) {
+    console.error('Error deleting bank account:', error);
+    return false;
+  }
+  return true;
 };

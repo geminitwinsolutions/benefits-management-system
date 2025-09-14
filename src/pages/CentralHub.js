@@ -43,7 +43,7 @@ function CentralHub() {
             {showRoleManagement && (
                 <NavLink to="/central-hub/role-management">Role Management</NavLink>
             )}
-            <NavLink to="/central-hub/company-settings">Company Settings</NavLink>
+
              <NavLink to="/central-hub/employee-settings">Employee Settings</NavLink>
           </div>
         </nav>

@@ -7,7 +7,7 @@ import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { getEmployees, getTiers, getServices, getEnrollmentsWithEmployeeData } from '../services/benefitService';
-import CompanyDetails from '../components/CompanyDetails'; // Import the new component
+import PrimaryClientDetails from '../components/PrimaryClientDetails'; // Import the new component
 
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -269,9 +269,7 @@ function Dashboard() {
           </div>
         </div>
 
-        <div key="overview">
-          <CompanyDetails />
-        </div>
+        <div key="overview"><PrimaryClientDetails /></div>
 
         <div key="deadlines" className="card">
           <div className="card-header"><h2>Upcoming Deadlines</h2></div>
