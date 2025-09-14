@@ -1,25 +1,8 @@
-// src/pages/EmployeeSettings.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
-
-// --- STANDARDIZED HR DATA ---
-const payTypes = ['Salary', 'Hourly'];
-const flsaTypes = ['Exempt', 'Non-Exempt'];
-const eeocCategories = [
-  'Not Specified',
-  'Executive/Senior Level Officials and Managers',
-  'First/Mid Level Officials and Managers',
-  'Professionals',
-  'Technicians',
-  'Sales Workers',
-  'Administrative Support Workers',
-  'Craft Workers',
-  'Operatives',
-  'Laborers and Helpers',
-  'Service Workers',
-];
+import { payTypes, flsaTypes, eeocCategories } from '../utils/constants';
 
 // Generic manager component for Job Codes and Employment Types
 const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
@@ -33,7 +16,7 @@ const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
     setCurrentItem(item || {
       pay_type: payTypes[0],
       flsa_type: flsaTypes[1],
-      eeoc_id: eeocCategories[0]
+      eeoc_id: `${eeocCategories[0].code} - ${eeocCategories[0].name}`
     });
     setShowForm(true);
   };
@@ -107,7 +90,10 @@ const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
     if (col.key === 'eeoc_id') {
         return (
             <select name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange}>
-                {eeocCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                {eeocCategories.map(cat => {
+                    const val = `${cat.code} - ${cat.name}`;
+                    return <option key={cat.code} value={val}>{val}</option>
+                })}
             </select>
         );
     }
@@ -144,6 +130,11 @@ const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
         <Modal onClose={handleCloseForm} size="large">
           <h3>{isEditing ? 'Edit' : 'Add'} {title.slice(0, -1)}</h3>
           <form onSubmit={handleSubmit}>
+            {title === 'Job Codes' && (
+              <p className="form-note">
+                <strong>Note:</strong> Pay Type, FLSA Type, and EEOC Category use standard industry classifications to ensure data consistency and cannot be customized.
+              </p>
+            )}
             <div className="settings-form-grid">
               {columns.map(col => (
                 <div className="form-group" key={col.key}>

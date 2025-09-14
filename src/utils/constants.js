@@ -1,4 +1,82 @@
 // src/utils/constants.js
+
+// --- HR & Employee Related ---
+
+export const payTypes = ['Salary', 'Hourly'];
+
+export const flsaTypes = ['Exempt', 'Non-Exempt'];
+
+// This is the corrected, single definition for EEOC Categories
+export const eeocCategories = [
+  { code: '0', name: 'Not Specified' },
+  { code: '1.1', name: 'Executive/Senior Level Officials and Managers' },
+  { code: '1.2', name: 'First/Mid Level Officials and Managers' },
+  { code: '2', name: 'Professionals' },
+  { code: '3', name: 'Technicians' },
+  { code: '4', name: 'Sales Workers' },
+  { code: '5', name: 'Administrative Support Workers' },
+  { code: '6', name: 'Craft Workers' },
+  { code: '7', name: 'Operatives' },
+  { code: '8', name: 'Laborers and Helpers' },
+  { code: '9', name: 'Service Workers' },
+];
+
+export const employmentTypes = [
+    'Full-Time',
+    'Part-Time',
+    'Temporary',
+    'Contractor'
+];
+
+export const employeeStatuses = [
+    'Active',
+    'On Leave',
+    'Terminated',
+    'Pending'
+];
+
+export const genderOptions = [
+    'Male',
+    'Female',
+    'Non-binary',
+    'Prefer not to say'
+];
+
+
+// --- Client & Location Related ---
+
+export const serviceGroups = ['REIN Client', 'EIN Client', 'Payroll Only'];
+
+export const clientStatuses = ['Active', 'Pending Active', 'Pending Close', 'Inactive'];
+
+export const locationStatuses = ['Active', 'Inactive'];
+
+export const payPeriods = ['Weekly', 'Bi-Weekly 1', 'Bi-Weekly 2', 'Semi-Monthly', 'Monthly'];
+
+
+// --- Benefits & Enrollment Related ---
+
+export const benefitPlanTypes = [
+    'Medical', 
+    'Dental', 
+    'Vision', 
+    'Life', 
+    'Disability', 
+    'Critical Illness', 
+    'Accident',
+    'Other'
+];
+
+export const coverageLevels = [
+    'Employee Only',
+    'Employee + Spouse',
+    'Employee + Child(ren)',
+    'Family'
+];
+
+
+// --- Geographic ---
+
 export const usStates = [
     { name: 'Alabama', abbreviation: 'AL' }, { name: 'Alaska', abbreviation: 'AK' },
     { name: 'Arizona', abbreviation: 'AZ' }, { name: 'Arkansas', abbreviation: 'AR' },

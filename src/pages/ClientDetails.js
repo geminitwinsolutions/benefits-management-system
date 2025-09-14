@@ -7,19 +7,7 @@ import {
 } from '../services/benefitService';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
-
-// --- CONSTANTS ---
-const serviceGroups = ['REIN Client', 'EIN Client', 'Payroll Only'];
-const clientStatuses = ['Active', 'Pending Active', 'Pending Close', 'Inactive'];
-const locationStatuses = ['Active', 'Inactive'];
-const payPeriods = ['Weekly', 'Bi-Weekly 1', 'Bi-Weekly 2', 'Semi-Monthly', 'Monthly'];
-const usStates = [
-    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia',
-    'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland',
-    'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
-    'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina',
-    'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
-];
+import { serviceGroups, clientStatuses, locationStatuses, payPeriods, usStates } from '../utils/constants';
 
 // --- Bank Account Manager Component ---
 const BankManager = ({ client }) => {
@@ -365,7 +353,19 @@ function ClientDetails() {
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     const valueToSet = type === 'checkbox' ? checked : value;
-    setCurrentClient(prev => ({ ...prev, [name]: valueToSet }));
+    
+    if (name.startsWith('tax_info.')) {
+        const field = name.split('.')[1];
+        setCurrentClient(prev => ({
+            ...prev,
+            tax_info: {
+                ...(prev.tax_info || {}),
+                [field]: valueToSet
+            }
+        }));
+    } else {
+        setCurrentClient(prev => ({ ...prev, [name]: valueToSet }));
+    }
   };
 
   const handleOwnerChange = (index, value) => {
@@ -403,7 +403,7 @@ function ClientDetails() {
     } else {
       setCurrentClient({
         company_name: '', ein: '', service_group: 'REIN Client', notes: '', franchisee_owner: [''], company_email: '', website: '', status: 'Active',
-        pay_period: 'Weekly', is_primary_organization: false,
+        pay_period: 'Weekly', is_primary_organization: false, tax_info: { state: '' }
       });
       setCanDelete(false);
     }
@@ -608,6 +608,21 @@ function ClientDetails() {
                 <select name="pay_period" value={currentClient.pay_period || ''} onChange={handleInputChange} required>
                     {payPeriods.map(period => <option key={period} value={period}>{period}</option>)}
                 </select>
+            </div>
+            <div className="form-group">
+              <label>State</label>
+              <select name="tax_info.state" value={currentClient.tax_info?.state || ''} onChange={handleInputChange}>
+                <option value="" disabled>Select a State</option>
+                {usStates.map(state => <option key={state.abbreviation} value={state.abbreviation}>{state.name}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>State Unemployment (SUI) Number</label>
+              <input type="text" name="tax_info.sui_number" value={currentClient.tax_info?.sui_number || ''} onChange={handleInputChange} autoComplete="off" />
+            </div>
+            <div className="form-group">
+              <label>Local Tax Details</label>
+              <input type="text" name="tax_info.local_tax" placeholder="e.g., specific county or city tax info" value={currentClient.tax_info?.local_tax || ''} onChange={handleInputChange} autoComplete="off" />
             </div>
             <div className="form-group">
               <label>Notes</label>
