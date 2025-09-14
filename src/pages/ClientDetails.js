@@ -5,19 +5,13 @@ import {
   getEmployees, getAllLocations
 } from '../services/benefitService';
 import Modal from '../components/Modal';
+import { usStates } from '../utils/constants';
 
 // --- CONSTANTS ---
 const serviceGroups = ['REIN Client', 'EIN Client', 'Payroll Only'];
 const clientStatuses = ['Active', 'Pending Active', 'Pending Close', 'Inactive'];
 const locationStatuses = ['Active', 'Inactive'];
 const payPeriods = ['Weekly', 'Bi-Weekly 1', 'Bi-Weekly 2', 'Semi-Monthly', 'Monthly'];
-const usStates = [
-    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia',
-    'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland',
-    'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
-    'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina',
-    'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
-];
 
 // --- HELPER COMPONENTS ---
 
@@ -61,17 +55,49 @@ const LocationManager = ({ client, onLocationsUpdate }) => {
     useEffect(() => {
       fetchLocationsAndEmployees();
     }, [fetchLocationsAndEmployees]);
+    
+    const formatAddress = (loc) => {
+        const parts = [loc.address_1, loc.address_2, loc.city, loc.state, loc.zip_code].filter(Boolean);
+        return parts.join(', ');
+    };
+
+    const managerOptions = useMemo(() => {
+        const activeManagers = clientEmployees.filter(emp => emp.status === 'Active');
+        
+        if (isEditing && currentLocation?.store_manager) {
+            const currentManagerIsActive = activeManagers.some(
+                emp => emp.name === currentLocation.store_manager
+            );
+            
+            if (!currentManagerIsActive) {
+                const currentManagerObject = clientEmployees.find(
+                    emp => emp.name === currentLocation.store_manager
+                );
+                if (currentManagerObject) {
+                    return [currentManagerObject, ...activeManagers];
+                }
+            }
+        }
+        return activeManagers;
+    }, [clientEmployees, isEditing, currentLocation]);
+
 
     const handleOpenForm = (location = null) => {
       setIsEditing(!!location);
       setCurrentLocation(location || {
           location_number: '',
           location_name: '',
-          address: '',
           store_id: '',
           client_id: client.id,
           store_manager: '',
-          status: 'Active'
+          status: 'Active',
+          store_phone_number: '',
+          store_fax_number: '',
+          address_1: '',
+          address_2: '',
+          city: '',
+          state: '',
+          zip_code: ''
       });
       setShowForm(true);
     };
@@ -80,11 +106,27 @@ const LocationManager = ({ client, onLocationsUpdate }) => {
       setShowForm(false);
       setCurrentLocation(null);
     };
+    
+    const formatPhoneNumber = (value) => {
+        if (!value) return value;
+        const phoneNumber = value.replace(/[^\d]/g, '');
+        const phoneNumberLength = phoneNumber.length;
+        if (phoneNumberLength < 4) return phoneNumber;
+        if (phoneNumberLength < 7) {
+            return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+        }
+        return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+    };
 
     const handleLocationInputChange = (e) => {
-      const { name, value } = e.target;
-      setCurrentLocation(prev => ({...prev, [name]: value}));
-    }
+        const { name, value } = e.target;
+        if (name === 'store_phone_number' || name === 'store_fax_number') {
+            const formattedValue = formatPhoneNumber(value);
+            setCurrentLocation(prev => ({ ...prev, [name]: formattedValue }));
+        } else {
+            setCurrentLocation(prev => ({...prev, [name]: value}));
+        }
+    };
 
     const handleSubmit = async (e) => {
       e.preventDefault();
@@ -103,6 +145,7 @@ const LocationManager = ({ client, onLocationsUpdate }) => {
             await deleteLocation(id);
             fetchLocationsAndEmployees();
             onLocationsUpdate();
+            handleCloseForm();
         }
     };
 
@@ -135,10 +178,9 @@ const LocationManager = ({ client, onLocationsUpdate }) => {
                   <td>{loc.location_name}</td>
                   <td>{loc.store_manager}</td>
                   <td><span className={`status-badge status-${(loc.status || '').toLowerCase()}`}>{loc.status}</span></td>
-                  <td>{loc.address}</td>
+                  <td>{formatAddress(loc)}</td>
                   <td className="action-buttons-cell">
                     <button className="action-button action-button-small" onClick={() => handleOpenForm(loc)}>Edit</button>
-                    <button className="action-button-delete action-button-small" onClick={() => handleDelete(loc.id)}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -147,47 +189,99 @@ const LocationManager = ({ client, onLocationsUpdate }) => {
         </div>
 
         {showForm && (
-          <Modal onClose={handleCloseForm}>
+          <Modal onClose={handleCloseForm} size="large">
             <h3>{isEditing ? 'Edit Location' : 'Add Location'}</h3>
             <form className="add-employee-form" onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Location Number</label>
-                <input type="text" name="location_number" value={currentLocation.location_number || ''} onChange={handleLocationInputChange} required />
-              </div>
-              <div className="form-group">
-                <label>Store ID</label>
-                <input type="text" name="store_id" value={currentLocation.store_id || ''} onChange={handleLocationInputChange} required />
-              </div>
-              <div className="form-group">
-                <label>Location Name</label>
-                <input type="text" name="location_name" value={currentLocation.location_name || ''} onChange={handleLocationInputChange} />
-              </div>
-              <div className="form-group">
-                  <label>Store Manager</label>
-                  <select
-                      name="store_manager"
-                      value={currentLocation.store_manager || ''}
+              <div className="settings-form-grid">
+                <div className="form-group">
+                  <label>Location Number</label>
+                  <input type="text" name="location_number" value={currentLocation.location_number || ''} onChange={handleLocationInputChange} required />
+                </div>
+                <div className="form-group">
+                  <label>Store ID</label>
+                  <input type="text" name="store_id" value={currentLocation.store_id || ''} onChange={handleLocationInputChange} required />
+                </div>
+                <div className="form-group">
+                  <label>Location Name</label>
+                  <input type="text" name="location_name" value={currentLocation.location_name || ''} onChange={handleLocationInputChange} />
+                </div>
+                <div className="form-group">
+                    <label>Store Manager</label>
+                    <select
+                        name="store_manager"
+                        value={currentLocation.store_manager || ''}
+                        onChange={handleLocationInputChange}
+                    >
+                        <option value="">Select a Manager</option>
+                        {managerOptions.map(employee => (
+                            <option key={employee.id} value={employee.name}>
+                                {employee.name}{employee.status !== 'Active' ? ' (Inactive)' : ''}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label>Store Phone</label>
+                    <input 
+                      type="tel" 
+                      name="store_phone_number" 
+                      value={currentLocation.store_phone_number || ''} 
+                      onChange={handleLocationInputChange} 
+                      autoComplete="tel"
+                      maxLength="14"
+                      placeholder="(XXX) XXX-XXXX"
+                    />
+                </div>
+                <div className="form-group">
+                    <label>Store Fax</label>
+                    <input 
+                      type="tel" 
+                      name="store_fax_number" 
+                      value={currentLocation.store_fax_number || ''} 
                       onChange={handleLocationInputChange}
-                  >
-                      <option value="">Select a Manager</option>
-                      {clientEmployees.map(employee => (
-                          <option key={employee.id} value={employee.name}>
-                              {employee.name}
-                          </option>
-                      ))}
+                      maxLength="14"
+                      placeholder="(XXX) XXX-XXXX"
+                    />
+                </div>
+                <div className="form-group">
+                  <label>Address 1</label>
+                  <input type="text" name="address_1" value={currentLocation.address_1 || ''} onChange={handleLocationInputChange} autoComplete="address-line1" />
+                </div>
+                <div className="form-group">
+                  <label>Address 2</label>
+                  <input type="text" name="address_2" value={currentLocation.address_2 || ''} onChange={handleLocationInputChange} autoComplete="address-line2" />
+                </div>
+                <div className="form-group">
+                  <label>City</label>
+                  <input type="text" name="city" value={currentLocation.city || ''} onChange={handleLocationInputChange} autoComplete="address-level2" />
+                </div>
+                <div className="form-group">
+                  <label>State</label>
+                  <select name="state" value={currentLocation.state || ''} onChange={handleLocationInputChange} autoComplete="address-level1">
+                    <option value="" disabled>Select a State</option>
+                    {usStates.map(state => <option key={state.abbreviation} value={state.name}>{`${state.name} (${state.abbreviation})`}</option>)}
                   </select>
+                </div>
+                <div className="form-group">
+                  <label>Zip Code</label>
+                  <input type="text" name="zip_code" value={currentLocation.zip_code || ''} onChange={handleLocationInputChange} autoComplete="postal-code" />
+                </div>
+                 <div className="form-group">
+                    <label>Status</label>
+                    <select name="status" value={currentLocation.status || ''} onChange={handleLocationInputChange}>
+                        {locationStatuses.map(status => <option key={status} value={status}>{status}</option>)}
+                    </select>
+                </div>
               </div>
-               <div className="form-group">
-                  <label>Status</label>
-                  <select name="status" value={currentLocation.status || ''} onChange={handleLocationInputChange}>
-                      {locationStatuses.map(status => <option key={status} value={status}>{status}</option>)}
-                  </select>
-              </div>
-              <div className="form-group">
-                <label>Address</label>
-                <textarea name="address" value={currentLocation.address || ''} onChange={handleLocationInputChange} autoComplete="street-address" />
-              </div>
-              <button type="submit" className="submit-button">Save Location</button>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem' }}>
+                    <button type="submit" className="submit-button">Save Location</button>
+                    {isEditing && (
+                        <button type="button" className="action-button-delete" onClick={() => handleDelete(currentLocation.id)}>
+                            Delete Location
+                        </button>
+                    )}
+                </div>
             </form>
           </Modal>
         )}
@@ -284,7 +378,7 @@ function ClientDetails() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name.startsWith('tax_')) {
-      const field = name.split('_')[1];
+      const field = name.substring(4); // Correctly gets the rest of the string after "tax_"
       setCurrentClient(prev => ({
         ...prev,
         tax_info: {
@@ -333,7 +427,10 @@ function ClientDetails() {
       setCurrentClient({
         company_name: '', ein: '', service_group: 'REIN Client', notes: '', franchisee_owner: [''], company_email: '', website: '', status: 'Active',
         pay_period: 'Weekly',
-        tax_info: { state: '', sui_number: '', local_tax: '' }
+        tax_info: { 
+            state: '', sui_number: '', local_tax: '', 
+            futa_rate: '', suta_account_number: '', suta_wage_limit: '', suta_rate: '', sitw_account_number: '' 
+        }
       });
       setCanDelete(false);
     }
@@ -478,7 +575,7 @@ function ClientDetails() {
       )}
 
       {showForm && currentClient && (
-        <Modal onClose={handleCloseForm}>
+        <Modal onClose={handleCloseForm} size="large">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>{isEditing ? 'Edit Client' : 'Add New Client'}</h3>
             {isEditing && canDelete && (
@@ -492,73 +589,95 @@ function ClientDetails() {
             )}
           </div>
           <form className="add-employee-form" onSubmit={handleSubmit}>
-             <div className="form-group">
-              <label>Company Name</label>
-              <input type="text" name="company_name" value={currentClient.company_name || ''} onChange={handleInputChange} required autoComplete="organization" />
-            </div>
-            <div className="form-group">
-                <label>Franchisee / Owner(s)</label>
-                {Array.isArray(currentClient.franchisee_owner) && currentClient.franchisee_owner.map((owner, index) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
-                        <input
-                            type="text"
-                            value={owner}
-                            onChange={(e) => handleOwnerChange(index, e.target.value)}
-                            style={{ flexGrow: 1, marginRight: '5px' }}
-                        />
-                        {currentClient.franchisee_owner.length > 1 && (
-                            <button type="button" onClick={() => removeOwnerField(index)} className="action-button-delete action-button-small">-</button>
-                        )}
-                    </div>
-                ))}
-                <button type="button" onClick={addOwnerField} className="action-button-small" style={{ marginTop: '5px' }}>+ Add Owner</button>
-            </div>
-            <div className="form-group">
-              <label>Company Email</label>
-              <input type="email" name="company_email" value={currentClient.company_email || ''} onChange={handleInputChange} autoComplete="email" />
-            </div>
-            <div className="form-group">
-              <label>Website</label>
-              <input type="text" name="website" value={currentClient.website || ''} onChange={handleInputChange} autoComplete="url" />
-            </div>
-            <div className="form-group">
-              <label>EIN</label>
-              <input type="text" name="ein" value={currentClient.ein || ''} onChange={handleInputChange} required autoComplete="off" />
-            </div>
-             <div className="form-group">
-              <label>Status</label>
-              <select name="status" value={currentClient.status || ''} onChange={handleInputChange} required>
-                <option value="" disabled>Select Status</option>
-                {clientStatuses.map(status => <option key={status} value={status}>{status}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Service Group</label>
-              <select name="service_group" value={currentClient.service_group || ''} onChange={handleInputChange} required>
-                <option value="" disabled>Select Service Group</option>
-                {serviceGroups.map(group => <option key={group} value={group}>{group}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-                <label>Pay Period</label>
-                <select name="pay_period" value={currentClient.pay_period || ''} onChange={handleInputChange} required>
-                    {payPeriods.map(period => <option key={period} value={period}>{period}</option>)}
+            <div className="settings-form-grid">
+              <div className="form-group">
+                <label>Company Name</label>
+                <input type="text" name="company_name" value={currentClient.company_name || ''} onChange={handleInputChange} required autoComplete="organization" />
+              </div>
+              <div className="form-group">
+                  <label>Franchisee / Owner(s)</label>
+                  {Array.isArray(currentClient.franchisee_owner) && currentClient.franchisee_owner.map((owner, index) => (
+                      <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                          <input
+                              type="text"
+                              value={owner}
+                              onChange={(e) => handleOwnerChange(index, e.target.value)}
+                              style={{ flexGrow: 1, marginRight: '5px' }}
+                          />
+                          {currentClient.franchisee_owner.length > 1 && (
+                              <button type="button" onClick={() => removeOwnerField(index)} className="action-button-delete action-button-small">-</button>
+                          )}
+                      </div>
+                  ))}
+                  <button type="button" onClick={addOwnerField} className="action-button-small" style={{ marginTop: '5px' }}>+ Add Owner</button>
+              </div>
+              <div className="form-group">
+                <label>Company Email</label>
+                <input type="email" name="company_email" value={currentClient.company_email || ''} onChange={handleInputChange} autoComplete="email" />
+              </div>
+              <div className="form-group">
+                <label>Website</label>
+                <input type="text" name="website" value={currentClient.website || ''} onChange={handleInputChange} autoComplete="url" />
+              </div>
+              <div className="form-group">
+                <label>EIN</label>
+                <input type="text" name="ein" value={currentClient.ein || ''} onChange={handleInputChange} required autoComplete="off" />
+              </div>
+              <div className="form-group">
+                <label>Status</label>
+                <select name="status" value={currentClient.status || ''} onChange={handleInputChange} required>
+                  <option value="" disabled>Select Status</option>
+                  {clientStatuses.map(status => <option key={status} value={status}>{status}</option>)}
                 </select>
-            </div>
-            <div className="form-group">
-              <label>State</label>
-              <select name="tax_state" value={currentClient.tax_info?.state || ''} onChange={handleInputChange}>
-                <option value="" disabled>Select a State</option>
-                {usStates.map(state => <option key={state} value={state}>{state}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>State Unemployment (SUI) Number</label>
-              <input type="text" name="tax_sui_number" value={currentClient.tax_info?.sui_number || ''} onChange={handleInputChange} autoComplete="off" />
-            </div>
-            <div className="form-group">
-              <label>Local Tax Details</label>
-              <input type="text" name="tax_local_tax" placeholder="e.g., specific county or city tax info" value={currentClient.tax_info?.local_tax || ''} onChange={handleInputChange} autoComplete="off" />
+              </div>
+              <div className="form-group">
+                <label>Service Group</label>
+                <select name="service_group" value={currentClient.service_group || ''} onChange={handleInputChange} required>
+                  <option value="" disabled>Select Service Group</option>
+                  {serviceGroups.map(group => <option key={group} value={group}>{group}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                  <label>Pay Period</label>
+                  <select name="pay_period" value={currentClient.pay_period || ''} onChange={handleInputChange} required>
+                      {payPeriods.map(period => <option key={period} value={period}>{period}</option>)}
+                  </select>
+              </div>
+              <div className="form-group">
+                <label>State</label>
+                <select name="tax_state" value={currentClient.tax_info?.state || ''} onChange={handleInputChange}>
+                  <option value="" disabled>Select a State</option>
+                  {usStates.map(state => <option key={state.abbreviation} value={state.name}>{`${state.name} (${state.abbreviation})`}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>State Unemployment (SUI) Number</label>
+                <input type="text" name="tax_sui_number" value={currentClient.tax_info?.sui_number || ''} onChange={handleInputChange} autoComplete="off" />
+              </div>
+               <div className="form-group">
+                <label>FUTA Rate</label>
+                <input type="text" name="tax_futa_rate" value={currentClient.tax_info?.futa_rate || ''} onChange={handleInputChange} autoComplete="off" />
+              </div>
+              <div className="form-group">
+                <label>SUTA Account Number</label>
+                <input type="text" name="tax_suta_account_number" value={currentClient.tax_info?.suta_account_number || ''} onChange={handleInputChange} autoComplete="off" />
+              </div>
+              <div className="form-group">
+                <label>SUTA Wage Limit</label>
+                <input type="text" name="tax_suta_wage_limit" value={currentClient.tax_info?.suta_wage_limit || ''} onChange={handleInputChange} autoComplete="off" />
+              </div>
+              <div className="form-group">
+                <label>SUTA Rate</label>
+                <input type="text" name="tax_suta_rate" value={currentClient.tax_info?.suta_rate || ''} onChange={handleInputChange} autoComplete="off" />
+              </div>
+               <div className="form-group">
+                <label>SITW Account Number</label>
+                <input type="text" name="tax_sitw_account_number" value={currentClient.tax_info?.sitw_account_number || ''} onChange={handleInputChange} autoComplete="off" />
+              </div>
+              <div className="form-group">
+                <label>Local Tax Details</label>
+                <input type="text" name="tax_local_tax" placeholder="e.g., specific county or city tax info" value={currentClient.tax_info?.local_tax || ''} onChange={handleInputChange} autoComplete="off" />
+              </div>
             </div>
             <div className="form-group">
               <label>Notes</label>

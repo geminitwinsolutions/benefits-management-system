@@ -1,3 +1,4 @@
+// src/pages/PlanManagement.js
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     getCarriers, addCarrier, updateCarrier, deleteCarrier,
@@ -38,17 +39,18 @@ const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive }) => {
         if (window.confirm('Are you sure you want to delete this carrier? This may affect associated benefit plans.')) {
             await deleteCarrier(id);
             onUpdate();
+            handleCloseForm();
         }
     };
 
     return (
         <div className="card">
-            <div className="page-header">
+            <div className="page-header card-header blue">
                 <h2>Carriers</h2>
                 <button
                     className="add-button action-button-small"
                     onClick={() => handleOpenForm()}
-                    disabled={!isEnrollmentActive}>
+                    disabled={isEnrollmentActive}>
                     Add Carrier
                 </button>
             </div>
@@ -64,14 +66,8 @@ const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive }) => {
                                     <button
                                         className="action-button-small"
                                         onClick={() => handleOpenForm(carrier)}
-                                        disabled={!isEnrollmentActive}>
+                                        disabled={isEnrollmentActive}>
                                         Edit
-                                    </button>
-                                    <button
-                                        className="action-button-delete action-button-small"
-                                        onClick={() => handleDelete(carrier.id)}
-                                        disabled={!isEnrollmentActive}>
-                                        Delete
                                     </button>
                                 </td>
                             </tr>
@@ -98,7 +94,14 @@ const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive }) => {
                                 <option value="Same-Month">Same-Month</option>
                             </select>
                         </div>
-                        <button type="submit" className="submit-button">Save</button>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem' }}>
+                            <button type="submit" className="submit-button">Save</button>
+                            {isEditing && (
+                                <button type="button" className="action-button-delete" onClick={() => handleDelete(currentCarrier.id)}>
+                                    Delete
+                                </button>
+                            )}
+                        </div>
                     </form>
                 </Modal>
             )}
@@ -194,6 +197,7 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
         if (window.confirm('Are you sure you want to delete this benefit plan?')) {
             await deleteBenefitPlan(id);
             onUpdate();
+            handleCloseForm();
         }
     };
 
@@ -254,9 +258,9 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
 
     return (
         <div className="card">
-            <div className="page-header">
+            <div className="page-header card-header blue">
                 <h2>Benefit Plans</h2>
-                <button className="add-button action-button-small" onClick={() => handleOpenForm()} disabled={!isEnrollmentActive}>Add Plan</button>
+                <button className="add-button action-button-small" onClick={() => handleOpenForm()} disabled={isEnrollmentActive}>Add Plan</button>
             </div>
             <div className="card-body">
                 <table className="employees-table">
@@ -269,8 +273,7 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
                                 <td>{carriers.find(c => c.id === plan.carrier_id)?.name || 'N/A'}</td>
                                 <td>{getPlanCostDisplay(plan)}</td>
                                 <td className="action-buttons-cell">
-                                    <button className="action-button-small" onClick={() => handleOpenForm(plan)} disabled={!isEnrollmentActive}>Edit</button>
-                                    <button className="action-button-delete action-button-small" onClick={() => handleDelete(plan.id)} disabled={!isEnrollmentActive}>Delete</button>
+                                    <button className="action-button-small" onClick={() => handleOpenForm(plan)} disabled={isEnrollmentActive}>Edit</button>
                                 </td>
                             </tr>
                         ))}
@@ -318,7 +321,14 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
                             <label>Rates</label>
                             {renderRateInputs()}
                         </div>
-                        <button type="submit" className="submit-button">Save Plan</button>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem' }}>
+                            <button type="submit" className="submit-button">Save Plan</button>
+                            {isEditing && (
+                                <button type="button" className="action-button-delete" onClick={() => handleDelete(currentPlan.id)}>
+                                    Delete Plan
+                                </button>
+                            )}
+                        </div>
                     </form>
                 </Modal>
             )}
@@ -331,7 +341,7 @@ function PlanManagement() {
     const [carriers, setCarriers] = useState([]);
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isEnrollmentActive, setIsEnrollmentActive] = useState(false);
+    const [isEnrollmentActive, setIsEnrollmentActive] = useState(true);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -359,17 +369,17 @@ function PlanManagement() {
             <h1>Plan & Carrier Management</h1>
             <p>
                 Manage insurance carriers and the benefit plans they offer. This section is only editable 
-                when an **Open Enrollment** period is active.
+                when an **Open Enrollment** period is not active.
             </p>
-            {!isEnrollmentActive && (
+            {isEnrollmentActive && (
               <div className="mt-4 p-4 text-center text-orange-700 bg-orange-100 border-l-4 border-orange-500">
                 <p className="font-bold">Plan management is locked.</p>
-                <p>Please activate an Open Enrollment period to add or edit plans and carriers.</p>
+                <p>Please end the active Open Enrollment period to add or edit plans and carriers.</p>
               </div>
             )}
             <div className="plan-management-layout">
-                <CarrierManager carriers={carriers} onUpdate={fetchData} isEnrollmentActive={isEnrollmentActive} />
-                <PlanManager plans={plans} carriers={carriers} onUpdate={fetchData} isEnrollmentActive={isEnrollmentActive} />
+                <CarrierManager carriers={carriers} onUpdate={fetchData} isEnrollmentActive={!isEnrollmentActive} />
+                <PlanManager plans={plans} carriers={carriers} onUpdate={fetchData} isEnrollmentActive={!isEnrollmentActive} />
             </div>
         </div>
     );

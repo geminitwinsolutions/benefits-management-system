@@ -415,12 +415,12 @@ export const updateInvoiceStatus = async (invoiceId, newStatus) => {
 
 // --- Employee Management ---
 export const getEmployees = async () => {
-  const { data, error } = await supabase.from('employees').select('*');
-  if (error) {
-    console.error('Error fetching employees:', error);
-    return [];
-  }
-  return data;
+    const { data, error } = await supabase.from('employees').select('*, employee_statuses(name)');
+    if (error) {
+        console.error('Error fetching employees:', error);
+        return [];
+    }
+    return data.map(emp => ({ ...emp, status: emp.employee_statuses.name }));
 };
 
 export const addEmployee = async (employeeData) => {
@@ -480,4 +480,145 @@ export const getAllLocations = async () => {
     return [];
   }
   return data;
+};
+
+// --- Company Settings ---
+export const getCompany = async () => {
+    const { data, error } = await supabase.from('company').select('*').single();
+    if (error && error.code !== 'PGRST116') { // PGRST116: no rows found
+        console.error('Error fetching company details:', error);
+        throw error;
+    }
+    return data;
+};
+
+export const updateCompany = async (companyData) => {
+    const { id, ...updateData } = companyData;
+    const { data, error } = await supabase
+        .from('company')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Error updating company details:', error);
+        throw error;
+    }
+    return data;
+};
+
+// --- User Management ---
+export const getUsersWithRoles = async () => {
+    const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+            id,
+            full_name,
+            users:users(email),
+            roles(id, name)
+        `);
+
+    if (error) {
+        console.error('Error fetching users with roles:', error);
+        return [];
+    }
+    // Flatten the response for easier use
+    return data.map(p => ({
+        id: p.id,
+        full_name: p.full_name,
+        email: p.users.email,
+        role: p.roles
+    }));
+};
+
+export const getRoles = async () => {
+    const { data, error } = await supabase.from('roles').select('*, role_permissions(permission)');
+    if (error) {
+        console.error('Error fetching roles:', error);
+        return [];
+    }
+    return data;
+};
+
+export const addRole = async (roleData) => {
+    const { data, error } = await supabase.from('roles').insert(roleData).select().single();
+    if (error) throw error;
+    return data;
+};
+
+export const updateRole = async (roleId, roleData) => {
+    const { data, error } = await supabase.from('roles').update(roleData).eq('id', roleId).select().single();
+    if (error) throw error;
+    return data;
+};
+
+export const deleteRole = async (roleId) => {
+    const { error } = await supabase.from('roles').delete().eq('id', roleId);
+    if (error) throw error;
+};
+
+export const updateRolePermissions = async (roleId, permissions) => {
+    // First, delete existing permissions for the role
+    const { error: deleteError } = await supabase.from('role_permissions').delete().eq('role_id', roleId);
+    if (deleteError) throw deleteError;
+
+    // Then, insert the new permissions
+    if (permissions.length > 0) {
+        const newPermissions = permissions.map(p => ({ role_id: roleId, permission: p }));
+        const { error: insertError } = await supabase.from('role_permissions').insert(newPermissions);
+        if (insertError) throw insertError;
+    }
+};
+
+export const getEmployeesWithoutUsers = async () => {
+    const { data, error } = await supabase.rpc('get_employees_without_users');
+    if (error) {
+        console.error('Error fetching employees without users:', error);
+        return [];
+    }
+    return data;
+}
+
+export const inviteUser = async ({ email, fullName, roleId }) => {
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+        data: {
+            full_name: fullName,
+            role_id: roleId
+        }
+    });
+
+    if (error) {
+        console.error('Error inviting user:', error);
+        throw new Error(error.message);
+    }
+    return data;
+};
+
+export const updateUserRole = async (userId, roleId) => {
+    const { data, error } = await supabase
+        .from('profiles')
+        .update({ role_id: roleId })
+        .eq('id', userId)
+        .select();
+
+    if (error) {
+        console.error('Error updating user role:', error);
+        throw new Error(error.message);
+    }
+    return data;
+};
+
+export const isSuperAdmin = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('roles(name)')
+        .eq('id', user.id)
+        .single();
+
+    if (error) return false;
+    return data.roles.name === 'Super Admin';
 };

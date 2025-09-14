@@ -53,23 +53,40 @@ const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
 
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this item?')) {
-      const toastId = toast.loading('Deleting item...');
-      try {
-        const { error } = await supabase.from(tableName).delete().eq('id', currentItem.id);
-        if (error) throw error;
-        toast.success('Item deleted!', { id: toastId });
-        onUpdate();
-        handleCloseForm();
-      } catch (error) {
-        toast.error('Failed to delete item.', { id: toastId });
-        console.error(error);
-      }
+        const toastId = toast.loading('Deleting item...');
+
+        try {
+            // For job codes, check if it's in use
+            if (tableName === 'job_codes') {
+                const { data: employees, error: employeesError } = await supabase
+                    .from('employees')
+                    .select('id')
+                    .eq('job_code_id', currentItem.id)
+                    .limit(1);
+
+                if (employeesError) throw employeesError;
+
+                if (employees && employees.length > 0) {
+                    throw new Error("This job code is in use and cannot be deleted.");
+                }
+            }
+
+            const { error } = await supabase.from(tableName).delete().eq('id', currentItem.id);
+            if (error) throw error;
+            
+            toast.success('Item deleted!', { id: toastId });
+            onUpdate();
+            handleCloseForm();
+        } catch (error) {
+            toast.error(error.message || 'Failed to delete item.', { id: toastId });
+            console.error(error);
+        }
     }
-  };
+};
 
   return (
     <div className="card">
-      <div className="page-header">
+      <div className="page-header card-header violet">
         <h2>{title}</h2>
         <button className="add-button action-button-small" onClick={() => handleOpenForm()}>Add New</button>
       </div>

@@ -1,7 +1,19 @@
-import React from 'react';
+// src/pages/CentralHub.js
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
+import { isSuperAdmin } from '../services/benefitService';
 
 function CentralHub() {
+    const [showRoleManagement, setShowRoleManagement] = useState(false);
+
+    useEffect(() => {
+        async function checkAdminStatus() {
+            const superAdmin = await isSuperAdmin();
+            setShowRoleManagement(superAdmin);
+        }
+        checkAdminStatus();
+    }, []);
+
   return (
     <div className="page-container">
       <div className="central-hub-layout">
@@ -27,6 +39,10 @@ function CentralHub() {
           </div>
           <div className="sidebar-group">
             <h4>Admin</h4>
+            <NavLink to="/central-hub/user-settings">User Settings</NavLink>
+            {showRoleManagement && (
+                <NavLink to="/central-hub/role-management">Role Management</NavLink>
+            )}
             <NavLink to="/central-hub/company-settings">Company Settings</NavLink>
              <NavLink to="/central-hub/employee-settings">Employee Settings</NavLink>
           </div>

@@ -60,6 +60,7 @@ function ServiceLibrary() {
             const success = await deleteService(id);
             if (success) {
                 setServices(prev => prev.filter(service => service.id !== id));
+                handleCloseModal();
             } else {
                 alert("Failed to delete the service.");
             }
@@ -116,7 +117,6 @@ function ServiceLibrary() {
                                     <td>${service.price}</td>
                                     <td className="action-buttons-cell">
                                         <button className="action-button-small" onClick={() => handleEditClick(service)}>Edit</button>
-                                        <button className="action-button-delete action-button-small" onClick={() => handleDelete(service.id)}>Delete</button>
                                     </td>
                                 </tr>
                             ))}
@@ -148,7 +148,14 @@ function ServiceLibrary() {
                                 <label>Price ($)</label>
                                 <input type="number" name="price" value={newService.price} onChange={handleInputChange} required />
                             </div>
-                            <button type="submit" className="submit-button">Save Service</button>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem' }}>
+                                <button type="submit" className="submit-button">Save Service</button>
+                                {editingService && (
+                                    <button type="button" className="action-button-delete" onClick={() => handleDelete(editingService.id)}>
+                                        Delete
+                                    </button>
+                                )}
+                            </div>
                         </form>
                     </div>
                 </Modal>
