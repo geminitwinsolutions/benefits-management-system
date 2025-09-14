@@ -38,7 +38,7 @@ function ProtectedRoute({ session, children }) {
 // ===============================================
 // === TEMPORARY AUTH BYPASS FOR DEVELOPMENT ===
 // ===============================================
-const BYPASS_AUTH = true;
+const BYPASS_AUTH = false;
 // Set to 'false' to enable authentication and require login
 // ===============================================
 

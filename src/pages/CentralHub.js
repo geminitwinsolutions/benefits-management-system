@@ -4,7 +4,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { isSuperAdmin } from '../services/benefitService';
 
 function CentralHub() {
-    const [showRoleManagement, setShowRoleManagement] = useState(false);
+    const [showRoleManagement, setShowRoleManagement] = useState(true);
 
     useEffect(() => {
         async function checkAdminStatus() {
@@ -43,7 +43,7 @@ function CentralHub() {
             {showRoleManagement && (
                 <NavLink to="/central-hub/role-management">Role Management</NavLink>
             )}
-
+            <NavLink to="/central-hub/company-settings">Company Settings</NavLink>
              <NavLink to="/central-hub/employee-settings">Employee Settings</NavLink>
           </div>
         </nav>
