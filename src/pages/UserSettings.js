@@ -1,6 +1,6 @@
 // src/pages/UserSettings.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { getUsersWithRoles, getRoles, inviteUser, updateUserRole, getEmployeesWithoutUsers } from '../services/benefitService';
+import { getUsersWithRoles, getRoles, inviteUser, updateUserRole, getEmployees, getUsers } from '../services/benefitService';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import SkeletonLoader from '../components/SkeletonLoader';
@@ -18,14 +18,19 @@ function UserSettings() {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const [usersData, rolesData, employeesData] = await Promise.all([
-                getUsersWithRoles(), 
+            const [usersData, rolesData, allEmployees, allUsers] = await Promise.all([
+                getUsersWithRoles(),
                 getRoles(),
-                getEmployeesWithoutUsers()
+                getEmployees(),
+                getUsers()
             ]);
+
+            const userEmails = new Set(allUsers.map(u => u.email));
+            const employeesToInvite = allEmployees.filter(emp => emp.email && !userEmails.has(emp.email));
+
             setUsers(usersData);
             setRoles(rolesData);
-            setEmployeesWithoutUsers(employeesData);
+            setEmployeesWithoutUsers(employeesToInvite);
         } catch (error) {
             toast.error("Failed to load user data.");
         } finally {
@@ -39,8 +44,13 @@ function UserSettings() {
 
     const handleOpenForm = (user = null) => {
         setIsEditing(!!user);
-        setCurrentUser(user || { email: '', full_name: '', role: { id: '' } });
-        setInviteType('external');
+        if (user) {
+            setCurrentUser(user);
+            setInviteType('external'); 
+        } else {
+            setCurrentUser({ email: '', full_name: '', role: { id: '' } });
+            setInviteType('external');
+        }
         setShowForm(true);
     };
 
@@ -48,6 +58,13 @@ function UserSettings() {
         setShowForm(false);
         setCurrentUser(null);
     };
+    
+    // Reset form when invite type changes
+    useEffect(() => {
+        if (!isEditing && showForm) {
+            setCurrentUser({ email: '', full_name: '', role: { id: '' } });
+        }
+    }, [inviteType, isEditing, showForm]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -60,12 +77,18 @@ function UserSettings() {
 
     const handleEmployeeSelect = (e) => {
         const employeeId = e.target.value;
-        const selectedEmployee = employeesWithoutUsers.find(emp => emp.id === employeeId);
+        const selectedEmployee = employeesWithoutUsers.find(emp => emp.id.toString() === employeeId);
         if (selectedEmployee) {
             setCurrentUser(prev => ({
                 ...prev,
                 full_name: selectedEmployee.name,
                 email: selectedEmployee.email
+            }));
+        } else {
+             setCurrentUser(prev => ({
+                ...prev,
+                full_name: '',
+                email: ''
             }));
         }
     };
@@ -134,7 +157,7 @@ function UserSettings() {
                 </div>
             </div>
 
-            {showForm && (
+            {showForm && currentUser && (
                 <Modal onClose={handleCloseForm}>
                     <h3>{isEditing ? 'Edit User' : 'Invite New User'}</h3>
                     <form className="add-employee-form" onSubmit={handleSubmit}>
@@ -154,10 +177,10 @@ function UserSettings() {
                             </div>
                         )}
 
-                        {inviteType === 'employee' && !isEditing ? (
+                        {!isEditing && inviteType === 'employee' && (
                             <div className="form-group">
                                 <label>Select Employee</label>
-                                <select onChange={handleEmployeeSelect} defaultValue="">
+                                <select onChange={handleEmployeeSelect} defaultValue="" required>
                                     <option value="" disabled>Choose an employee</option>
                                     {employeesWithoutUsers.map(emp => (
                                         <option key={emp.id} value={emp.id}>
@@ -166,18 +189,30 @@ function UserSettings() {
                                     ))}
                                 </select>
                             </div>
-                        ) : (
-                            <>
-                                <div className="form-group">
-                                    <label>Full Name</label>
-                                    <input type="text" name="full_name" value={currentUser.full_name || ''} onChange={handleInputChange} required />
-                                </div>
-                                <div className="form-group">
-                                    <label>Email Address</label>
-                                    <input type="email" name="email" value={currentUser.email || ''} onChange={handleInputChange} required disabled={isEditing} />
-                                </div>
-                            </>
                         )}
+                        
+                        <div className="form-group">
+                            <label>Full Name</label>
+                            <input 
+                                type="text" 
+                                name="full_name" 
+                                value={currentUser.full_name || ''} 
+                                onChange={handleInputChange} 
+                                required 
+                                disabled={isEditing || inviteType === 'employee'}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Email Address</label>
+                            <input 
+                                type="email" 
+                                name="email" 
+                                value={currentUser.email || ''} 
+                                onChange={handleInputChange} 
+                                required 
+                                disabled={isEditing || inviteType === 'employee'}
+                            />
+                        </div>
                         
                         <div className="form-group">
                             <label>Role</label>

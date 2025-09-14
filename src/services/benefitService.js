@@ -532,26 +532,13 @@ export const updateCompany = async (companyData) => {
 
 // --- User Management ---
 export const getUsersWithRoles = async () => {
-    const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-            id,
-            full_name,
-            users:users(email),
-            roles(id, name)
-        `);
+    const { data, error } = await supabase.rpc('get_users_with_roles_and_email');
 
     if (error) {
         console.error('Error fetching users with roles:', error);
         return [];
     }
-    // Flatten the response for easier use
-    return data.map(p => ({
-        id: p.id,
-        full_name: p.full_name,
-        email: p.users.email,
-        role: p.roles
-    }));
+    return data;
 };
 
 export const getRoles = async () => {
@@ -603,18 +590,20 @@ export const getEmployeesWithoutUsers = async () => {
 }
 
 export const inviteUser = async ({ email, fullName, roleId }) => {
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-        data: {
-            full_name: fullName,
-            role_id: roleId
-        }
-    });
+    try {
+        const { data, error } = await supabase.functions.invoke('invite-user', {
+            body: { email, fullName, roleId },
+        });
 
-    if (error) {
+        if (error) {
+            throw error;
+        }
+
+        return data;
+    } catch (error) {
         console.error('Error inviting user:', error);
-        throw new Error(error.message);
+        throw new Error(error.message || 'An unexpected error occurred.');
     }
-    return data;
 };
 
 export const updateUserRole = async (userId, roleId) => {
@@ -646,8 +635,11 @@ export const isSuperAdmin = async () => {
 };
 
 // --- Bank Account Management ---
-export const getBankAccounts = async () => {
-  const { data, error } = await supabase.from('bank_accounts').select('*');
+export const getBankAccounts = async (clientId) => {
+  const { data, error } = await supabase
+    .from('bank_accounts')
+    .select('*')
+    .eq('client_id', clientId);
   if (error) {
     console.error('Error fetching bank accounts:', error);
     return [];
@@ -680,4 +672,12 @@ export const deleteBankAccount = async (id) => {
     return false;
   }
   return true;
+};
+export const getUsers = async () => {
+    const { data, error } = await supabase.rpc('get_users_with_roles_and_email');
+    if (error) {
+        console.error('Error fetching users:', error);
+        return [];
+    }
+    return data;
 };

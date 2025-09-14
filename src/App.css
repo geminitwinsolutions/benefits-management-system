@@ -822,3 +822,16 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; }
   margin-bottom: 1.5rem;
   border: 1px solid var(--border-color);
 }
+.add-employee-form h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.add-employee-form h4:first-of-type {
+  margin-top: 0;
+}

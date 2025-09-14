@@ -538,97 +538,122 @@ function ClientDetails() {
             )}
           </div>
           <form className="add-employee-form" onSubmit={handleSubmit}>
+            <h4>Primary Information</h4>
+            <div className="employee-form-grid">
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label>Company Name</label>
+                    <input type="text" name="company_name" value={currentClient.company_name || ''} onChange={handleInputChange} required autoComplete="organization" />
+                </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label>Franchisee / Owner(s)</label>
+                    {Array.isArray(currentClient.franchisee_owner) && currentClient.franchisee_owner.map((owner, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                            <input
+                                type="text"
+                                value={owner}
+                                onChange={(e) => handleOwnerChange(index, e.target.value)}
+                                style={{ flexGrow: 1, marginRight: '5px' }}
+                            />
+                            {currentClient.franchisee_owner.length > 1 && (
+                                <button type="button" onClick={() => removeOwnerField(index)} className="action-button-delete action-button-small">-</button>
+                            )}
+                        </div>
+                    ))}
+                    <button type="button" onClick={addOwnerField} className="action-button-small" style={{ marginTop: '5px' }}>+ Add Owner</button>
+                </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'normal' }}>
+                        <input type="checkbox" name="is_primary_organization" checked={!!currentClient.is_primary_organization} onChange={handleInputChange} />
+                        Set as Primary Organization (for Dashboard display)
+                    </label>
+                </div>
+            </div>
+
+            <hr style={{ margin: '1.5rem 0' }} />
+
+            <h4>Company Details</h4>
+            <div className="employee-form-grid">
+                <div className="form-group">
+                  <label>EIN</label>
+                  <input type="text" name="ein" value={currentClient.ein || ''} onChange={handleInputChange} required autoComplete="off" />
+                </div>
+                <div className="form-group">
+                  <label>Status</label>
+                  <select name="status" value={currentClient.status || ''} onChange={handleInputChange} required>
+                    <option value="" disabled>Select Status</option>
+                    {clientStatuses.map(status => <option key={status} value={status}>{status}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Service Group</label>
+                  <select name="service_group" value={currentClient.service_group || ''} onChange={handleInputChange} required>
+                    <option value="" disabled>Select Service Group</option>
+                    {serviceGroups.map(group => <option key={group} value={group}>{group}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                    <label>Pay Period</label>
+                    <select name="pay_period" value={currentClient.pay_period || ''} onChange={handleInputChange} required>
+                        {payPeriods.map(period => <option key={period} value={period}>{period}</option>)}
+                    </select>
+                </div>
+            </div>
+
+            <hr style={{ margin: '1.5rem 0' }} />
+
+            <h4>Contact & Location</h4>
+            <div className="employee-form-grid">
+                <div className="form-group">
+                  <label>Company Email</label>
+                  <input type="email" name="company_email" value={currentClient.company_email || ''} onChange={handleInputChange} autoComplete="email" />
+                </div>
+                <div className="form-group">
+                  <label>Website</label>
+                  <input type="text" name="website" value={currentClient.website || ''} onChange={handleInputChange} autoComplete="url" />
+                </div>
+                <div className="form-group">
+                  <label>HR Office Phone</label>
+                  <input type="tel" name="hr_office_phone" value={currentClient.hr_office_phone || ''} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                  <label>HR Fax Number</label>
+                  <input type="tel" name="hr_fax_phone" value={currentClient.hr_fax_phone || ''} onChange={handleInputChange} />
+                </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label>Address</label>
+                  <textarea name="address" value={currentClient.address || ''} onChange={handleInputChange} rows="3"></textarea>
+                </div>
+            </div>
+
+            <hr style={{ margin: '1.5rem 0' }} />
+
+            <h4>Tax Information</h4>
+            <div className="employee-form-grid">
+                <div className="form-group">
+                  <label>State</label>
+                  <select name="tax_info.state" value={currentClient.tax_info?.state || ''} onChange={handleInputChange}>
+                    <option value="" disabled>Select a State</option>
+                    {usStates.map(state => <option key={state.abbreviation} value={state.abbreviation}>{state.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>State Unemployment (SUI) Number</label>
+                  <input type="text" name="tax_info.sui_number" value={currentClient.tax_info?.sui_number || ''} onChange={handleInputChange} autoComplete="off" />
+                </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label>Local Tax Details</label>
+                  <input type="text" name="tax_info.local_tax" placeholder="e.g., specific county or city tax info" value={currentClient.tax_info?.local_tax || ''} onChange={handleInputChange} autoComplete="off" />
+                </div>
+            </div>
+
+            <hr style={{ margin: '1.5rem 0' }} />
+
+            <h4>Notes</h4>
             <div className="form-group">
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <input type="checkbox" name="is_primary_organization" checked={!!currentClient.is_primary_organization} onChange={handleInputChange} />
-                    Set as Primary Organization (for Dashboard display)
-                </label>
+                <textarea name="notes" value={currentClient.notes || ''} onChange={handleInputChange} rows="4" />
             </div>
-             <div className="form-group">
-              <label>Company Name</label>
-              <input type="text" name="company_name" value={currentClient.company_name || ''} onChange={handleInputChange} required autoComplete="organization" />
-            </div>
-            <div className="form-group">
-                <label>Franchisee / Owner(s)</label>
-                {Array.isArray(currentClient.franchisee_owner) && currentClient.franchisee_owner.map((owner, index) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
-                        <input
-                            type="text"
-                            value={owner}
-                            onChange={(e) => handleOwnerChange(index, e.target.value)}
-                            style={{ flexGrow: 1, marginRight: '5px' }}
-                        />
-                        {currentClient.franchisee_owner.length > 1 && (
-                            <button type="button" onClick={() => removeOwnerField(index)} className="action-button-delete action-button-small">-</button>
-                        )}
-                    </div>
-                ))}
-                <button type="button" onClick={addOwnerField} className="action-button-small" style={{ marginTop: '5px' }}>+ Add Owner</button>
-            </div>
-            <div className="form-group">
-              <label>Company Email</label>
-              <input type="email" name="company_email" value={currentClient.company_email || ''} onChange={handleInputChange} autoComplete="email" />
-            </div>
-            <div className="form-group">
-              <label>Website</label>
-              <input type="text" name="website" value={currentClient.website || ''} onChange={handleInputChange} autoComplete="url" />
-            </div>
-             <div className="form-group">
-              <label>EIN</label>
-              <input type="text" name="ein" value={currentClient.ein || ''} onChange={handleInputChange} required autoComplete="off" />
-            </div>
-            <div className="form-group">
-              <label>Address</label>
-              <textarea name="address" value={currentClient.address || ''} onChange={handleInputChange} rows="3"></textarea>
-            </div>
-            <div className="form-group">
-              <label>HR Office Phone</label>
-              <input type="tel" name="hr_office_phone" value={currentClient.hr_office_phone || ''} onChange={handleInputChange} />
-            </div>
-            <div className="form-group">
-              <label>HR Fax Number</label>
-              <input type="tel" name="hr_fax_phone" value={currentClient.hr_fax_phone || ''} onChange={handleInputChange} />
-            </div>
-             <div className="form-group">
-              <label>Status</label>
-              <select name="status" value={currentClient.status || ''} onChange={handleInputChange} required>
-                <option value="" disabled>Select Status</option>
-                {clientStatuses.map(status => <option key={status} value={status}>{status}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Service Group</label>
-              <select name="service_group" value={currentClient.service_group || ''} onChange={handleInputChange} required>
-                <option value="" disabled>Select Service Group</option>
-                {serviceGroups.map(group => <option key={group} value={group}>{group}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-                <label>Pay Period</label>
-                <select name="pay_period" value={currentClient.pay_period || ''} onChange={handleInputChange} required>
-                    {payPeriods.map(period => <option key={period} value={period}>{period}</option>)}
-                </select>
-            </div>
-            <div className="form-group">
-              <label>State</label>
-              <select name="tax_info.state" value={currentClient.tax_info?.state || ''} onChange={handleInputChange}>
-                <option value="" disabled>Select a State</option>
-                {usStates.map(state => <option key={state.abbreviation} value={state.abbreviation}>{state.name}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>State Unemployment (SUI) Number</label>
-              <input type="text" name="tax_info.sui_number" value={currentClient.tax_info?.sui_number || ''} onChange={handleInputChange} autoComplete="off" />
-            </div>
-            <div className="form-group">
-              <label>Local Tax Details</label>
-              <input type="text" name="tax_info.local_tax" placeholder="e.g., specific county or city tax info" value={currentClient.tax_info?.local_tax || ''} onChange={handleInputChange} autoComplete="off" />
-            </div>
-            <div className="form-group">
-              <label>Notes</label>
-              <textarea name="notes" value={currentClient.notes || ''} onChange={handleInputChange} />
-            </div>
-            <button type="submit" className="submit-button">Save Client</button>
+
+            <button type="submit" className="submit-button" style={{ marginTop: '1rem' }}>Save Client</button>
           </form>
         </Modal>
       )}
