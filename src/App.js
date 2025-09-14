@@ -20,6 +20,8 @@ import StatsAndReports from './pages/StatsAndReports';
 import CentralHub from './pages/CentralHub';
 import NotFound from './pages/NotFound';
 import ServiceLibrary from './pages/ServiceLibrary';
+import CompanySettings from './pages/CompanySettings';
+import EmployeeSettings from './pages/EmployeeSettings';
 import PlanManagement from './pages/PlanManagement'; // Import the new page
 
 import './App.css';
@@ -86,7 +88,8 @@ function App() {
             <Route path="plan-management" element={<PlanManagement />} />
             <Route path="reconciliation" element={<BenefitsReconciliation />} />
             <Route path="service-library" element={<ServiceLibrary />} />
-
+            <Route path="company-settings" element={<CompanySettings />} />
+            <Route path="employee-settings" element={<EmployeeSettings />} />
             <Route index element={<Navigate to="enrollment-management" replace />} />
           </Route>
 

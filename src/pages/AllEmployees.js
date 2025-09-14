@@ -1,14 +1,14 @@
-// src/pages/AllEmployees.js
 import React, { useState, useEffect } from 'react';
 import Modal from '../components/Modal';
 import OpenEnrollmentForm from '../components/OpenEnrollmentForm';
 import { getEmployees, addEmployee, deleteEmployee, updateEmployee, submitEnrollment, getEnrollmentPeriods } from '../services/benefitService';
+import SkeletonLoader from '../components/SkeletonLoader';
+import { supabase } from '../supabase';
+import toast from 'react-hot-toast';
 
-// Helper to format date for input[type="date"]
 const formatDateForInput = (dateStr) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
-  // Adjust for timezone offset to prevent the date from being off by one day
   const timezoneOffset = date.getTimezoneOffset() * 60000;
   const adjustedDate = new Date(date.getTime() + timezoneOffset);
   return adjustedDate.toISOString().split('T')[0];
@@ -18,101 +18,118 @@ function AllEmployees() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [currentEmployee, setCurrentEmployee] = useState(null); 
+  const [currentEmployee, setCurrentEmployee] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showEnrollmentForm, setShowEnrollmentForm] = useState(false);
   const [activeEnrollmentPeriodId, setActiveEnrollmentPeriodId] = useState(null);
+  const [jobCodes, setJobCodes] = useState([]);
+  const [employmentTypes, setEmploymentTypes] = useState([]);
+  const [employeeStatuses, setEmployeeStatuses] = useState([]);
 
-  async function fetchEmployees() {
+  async function fetchData() {
     setLoading(true);
-    const [fetchedEmployees, enrollmentPeriods] = await Promise.all([
-      getEmployees(),
-      getEnrollmentPeriods()
-    ]);
-    const activePeriod = enrollmentPeriods.find(p => p.status === 'Active');
-    if (activePeriod) {
-      setActiveEnrollmentPeriodId(activePeriod.id);
+    try {
+      const [
+        fetchedEmployees,
+        enrollmentPeriods,
+        jobCodesRes,
+        empTypesRes,
+        empStatusesRes,
+      ] = await Promise.all([
+        getEmployees(),
+        getEnrollmentPeriods(),
+        supabase.from('job_codes').select('*'),
+        supabase.from('employment_types').select('*'),
+        supabase.from('employee_statuses').select('*'),
+      ]);
+
+      const activePeriod = enrollmentPeriods.find(p => p.status === 'Active');
+      if (activePeriod) {
+        setActiveEnrollmentPeriodId(activePeriod.id);
+      }
+
+      setEmployees(fetchedEmployees.sort((a, b) => a.name.localeCompare(b.name)));
+      setJobCodes(jobCodesRes.data || []);
+      setEmploymentTypes(empTypesRes.data || []);
+      setEmployeeStatuses(empStatusesRes.data || []);
+
+    } catch (error) {
+      toast.error("Failed to load employee data and settings.");
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
-    setEmployees(fetchedEmployees.sort((a, b) => a.name.localeCompare(b.name)));
-    setLoading(false);
   }
 
   useEffect(() => {
-    fetchEmployees();
+    fetchData();
   }, []);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    // Send null for empty optional fields that are not required
-    const valueToSend = value === '' && name !== 'name' && name !== 'department' && name !== 'status' && name !== 'hire_date' ? null : value;
-    setCurrentEmployee(prev => ({ ...prev, [name]: valueToSend }));
+    const { name, value, type, checked } = e.target;
+    const valueToSet = type === 'checkbox' ? checked : value;
+    setCurrentEmployee(prev => ({ ...prev, [name]: valueToSet }));
   };
 
   const openAddModal = () => {
     setIsEditing(false);
-    setCurrentEmployee({ 
-      name: '', 
-      department: '', 
-      status: 'Active',
-      date_of_birth: null,
-      hire_date: new Date().toISOString().split('T')[0], // Default hire date to today
-      termination_date: null,
-      address: '',
-      ssn: '',
-      dependents: [] // Default to an empty array
+    setCurrentEmployee({
+      name: '',
+      department: '',
+      status_id: '',
+      hire_date: new Date().toISOString().split('T')[0],
+      eid: '',
+      email: '',
+      employment_type_id: '',
+      job_code_id: '',
+      eligible_for_rehire: true,
     });
     setShowAddForm(true);
   };
-  
+
   const openEditModal = (employee) => {
     setIsEditing(true);
     setCurrentEmployee(employee);
     setShowAddForm(true);
   };
-  
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this employee? This could affect historical records.")) {
-        const success = await deleteEmployee(id);
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure? This will permanently delete the employee.")) {
+        const success = await deleteEmployee(currentEmployee.id);
         if (success) {
-            setEmployees(prev => prev.filter(emp => emp.id !== id));
+            toast.success("Employee deleted.");
+            setShowAddForm(false);
+            fetchData();
         } else {
-            alert("Failed to delete employee.");
+            toast.error("Failed to delete employee.");
         }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let updatedEmployee = null;
+    const toastId = toast.loading(isEditing ? 'Updating employee...' : 'Adding employee...');
 
-    if (isEditing) {
-      const originalEmployee = employees.find(emp => emp.id === currentEmployee.id);
-      updatedEmployee = await updateEmployee(currentEmployee.id, currentEmployee);
-      
-      if (updatedEmployee) {
-        setEmployees(prev => prev.map(emp => emp.id === updatedEmployee.id ? updatedEmployee : emp).sort((a, b) => a.name.localeCompare(b.name)));
-        if (originalEmployee.status !== 'Active' && updatedEmployee.status === 'Active') {
-          triggerEnrollment(updatedEmployee);
-        }
+    try {
+      let updatedEmployee = null;
+      if (isEditing) {
+        updatedEmployee = await updateEmployee(currentEmployee.id, currentEmployee);
+      } else {
+        updatedEmployee = await addEmployee(currentEmployee);
       }
-    } else {
-      updatedEmployee = await addEmployee(currentEmployee);
+
       if (updatedEmployee) {
-        setEmployees(prev => [...prev, updatedEmployee].sort((a,b) => a.name.localeCompare(b.name)));
-        triggerEnrollment(updatedEmployee);
+        toast.success(`Employee successfully ${isEditing ? 'updated' : 'added'}!`, { id: toastId });
+        fetchData();
       }
+    } catch (error) {
+      toast.error(`Error: ${error.message}`, { id: toastId });
+    } finally {
+      setShowAddForm(false);
     }
-    
-    setShowAddForm(false);
   };
   
-  const triggerEnrollment = (employee) => {
-    if (window.confirm(`${employee.name} now qualifies for benefits. Do you want to open a special enrollment period for them?`)) {
-      handleStartEnrollment(employee);
-    }
-  };
-
   const handleStartEnrollment = (employee) => {
     const employeeWithDetails = { ...employee, fullName: employee.name, employeeId: employee.id };
     setSelectedEmployee(employeeWithDetails);
@@ -120,80 +137,76 @@ function AllEmployees() {
   };
 
   const handleEnrollmentSubmit = async (enrollmentData) => {
-    const dataToSubmit = {
-      ...enrollmentData,
-      enrollment_period_id: activeEnrollmentPeriodId
-    };
-
-    const result = await submitEnrollment(dataToSubmit);
-    if (result) {
-      alert(`Successfully submitted enrollment for ${selectedEmployee.name}!`);
-    } else {
-      alert(`There was an error submitting the enrollment. Please try again.`);
+    const toastId = toast.loading("Submitting enrollment...");
+    try {
+      const dataToSubmit = {
+        ...enrollmentData,
+        enrollment_period_id: activeEnrollmentPeriodId
+      };
+      const result = await submitEnrollment(dataToSubmit);
+      if (result) {
+        toast.success(`Enrollment submitted for ${selectedEmployee.name}!`, { id: toastId });
+        fetchData();
+      } else {
+        throw new Error("Submission returned no result.");
+      }
+    } catch (error) {
+      toast.error(`Error submitting enrollment: ${error.message}`, { id: toastId });
+    } finally {
+      setShowEnrollmentForm(false);
     }
-    setShowEnrollmentForm(false);
   };
-
-  if (loading) {
-    return (
-      <div className="page-container">
-        <h1>Loading Employees...</h1>
-      </div>
-    );
-  }
 
   return (
     <div className="page-container">
       <div className="page-header">
         <h1>All Employees</h1>
-        <button className="add-button" onClick={openAddModal}>
-          Add New Employee
-        </button>
+        <button className="add-button" onClick={openAddModal}>Add New Employee</button>
       </div>
 
       <div className="card">
         <div className="card-body">
-            <table className="employees-table">
-            <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Location / Dept #</th>
-                  <th>Hire Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {employees.map((employee) => (
-                <tr key={employee.id}>
-                    <td>{employee.name}</td>
-                    <td>{employee.department}</td>
-                    <td>{employee.hire_date}</td>
-                    <td>
-                      <span className={`status-badge status-${(employee.status || '').toLowerCase().replace(' ', '-')}`}>
-                          {employee.status}
-                      </span>
-                    </td>
-                    <td className="action-buttons-cell">
-                      <button className="action-button-small" onClick={() => openEditModal(employee)}>
-                          Edit
-                      </button>
-                      <button
-                          className="action-button-delete action-button-small"
-                          onClick={() => handleDelete(employee.id)}
-                          aria-label={`Delete ${employee.name}`}
-                      >
-                          Delete
-                      </button>
-                    </td>
-                </tr>
-                ))}
-            </tbody>
-            </table>
+            {loading ? <SkeletonLoader type="table" /> : (
+              <table className="employees-table">
+                <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Location / Dept #</th>
+                      <th>Hire Date</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {employees.map((employee) => (
+                    <tr key={employee.id}>
+                        <td>{employee.name}</td>
+                        <td>{employee.department}</td>
+                        <td>{employee.hire_date}</td>
+                        <td>
+                          <span className={`status-badge status-${(employee.employee_statuses?.name || 'default').toLowerCase().replace(' ', '-')}`}>
+                              {employee.employee_statuses?.name || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="action-buttons-cell">
+                          <button className="action-button-small" onClick={() => openEditModal(employee)}>
+                              Edit
+                          </button>
+                          {activeEnrollmentPeriodId && employee.status === 'Active' && (
+                            <button className="action-button-small" onClick={() => handleStartEnrollment(employee)}>
+                              Enroll
+                            </button>
+                          )}
+                        </td>
+                    </tr>
+                    ))}
+                </tbody>
+              </table>
+            )}
         </div>
       </div>
 
-      {showAddForm && (
+      {showAddForm && currentEmployee && (
         <Modal onClose={() => setShowAddForm(false)}>
             <h3>{isEditing ? 'Edit Employee' : 'Add New Employee'}</h3>
             <form className="add-employee-form" onSubmit={handleSubmit}>
@@ -202,15 +215,30 @@ function AllEmployees() {
                     <input type="text" name="name" value={currentEmployee.name || ''} onChange={handleInputChange} required />
                 </div>
                 <div className="form-group">
+                    <label>EID</label>
+                    <input type="text" name="eid" value={currentEmployee.eid || ''} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" value={currentEmployee.email || ''} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                    <label>Employment Type</label>
+                    <select name="employment_type_id" value={currentEmployee.employment_type_id || ''} onChange={handleInputChange} required>
+                        <option value="" disabled>Select a type</option>
+                        {employmentTypes.map(type => <option key={type.id} value={type.id}>{type.name}</option>)}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label>Job Code</label>
+                    <select name="job_code_id" value={currentEmployee.job_code_id || ''} onChange={handleInputChange} required>
+                        <option value="" disabled>Select a code</option>
+                        {jobCodes.map(code => <option key={code.id} value={code.id}>{code.code} - {code.description}</option>)}
+                    </select>
+                </div>
+                <div className="form-group">
                     <label>Location / Department #</label>
-                    <input 
-                      type="text" 
-                      name="department" 
-                      value={currentEmployee.department || ''} 
-                      onChange={handleInputChange} 
-                      placeholder="e.g., 001"
-                      required 
-                    />
+                    <input type="text" name="department" value={currentEmployee.department || ''} onChange={handleInputChange} required />
                 </div>
                  <div className="form-group">
                     <label>Address</label>
@@ -230,22 +258,34 @@ function AllEmployees() {
                 </div>
                 <div className="form-group">
                     <label>Status</label>
-                    <select name="status" value={currentEmployee.status} onChange={handleInputChange} required>
-                        <option value="Active">Active</option>
-                        <option value="On Leave">On Leave</option>
-                        <option value="Terminated">Terminated</option>
+                    <select name="status_id" value={currentEmployee.status_id || ''} onChange={handleInputChange} required>
+                        <option value="" disabled>Select a status</option>
+                        {employeeStatuses.map(status => <option key={status.id} value={status.id}>{status.name}</option>)}
                     </select>
                 </div>
                  <div className="form-group">
                     <label>Termination Date</label>
                     <input type="date" name="termination_date" value={formatDateForInput(currentEmployee.termination_date)} onChange={handleInputChange} />
                 </div>
-                <button type="submit" className="submit-button">Save Employee</button>
+                <div className="form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <input type="checkbox" name="eligible_for_rehire" checked={!!currentEmployee.eligible_for_rehire} onChange={handleInputChange} />
+                        Eligible for Rehire
+                    </label>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+                    <button type="submit" className="submit-button">Save Employee</button>
+                    {isEditing && (
+                        <button type="button" className="action-button-delete" onClick={handleDelete}>
+                            Delete Employee
+                        </button>
+                    )}
+                </div>
             </form>
         </Modal>
       )}
 
-      {showEnrollmentForm && (
+      {showEnrollmentForm && selectedEmployee && (
         <OpenEnrollmentForm 
           employeeInfo={selectedEmployee}
           onClose={() => setShowEnrollmentForm(false)}

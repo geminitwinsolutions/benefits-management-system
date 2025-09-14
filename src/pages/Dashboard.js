@@ -7,6 +7,7 @@ import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { getEmployees, getTiers, getServices, getEnrollmentsWithEmployeeData } from '../services/benefitService';
+import CompanyDetails from '../components/CompanyDetails'; // Import the new component
 
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -97,7 +98,7 @@ function Dashboard() {
     { id: 2, text: 'Terminate benefits for Peter Jones', completed: false },
     { id: 3, text: 'Review quarterly tax documents', completed: true },
   ]);
-  const [clientData] = useState({ name: 'The Premier Companies, Inc.', tier: 'Gold', lastLogin: '09/05/25' });
+
   const [layouts, setLayouts] = useState(() => getFromLS('dashboardLayouts') || initialLayouts);
 
   const [margin, setMargin] = useState([20, 20]);
@@ -251,13 +252,15 @@ function Dashboard() {
         <div key="actions" className="card">
           <div className="card-header"><h2>Action Items</h2></div>
           <div className="card-body">
-            <table className="simple-table">
+            <table className="simple-table action-items-table">
               <tbody>
                 {actionItems.map(item => (
                   <tr key={item.id}>
-                    <td className={item.completed ? 'line-through' : ''}>{item.text}</td>
-                    <td>
-                      <button onClick={() => handleToggleComplete(item.id)} className="action-button-small">{item.completed ? 'Undo' : 'Done'}</button>
+                    <td className={item.completed ? 'completed-task' : ''}>{item.text}</td>
+                    <td style={{ width: '80px' }}>
+                      <button onClick={() => handleToggleComplete(item.id)} className="action-button-small">
+                        {item.completed ? 'Undo' : 'Done'}
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -266,19 +269,14 @@ function Dashboard() {
           </div>
         </div>
 
-        <div key="overview" className="card">
-          <div className="card-header"><h2>Client Overview</h2></div>
-          <div className="card-body">
-            <p><strong>Name:</strong> {clientData.name}</p>
-            <p><strong>Tier:</strong> <span className="tier-badge tier-gold">{clientData.tier}</span></p>
-            <p><strong>Last Login:</strong> {clientData.lastLogin}</p>
-          </div>
+        <div key="overview">
+          <CompanyDetails />
         </div>
 
         <div key="deadlines" className="card">
           <div className="card-header"><h2>Upcoming Deadlines</h2></div>
           <div className="card-body">
-            <table className="simple-table">
+            <table className="simple-table upcoming-deadlines-table">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -286,9 +284,9 @@ function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                <tr><td>Sep 15</td><td>Open Enrollment Ends</td></tr>
-                <tr><td>Oct 01</td><td>Q4 Invoices Due</td></tr>
-                <tr><td>Oct 10</td><td>Compliance Docs Submission</td></tr>
+                <tr><td className="date">Sep 15</td><td>Open Enrollment Ends</td></tr>
+                <tr><td className="date">Oct 01</td><td>Q4 Invoices Due</td></tr>
+                <tr><td className="date">Oct 10</td><td>Compliance Docs Submission</td></tr>
               </tbody>
             </table>
           </div>

@@ -797,3 +797,74 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; }
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     cursor: pointer;
 }
+.simple-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.simple-table th, .simple-table td {
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.simple-table th {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+}
+
+.simple-table tr:last-child td {
+  border-bottom: none;
+}
+
+.action-items-table .completed-task {
+  text-decoration: line-through;
+  color: var(--text-light);
+}
+
+.upcoming-deadlines-table .date {
+  font-weight: 600;
+  color: var(--primary-color);
+  white-space: nowrap;
+}
+/* --- Skeleton Loader Styles for Forms --- */
+.skeleton-form {
+  padding: 1rem;
+}
+
+.skeleton-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.skeleton-label {
+  height: 14px;
+  width: 100px;
+  margin-bottom: 0.5rem;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  animation: skeleton-loading 1.5s infinite alternate;
+}
+
+.skeleton-input {
+  height: 40px;
+  width: 100%;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  animation: skeleton-loading 1.5s infinite alternate;
+}
+
+.skeleton-button {
+  height: 40px;
+  width: 120px;
+  margin-top: 1rem;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  animation: skeleton-loading 1.5s infinite alternate;
+}
+/* --- Settings Modal Form Grid --- */
+.settings-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem 1.0rem;
+}
