@@ -109,19 +109,21 @@ function AllEmployees() {
     setCurrentEmployee(prev => ({ ...prev, [name]: valueToSet }));
   };
 
+  // src/pages/AllEmployees.js
   const openAddModal = () => {
     setIsEditing(false);
     setIsSsnVisible(true);
+    // This is the updated part that sets default values for the dropdowns
     setCurrentEmployee({
       name: '',
       department: '',
-      status_id: '',
+      status_id: employeeStatuses.length > 0 ? employeeStatuses[0].id : '',
       hire_date: new Date().toISOString().split('T')[0],
       eid: '',
       email: '',
       phone_number: '',
-      employment_type_id: '',
-      job_code_id: '',
+      employment_type_id: employmentTypes.length > 0 ? employmentTypes[0].id : '',
+      job_code_id: jobCodes.length > 0 ? jobCodes[0].id : '',
       eligible_for_rehire: true,
       address_1: '',
       address_2: '',

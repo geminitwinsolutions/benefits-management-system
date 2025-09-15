@@ -416,12 +416,22 @@ export const updateInvoiceStatus = async (invoiceId, newStatus) => {
 
 // --- Employee Management ---
 export const getEmployees = async () => {
-  const { data, error } = await supabase.from('employees').select('*, employee_statuses(name)');
+  const { data, error } = await supabase.from('employees').select('*, employee_statuses!fk_employee_status(name)');
+
   if (error) {
     console.error('Error fetching employees:', error);
+    // Even if there's an error, return the data we have so the app doesn't crash
+    if (data) {
+      return data.map(emp => ({ ...emp, status: 'N/A' }));
+    }
     return [];
   }
-  return data.map(emp => ({ ...emp, status: emp.employee_statuses.name }));
+
+  return data.map(emp => ({
+    ...emp,
+    // Safely access the status name, providing a default if it's not available
+    status: emp.employee_statuses ? emp.employee_statuses.name : 'N/A'
+  }));
 };
 
 export const addEmployee = async (employeeData) => {
