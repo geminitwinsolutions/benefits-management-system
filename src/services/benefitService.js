@@ -1,3 +1,5 @@
+// src/services/benefitService.js
+
 import { supabase } from '../supabase';
 import toast from 'react-hot-toast';
 
@@ -318,94 +320,97 @@ export const setPlansForEnrollmentPeriod = async (enrollmentPeriodId, benefitIds
   return true;
 };
 
-
 // --- Benefit Plans & Carriers ---
 export const getBenefitPlans = async () => {
-  const { data, error } = await supabase
-    .from('benefits')
-    .select('*, benefit_rates(*)');
-  if (error) {
-    console.error('Error fetching benefit plans:', error);
-    return [];
-  }
-  return data;
-};
-
-export const addBenefitPlanWithRates = async (planData, ratesData) => {
-  const { description, ...restOfPlanData } = planData;
-  const { data: plan, error: planError } = await supabase
-    .from('benefits')
-    .insert([restOfPlanData])
-    .select()
-    .single();
-
-  if (planError) {
-    console.error('Error adding benefit plan:', planError);
-    return null;
-  }
-
-  // The `ratesData` now contains nested structures. We'll store it as JSON.
-  // We first clear existing rates to prepare for the new rates.
-  const { error: deleteRatesError } = await supabase.from('benefit_rates').delete().eq('benefit_id', plan.id);
-  if (deleteRatesError) {
-      console.error('Error clearing old rates:', deleteRatesError);
-      // We can decide to roll back the plan creation here if needed
-      return null;
-  }
-
-  // Insert the new rate data as a single JSON object.
-  const ratesToInsert = {
-      benefit_id: plan.id,
-      rates: ratesData
-  }
-
-  const { error: ratesError } = await supabase.from('benefit_rates').insert([ratesToInsert]);
-
-  if (ratesError) {
-    console.error('Error adding benefit rates:', ratesError);
-    await supabase.from('benefits').delete().eq('id', plan.id);
-    return null;
-  }
-
-  return { ...plan, benefit_rates: ratesData };
-};
-
-
-export const updateBenefitPlanWithRates = async (planId, planData, ratesData) => {
-  const { description, ...restOfPlanData } = planData;
-  const { data: plan, error: planError } = await supabase
-    .from('benefits')
-    .update(restOfPlanData)
-    .eq('id', planId)
-    .select()
-    .single();
-
-  if (planError) {
-    console.error('Error updating benefit plan:', planError);
-    return null;
-  }
-
-  const { error: deleteError } = await supabase.from('benefit_rates').delete().eq('benefit_id', planId);
-  if (deleteError) {
-    console.error('Error deleting old rates:', deleteError);
-    return null;
-  }
-
-  // Insert the new rates as a single JSON object.
-  const ratesToInsert = {
-      benefit_id: planId,
-      rates: ratesData
+    const { data, error } = await supabase
+      .from('benefits')
+      .select('*, benefit_rates(*)');
+    if (error) {
+      console.error('Error fetching benefit plans:', error);
+      return [];
+    }
+    return data;
   };
 
-  const { error: ratesError } = await supabase.from('benefit_rates').insert([ratesToInsert]);
-
-  if (ratesError) {
-    console.error('Error inserting new rates:', ratesError);
-    return null;
-  }
-
-  return { ...plan, benefit_rates: ratesToInsert };
-};
+  export const addBenefitPlanWithRates = async (planData, ratesData) => {
+    // 1. Create the benefit plan to get its ID
+    const { data: plan, error: planError } = await supabase
+      .from('benefits')
+      .insert([planData])
+      .select()
+      .single();
+  
+    if (planError) {
+      console.error('Error adding benefit plan:', planError);
+      return null;
+    }
+  
+    // 2. Prepare the rate rows for insertion
+    const ratesToInsert = ratesData.map(rate => ({
+      benefit_id: plan.id,
+      coverage_level: rate.coverage_level || null,
+      min_age: rate.min_age || null,
+      max_age: rate.max_age || null,
+      carrier_rate: rate.carrier_rate || 0,
+      // Pass the entire `ratesData` array as the `rates` jsonb field
+      rates: ratesData,
+    }));
+  
+    // 3. Insert all rate rows
+    const { error: ratesError } = await supabase.from('benefit_rates').insert(ratesToInsert);
+  
+    if (ratesError) {
+      console.error('Error adding benefit rates:', ratesError);
+      // Clean up the created plan if rates fail
+      await supabase.from('benefits').delete().eq('id', plan.id);
+      return null;
+    }
+  
+    return { ...plan, benefit_rates: [{ rates: ratesData }] };
+  };
+  
+  export const updateBenefitPlanWithRates = async (planId, planData, ratesData) => {
+    // 1. Update the benefit plan details
+    const { data: plan, error: planError } = await supabase
+      .from('benefits')
+      .update(planData)
+      .eq('id', planId)
+      .select()
+      .single();
+  
+    if (planError) {
+      console.error('Error updating benefit plan:', planError);
+      return null;
+    }
+  
+    // 2. Clear existing rates for this plan
+    const { error: deleteError } = await supabase.from('benefit_rates').delete().eq('benefit_id', planId);
+  
+    if (deleteError) {
+      console.error('Error deleting old rates:', deleteError);
+      return null;
+    }
+  
+    // 3. Prepare and insert new rate rows
+    const ratesToInsert = ratesData.map(rate => ({
+        benefit_id: planId,
+        coverage_level: rate.coverage_level || null,
+        min_age: rate.min_age || null,
+        max_age: rate.max_age || null,
+        carrier_rate: rate.carrier_rate || 0,
+        // Pass the entire `ratesData` array as the `rates` jsonb field
+        rates: ratesData,
+      }));
+  
+    const { error: ratesError } = await supabase.from('benefit_rates').insert(ratesToInsert);
+  
+    if (ratesError) {
+      console.error('Error inserting new rates:', ratesError);
+      return null;
+    }
+  
+    return { ...plan, benefit_rates: [{ rates: ratesData }] };
+  };
 
 export const deleteBenefitPlan = async (id) => {
   const { error } = await supabase.from('benefits').delete().eq('id', id);
