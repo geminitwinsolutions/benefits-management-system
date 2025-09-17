@@ -835,3 +835,13 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; }
 .add-employee-form h4:first-of-type {
   margin-top: 0;
 }
+/* --- Carrier Table Selection --- */
+.carrier-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.carrier-table tbody tr.selected-row {
+  background-color: #eef2ff; /* A light indigo color */
+  box-shadow: inset 3px 0 0 0 var(--primary-color);
+}
