@@ -264,66 +264,11 @@ export const updateEnrollmentPeriod = async (id, updatedPeriodData) => {
   return data[0];
 };
 
-// --- New Functions for Enrollment Period Plans ---
-
-/**
- * Get all benefit plans associated with a specific enrollment period.
- */
-export const getPlansForEnrollmentPeriod = async (enrollmentPeriodId) => {
-  const { data, error } = await supabase
-    .from('enrollment_period_benefits')
-    .select('benefits(*, benefit_rates(*))')
-    .eq('enrollment_period_id', enrollmentPeriodId);
-
-  if (error) {
-    console.error('Error fetching plans for enrollment period:', error);
-    return [];
-  }
-  // The data is nested, so we extract just the plan details.
-  return data.map(item => item.benefits);
-};
-
-/**
- * Sets the associated benefit plans for an enrollment period, overwriting any previous associations.
- */
-export const setPlansForEnrollmentPeriod = async (enrollmentPeriodId, benefitIds) => {
-  // First, remove all existing associations for this period to ensure a clean slate.
-  const { error: deleteError } = await supabase
-    .from('enrollment_period_benefits')
-    .delete()
-    .eq('enrollment_period_id', enrollmentPeriodId);
-
-  if (deleteError) {
-    console.error('Error clearing existing plans for enrollment period:', deleteError);
-    return false;
-  }
-
-  // Then, insert the new associations if any are provided.
-  if (benefitIds && benefitIds.length > 0) {
-    const recordsToInsert = benefitIds.map(benefitId => ({
-      enrollment_period_id: enrollmentPeriodId,
-      benefit_id: benefitId,
-    }));
-
-    const { error: insertError } = await supabase
-      .from('enrollment_period_benefits')
-      .insert(recordsToInsert);
-
-    if (insertError) {
-      console.error('Error setting new plans for enrollment period:', insertError);
-      return false;
-    }
-  }
-
-  return true;
-};
-
-
 // --- Benefit Plans & Carriers ---
 export const getBenefitPlans = async () => {
   const { data, error } = await supabase
     .from('benefits')
-    .select('*, benefit_rates(*)');
+    .select('*, benefit_rates(benefit_id, rates)');
   if (error) {
     console.error('Error fetching benefit plans:', error);
     return [];
