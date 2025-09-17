@@ -8,14 +8,13 @@ import {
   getPlansForEnrollmentPeriod
 } from '../services/benefitService';
 import Modal from '../components/Modal';
-import OpenEnrollmentForm from '../components/OpenEnrollmentForm'; // Import the form
+import OpenEnrollmentForm from '../components/OpenEnrollmentForm';
 import toast from 'react-hot-toast';
 
-// A sample employee for previewing the enrollment form
 const sampleEmployee = {
   fullName: 'John Doe (Sample)',
   employeeId: 'PREVIEW-123',
-  date_of_birth: '1988-01-15', // An example date of birth
+  date_of_birth: '1988-01-15',
 };
 
 function OpenEnrollment() {
@@ -93,6 +92,7 @@ function OpenEnrollment() {
     setNewPeriod(prev => ({ ...prev, [name]: value }));
   };
 
+  // CORRECTED FUNCTION
   const handleSubmit = async (e) => {
     e.preventDefault();
     const toastId = toast.loading('Saving enrollment period...');
@@ -107,6 +107,7 @@ function OpenEnrollment() {
         }
 
         if (periodResponse && periodResponse.id) {
+            // Corrected from periodResponse[0].id
             await setPlansForEnrollmentPeriod(periodResponse.id, selectedBenefitIds);
             toast.success('Enrollment period saved!', { id: toastId });
             fetchData();
@@ -124,7 +125,7 @@ function OpenEnrollment() {
       const updatedPeriod = await updateEnrollmentPeriod(periodId, { 
         status: 'Active', 
         start_date: new Date().toISOString().split('T')[0],
-        end_date: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0] // Default to 30 days
+        end_date: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0]
       });
       if (updatedPeriod) {
         setPeriods(periods.map(p => p.id === updatedPeriod.id ? updatedPeriod : p));
