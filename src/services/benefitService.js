@@ -277,9 +277,10 @@ export const getBenefitPlans = async () => {
 };
 
 export const addBenefitPlanWithRates = async (planData, ratesData) => {
+  const { description, ...restOfPlanData } = planData;
   const { data: plan, error: planError } = await supabase
     .from('benefits')
-    .insert([planData])
+    .insert([restOfPlanData])
     .select()
     .single();
 
@@ -316,9 +317,10 @@ export const addBenefitPlanWithRates = async (planData, ratesData) => {
 
 
 export const updateBenefitPlanWithRates = async (planId, planData, ratesData) => {
+  const { description, ...restOfPlanData } = planData;
   const { data: plan, error: planError } = await supabase
     .from('benefits')
-    .update(planData)
+    .update(restOfPlanData)
     .eq('id', planId)
     .select()
     .single();
