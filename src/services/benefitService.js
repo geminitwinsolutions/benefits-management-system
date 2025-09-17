@@ -296,7 +296,7 @@ export const addBenefitPlanWithRates = async (planData, ratesData) => {
       // We can decide to roll back the plan creation here if needed
       return null;
   }
-  
+
   // Insert the new rate data as a single JSON object.
   const ratesToInsert = {
       benefit_id: plan.id,
@@ -304,7 +304,7 @@ export const addBenefitPlanWithRates = async (planData, ratesData) => {
   }
 
   const { error: ratesError } = await supabase.from('benefit_rates').insert([ratesToInsert]);
-  
+
   if (ratesError) {
     console.error('Error adding benefit rates:', ratesError);
     await supabase.from('benefits').delete().eq('id', plan.id);
@@ -665,7 +665,7 @@ export const isSuperAdmin = async () => {
     .eq('id', user.id)
     .single();
 
-  if (profileError || !profileData.role_id) return false;
+  if (profileError || !profileData || !profileData.role_id) return false;
 
   const { data: roleData, error: roleError } = await supabase
     .from('roles')

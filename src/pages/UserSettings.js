@@ -46,7 +46,7 @@ function UserSettings() {
         setIsEditing(!!user);
         if (user) {
             setCurrentUser(user);
-            setInviteType('external'); 
+            setInviteType('external');
         } else {
             setCurrentUser({ email: '', full_name: '', role: { id: '' } });
             setInviteType('external');
@@ -58,7 +58,7 @@ function UserSettings() {
         setShowForm(false);
         setCurrentUser(null);
     };
-    
+
     // Reset form when invite type changes
     useEffect(() => {
         if (!isEditing && showForm) {
@@ -69,7 +69,7 @@ function UserSettings() {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         if (name === 'role_id') {
-            setCurrentUser(prev => ({ ...prev, role: { ...prev.role, id: value } }));
+            setCurrentUser(prev => ({ ...prev, role: { ...(prev.role || {}), id: value } }));
         } else {
             setCurrentUser(prev => ({ ...prev, [name]: value }));
         }
@@ -190,30 +190,30 @@ function UserSettings() {
                                 </select>
                             </div>
                         )}
-                        
+
                         <div className="form-group">
                             <label>Full Name</label>
-                            <input 
-                                type="text" 
-                                name="full_name" 
-                                value={currentUser.full_name || ''} 
-                                onChange={handleInputChange} 
-                                required 
+                            <input
+                                type="text"
+                                name="full_name"
+                                value={currentUser.full_name || ''}
+                                onChange={handleInputChange}
+                                required
                                 disabled={isEditing || inviteType === 'employee'}
                             />
                         </div>
                         <div className="form-group">
                             <label>Email Address</label>
-                            <input 
-                                type="email" 
-                                name="email" 
-                                value={currentUser.email || ''} 
-                                onChange={handleInputChange} 
-                                required 
+                            <input
+                                type="email"
+                                name="email"
+                                value={currentUser.email || ''}
+                                onChange={handleInputChange}
+                                required
                                 disabled={isEditing || inviteType === 'employee'}
                             />
                         </div>
-                        
+
                         <div className="form-group">
                             <label>Role</label>
                             <select name="role_id" value={currentUser.role?.id || ''} onChange={handleInputChange} required>
