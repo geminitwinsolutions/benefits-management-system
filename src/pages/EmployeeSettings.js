@@ -12,13 +12,29 @@ const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
 
   const handleOpenForm = (item = null) => {
     setIsEditing(!!item);
-    // Set default values for new items
-    setCurrentItem(item || {
-      pay_type: payTypes[0],
-      flsa_type: flsaTypes[1],
-      eeoc_id: `${eeocCategories[0].code} - ${eeocCategories[0].name}`,
-      workers_comp_code: workersCompCodes[0]
-    });
+    if (item) {
+        setCurrentItem(item);
+    } else {
+        // Set default values for new items
+        const newItem = {};
+        columns.forEach(col => {
+            // Set initial values for the form fields
+            switch(col.key) {
+                case 'pay_type':
+                    newItem[col.key] = payTypes[0];
+                    break;
+                case 'flsa_type':
+                    newItem[col.key] = flsaTypes[0];
+                    break;
+                case 'eeoc_id':
+                    newItem[col.key] = `${eeocCategories[0].code} - ${eeocCategories[0].name}`;
+                    break;
+                default:
+                    newItem[col.key] = '';
+            }
+        });
+        setCurrentItem(newItem);
+    }
     setShowForm(true);
   };
 
@@ -74,39 +90,40 @@ const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
   };
 
   const renderInput = (col) => {
-    if (col.key === 'pay_type') {
-        return (
-            <select name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange}>
-                {payTypes.map(type => <option key={type} value={type}>{type}</option>)}
-            </select>
-        );
+    const isRequired = col.required !== false;
+
+    switch (col.key) {
+        case 'pay_type':
+            return (
+                <select name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange} required={isRequired}>
+                    {payTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                </select>
+            );
+        case 'flsa_type':
+            return (
+                <select name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange} required={isRequired}>
+                    {flsaTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                </select>
+            );
+        case 'eeoc_id':
+            return (
+                <select name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange} required={isRequired}>
+                    {eeocCategories.map(cat => {
+                        const val = `${cat.code} - ${cat.name}`;
+                        return <option key={cat.code} value={val}>{val}</option>;
+                    })}
+                </select>
+            );
+        case 'workers_comp_code':
+            return (
+                <select name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange} required={isRequired}>
+                    <option value="" disabled>Select a code</option>
+                    {workersCompCodes.map(code => <option key={code} value={code}>{code}</option>)}
+                </select>
+            );
+        default:
+            return <input type="text" name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange} required={isRequired} />;
     }
-    if (col.key === 'flsa_type') {
-        return (
-            <select name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange}>
-                {flsaTypes.map(type => <option key={type} value={type}>{type}</option>)}
-            </select>
-        );
-    }
-    if (col.key === 'eeoc_id') {
-        return (
-            <select name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange}>
-                {eeocCategories.map(cat => {
-                    const val = `${cat.code} - ${cat.name}`;
-                    return <option key={cat.code} value={val}>{val}</option>
-                })}
-            </select>
-        );
-    }
-    if (col.key === 'workers_comp_code') {
-        return (
-            <select name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange}>
-                <option value="" disabled>Select a code</option>
-                {workersCompCodes.map(code => <option key={code} value={code}>{code}</option>)}
-            </select>
-        );
-    }
-    return <input type="text" name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange} required={col.required !== false} />;
   }
 
   return (
@@ -210,7 +227,7 @@ function EmployeeSettings() {
   const jobCodeColumns = [
     { key: 'code', header: 'Job Code' }, { key: 'description', header: 'Description', required: false },
     { key: 'pay_type', header: 'Pay Type' }, { key: 'eeoc_id', header: 'EEOC Category' },
-    { key: 'flsa_type', header: 'FLSA Type' }, { key: 'workers_comp_code', header: 'Workers Comp', required: false }
+    { key: 'flsa_type', header: 'FLSA Type' }, { key: 'workers_comp_code', header: 'Workers Comp' }
   ];
 
   const employmentTypeColumns = [
