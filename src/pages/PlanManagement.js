@@ -7,9 +7,8 @@ import {
 } from '../services/benefitService';
 import Modal from '../components/Modal';
 
-// --- Carrier Management Component (No changes needed) ---
+// --- Carrier Management Component ---
 const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive, selectedCarrier, onSelectCarrier }) => {
-    // ... This component's code remains the same as the previous version ...
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentCarrier, setCurrentCarrier] = useState(null);
@@ -128,7 +127,7 @@ const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive, selectedCarrie
 };
 
 
-// --- Benefit Plan Management Component (Refactored for UI and Bug Fix) ---
+// --- Benefit Plan Management Component ---
 const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) => {
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -143,7 +142,7 @@ const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) =
                 plan_name: plan.plan_name,
                 plan_type: plan.plan_type,
                 carrier_id: plan.carrier_id,
-                description: plan.description,
+                summary: plan.summary, // Use summary
                 rate_model: plan.rate_model,
                 client_margin: plan.client_margin,
             });
@@ -153,7 +152,7 @@ const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) =
                 plan_name: '',
                 plan_type: 'Medical',
                 carrier_id: selectedCarrier?.id || '',
-                description: '',
+                summary: '', // Use summary
                 rate_model: 'FLAT',
                 client_margin: 0,
             });
@@ -171,7 +170,7 @@ const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) =
     const handlePlanChange = (e) => {
         const { name, value } = e.target;
         setCurrentPlan(prev => ({ ...prev, [name]: value }));
-        
+
         if (name === 'rate_model') {
             switch (value) {
                 case 'AGE_BANDED_TIER':
@@ -189,9 +188,7 @@ const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) =
             }
         }
     };
-    
-    // --- BUG FIX ---
-    // Handles changes for the complex AGE_BANDED_TIER model
+
     const handleTieredRateChange = (bandIndex, rateIndex, field, value) => {
         const newBands = [...currentRates];
         const numValue = parseFloat(value);
@@ -204,7 +201,7 @@ const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) =
         newBands[bandIndex].age_band = value;
         setCurrentRates(newBands);
     };
-    
+
     const addRateBand = () => setCurrentRates([...currentRates, { age_band: '', rates: [{ amount: 0, premium: 0 }] }]);
     const addRateToBand = (bandIndex) => {
         const newBands = [...currentRates];
@@ -217,7 +214,6 @@ const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) =
         newBands[bandIndex].rates = newBands[bandIndex].rates.filter((_, i) => i !== rateIndex);
         setCurrentRates(newBands);
     };
-    // --- END BUG FIX & CHANGE ---
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -225,7 +221,7 @@ const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) =
         try {
             const planData = { ...currentPlan };
             delete planData.id;
-            
+
             if (isEditing) {
                 await updateBenefitPlanWithRates(currentPlan.id, planData, currentRates);
             } else {
@@ -257,12 +253,9 @@ const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) =
       if (!plan.rate_model) return 'N/A';
       return plan.rate_model.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     };
-    
-    // --- UI REFACTOR ---
-    // Renders a much cleaner, table-based UI for complex rate structures
+
     const renderRateInputs = () => {
         if (currentPlan?.rate_model !== 'AGE_BANDED_TIER') {
-            // Logic for FLAT and AGE_BANDED can be simplified or kept as is
             return <p>Rate model not supported in this view yet.</p>;
         }
 
@@ -319,7 +312,7 @@ const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) =
             </div>
         );
     };
-    
+
     if (!selectedCarrier) {
         return null;
     }
@@ -375,7 +368,7 @@ const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) =
                         </div>
                         <div className="form-group">
                             <label>Description</label>
-                            <textarea name="description" value={currentPlan?.description || ''} onChange={handlePlanChange} />
+                            <textarea name="summary" value={currentPlan?.summary || ''} onChange={handlePlanChange} />
                         </div>
                         <div className="form-group">
                             <label>Rates</label>
