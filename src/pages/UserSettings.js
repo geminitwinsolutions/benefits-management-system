@@ -85,7 +85,7 @@ function UserSettings() {
                 email: selectedEmployee.email
             }));
         } else {
-             setCurrentUser(prev => ({
+            setCurrentUser(prev => ({
                 ...prev,
                 full_name: '',
                 email: ''
@@ -117,7 +117,7 @@ function UserSettings() {
         } catch (error) {
             toast.error(error.message, { id: toastId });
         }
-    };
+    }
 
     if (loading) {
         return <SkeletonLoader type="table" />;
