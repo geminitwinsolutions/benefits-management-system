@@ -323,7 +323,7 @@ export const setPlansForEnrollmentPeriod = async (enrollmentPeriodId, benefitIds
 export const getBenefitPlans = async () => {
   const { data, error } = await supabase
     .from('benefits')
-    .select('*, benefit_rates(*)'); // CORRECTED THIS LINE
+    .select('*, benefit_rates(*)');
   if (error) {
     console.error('Error fetching benefit plans:', error);
     return [];
