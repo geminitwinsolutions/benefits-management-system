@@ -845,3 +845,43 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; }
   background-color: #eef2ff; /* A light indigo color */
   box-shadow: inset 3px 0 0 0 var(--primary-color);
 }
+/* --- Rate Input UI for Plan Management --- */
+.rate-input-container {
+  max-height: 350px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  border-radius: 6px;
+  background-color: #f9fafb;
+}
+
+.age-band-group {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: var(--bg-white);
+}
+
+.age-band-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.age-band-header input {
+  font-weight: 600;
+  flex-grow: 1;
+}
+
+.rate-input-container .simple-table input {
+    width: 100%;
+    padding: 0.5rem;
+    box-sizing: border-box;
+}
+
+.rate-input-container .simple-table th {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+}

@@ -1,28 +1,83 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { getEnrollmentPeriods, addEnrollmentPeriod, updateEnrollmentPeriod } from '../services/benefitService';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import {
+  getEnrollmentPeriods,
+  addEnrollmentPeriod,
+  updateEnrollmentPeriod,
+  getBenefitPlans,
+  setPlansForEnrollmentPeriod,
+  getPlansForEnrollmentPeriod
+} from '../services/benefitService';
 import Modal from '../components/Modal';
+import toast from 'react-hot-toast';
 
 function OpenEnrollment() {
   const [periods, setPeriods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  // --- CHANGE START ---
+  const [allBenefitPlans, setAllBenefitPlans] = useState([]);
+  const [selectedBenefitIds, setSelectedBenefitIds] = useState([]);
+  const [editingPeriod, setEditingPeriod] = useState(null);
   const [newPeriod, setNewPeriod] = useState({
     projected_start_date: '',
     status: 'Upcoming',
-    waiting_period_days: '60' // Default to 60 as per the guide
+    waiting_period_days: '60'
   });
-  // --- CHANGE END ---
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [fetchedPeriods, allPlans] = await Promise.all([
+        getEnrollmentPeriods(),
+        getBenefitPlans()
+      ]);
+      setPeriods(fetchedPeriods);
+      setAllBenefitPlans(allPlans);
+    } catch (error) {
+        toast.error('Failed to load enrollment data.');
+    } finally {
+        setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function fetchPeriods() {
-      setLoading(true);
-      const fetchedPeriods = await getEnrollmentPeriods();
-      setPeriods(fetchedPeriods);
-      setLoading(false);
+    fetchData();
+  }, [fetchData]);
+
+  const handleOpenForm = async (period = null) => {
+    setShowAddForm(true);
+    if (period) {
+      setEditingPeriod(period);
+      setNewPeriod({
+        projected_start_date: period.projected_start_date,
+        status: period.status,
+        waiting_period_days: period.waiting_period_days
+      });
+      const existingPlans = await getPlansForEnrollmentPeriod(period.id);
+      setSelectedBenefitIds(existingPlans.map(p => p.id));
+    } else {
+      setEditingPeriod(null);
+      setNewPeriod({
+        projected_start_date: '',
+        status: 'Upcoming',
+        waiting_period_days: '60'
+      });
+      setSelectedBenefitIds([]);
     }
-    fetchPeriods();
-  }, []);
+  };
+  
+  const handleCloseForm = () => {
+      setShowAddForm(false);
+      setEditingPeriod(null);
+      setSelectedBenefitIds([]);
+  }
+
+  const handlePlanSelectionChange = (planId) => {
+    setSelectedBenefitIds(prev =>
+      prev.includes(planId)
+        ? prev.filter(id => id !== planId)
+        : [...prev, planId]
+    );
+  };
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -31,15 +86,27 @@ function OpenEnrollment() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const addedPeriod = await addEnrollmentPeriod(newPeriod);
-    if (addedPeriod) {
-      setPeriods(prevPeriods => [...prevPeriods, addedPeriod].sort((a, b) => new Date(a.projected_start_date) - new Date(b.projected_start_date)));
-      setShowAddForm(false);
-      // --- CHANGE START ---
-      setNewPeriod({ projected_start_date: '', status: 'Upcoming', waiting_period_days: '60' });
-      // --- CHANGE END ---
-    } else {
-      alert("Failed to create the new enrollment period.");
+    const toastId = toast.loading('Saving enrollment period...');
+    
+    try {
+        let periodResponse;
+        if (editingPeriod) {
+          const { id, ...updateData } = { ...editingPeriod, ...newPeriod };
+          periodResponse = await updateEnrollmentPeriod(id, updateData);
+        } else {
+          periodResponse = await addEnrollmentPeriod(newPeriod);
+        }
+
+        if (periodResponse && periodResponse.id) {
+            await setPlansForEnrollmentPeriod(periodResponse[0].id, selectedBenefitIds);
+            toast.success('Enrollment period saved!', { id: toastId });
+            fetchData();
+            handleCloseForm();
+        } else {
+            throw new Error('Failed to create or update the enrollment period.');
+        }
+    } catch(error) {
+        toast.error(`Error: ${error.message}`, { id: toastId });
     }
   };
   
@@ -52,7 +119,7 @@ function OpenEnrollment() {
       });
       if (updatedPeriod) {
         setPeriods(periods.map(p => p.id === updatedPeriod.id ? updatedPeriod : p));
-        alert("Enrollment has been successfully activated!");
+        toast.success("Enrollment has been successfully activated!");
       }
     }
   };
@@ -62,7 +129,7 @@ function OpenEnrollment() {
       const updatedPeriod = await updateEnrollmentPeriod(periodId, { status: 'Completed' });
       if (updatedPeriod) {
         setPeriods(periods.map(p => p.id === updatedPeriod.id ? updatedPeriod : p));
-        alert("Enrollment has been successfully ended.");
+        toast.success("Enrollment has been successfully ended.");
       }
     }
   };
@@ -74,7 +141,6 @@ function OpenEnrollment() {
     return { activePeriod: active, upcomingPeriods: upcoming, completedPeriods: completed };
   }, [periods]);
 
-
   if (loading) {
     return <div className="page-container"><h1>Loading Enrollment Periods...</h1></div>;
   }
@@ -83,7 +149,7 @@ function OpenEnrollment() {
     <div className="page-container">
       <div className="page-header">
         <h1>Enrollment Periods</h1>
-        <button className="add-button" onClick={() => setShowAddForm(true)} disabled={!!activePeriod}>
+        <button className="add-button" onClick={() => handleOpenForm()} disabled={!!activePeriod}>
           {activePeriod ? 'An Enrollment is Active' : 'Create New Enrollment'}
         </button>
       </div>
@@ -116,6 +182,7 @@ function OpenEnrollment() {
                   <div className="info-card" key={period.id}>
                     <h3>Projected Start: {period.projected_start_date || 'N/A'}</h3>
                     <p><strong>Status:</strong> <span className={`status-badge status-${period.status.toLowerCase()}`}>{period.status}</span></p>
+                    <button className="action-button-small" onClick={() => handleOpenForm(period)}>Edit</button>
                     <button className="submit-button mt-4" onClick={() => handleStartEnrollment(period.id)} disabled={!!activePeriod}>
                       Activate Enrollment
                     </button>
@@ -148,14 +215,13 @@ function OpenEnrollment() {
       </div>
       
       {showAddForm && (
-        <Modal onClose={() => setShowAddForm(false)}>
-          <h3>Create New Enrollment Period</h3>
+        <Modal onClose={handleCloseForm} size="large">
+          <h3>{editingPeriod ? 'Edit' : 'Create'} Enrollment Period</h3>
           <form className="add-employee-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Projected Start Date</label>
               <input type="date" name="projected_start_date" value={newPeriod.projected_start_date} onChange={handleFormChange} required />
             </div>
-            {/* --- CHANGE START --- */}
             <div className="form-group">
               <label>Waiting Period (in days)</label>
               <input 
@@ -167,7 +233,22 @@ function OpenEnrollment() {
                 placeholder="e.g., 60"
               />
             </div>
-            {/* --- CHANGE END --- */}
+             <div className="form-group">
+                <label>Benefit Plans for this Period</label>
+                <p className="form-note">Select all benefit plans that should be available to employees during this enrollment period.</p>
+                <div className="permissions-grid">
+                    {allBenefitPlans.map(plan => (
+                        <label key={plan.id}>
+                            <input
+                                type="checkbox"
+                                checked={selectedBenefitIds.includes(plan.id)}
+                                onChange={() => handlePlanSelectionChange(plan.id)}
+                            />
+                            {plan.plan_name} ({plan.plan_type})
+                        </label>
+                    ))}
+                </div>
+            </div>
             <button type="submit" className="submit-button">
               Save Period
             </button>

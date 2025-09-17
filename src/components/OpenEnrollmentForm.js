@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Modal from '../components/Modal';
-import { getBenefitPlans } from '../services/benefitService';
+import { getPlansForEnrollmentPeriod } from '../services/benefitService';
 
 // Helper function to calculate age from date of birth
 function calculateAge(dob) {
@@ -33,20 +33,25 @@ function getAgeBasedRate(age, rates, amount) {
     return rate;
 }
 
-function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
+function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit, activePeriodId }) {
     const [selections, setSelections] = useState({ plans: {} });
     const [benefitPlans, setBenefitPlans] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetchPlans() {
+            if (!activePeriodId) {
+                console.error("No active enrollment period ID provided.");
+                setLoading(false);
+                return;
+            }
             setLoading(true);
-            const plans = await getBenefitPlans();
+            const plans = await getPlansForEnrollmentPeriod(activePeriodId);
             setBenefitPlans(plans);
             setLoading(false);
         }
         fetchPlans();
-    }, []);
+    }, [activePeriodId]);
 
     const employeeAge = useMemo(() => calculateAge(employeeInfo.date_of_birth), [employeeInfo.date_of_birth]);
 
@@ -56,14 +61,11 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
                 return acc;
             }
             
-            // This is where we calculate the cost for each plan item based on employee age
             let cost = 0;
             let planWithCost = { ...plan };
             if (plan.rate_model === 'AGE_BANDED_TIER') {
-                // For age-banded tiered plans (like Life), we'll represent it as a single plan with multiple options
-                // We'll need a different way to display this in the UI
-                planWithCost.options = plan.benefit_rates.map(band => {
-                    const employeeRate = getAgeBasedRate(employeeAge, [band], band.rates[0].amount);
+                planWithCost.options = plan.benefit_rates[0]?.rates.map(band => {
+                    const employeeRate = getAgeBasedRate(employeeAge, [band], band.amount);
                     if (employeeRate && employeeRate.rate_per_thousand) {
                          return band.rates.map(r => ({
                             ...r,
@@ -74,14 +76,12 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
                     return null;
                 }).filter(Boolean).flat();
             } else {
-                // For simple flat rate plans, cost is pre-calculated
-                cost = (plan.benefit_rates[0]?.carrier_rate || 0) * (1 + (plan.client_margin / 100));
+                cost = (plan.benefit_rates[0]?.rates[0]?.carrier_rate || 0) * (1 + (plan.client_margin / 100));
                 planWithCost.cost = cost;
             }
 
             (acc[plan.plan_type] = acc[plan.plan_type] || []).push(planWithCost);
             
-            // Add a "Waive" option for every plan type
             if (!acc[plan.plan_type].some(p => p.plan_name === 'Waive')) {
                 acc[plan.plan_type].unshift({
                     id: `waive-${plan.plan_type}`,

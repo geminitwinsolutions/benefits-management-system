@@ -386,6 +386,7 @@ function AllEmployees() {
           employeeInfo={selectedEmployee}
           onClose={() => setShowEnrollmentForm(false)}
           onSubmit={handleEnrollmentSubmit}
+          activePeriodId={activeEnrollmentPeriodId}
         />
       )}
     </div>
