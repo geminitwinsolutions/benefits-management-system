@@ -98,7 +98,12 @@ function UserSettings() {
         const toastId = toast.loading(isEditing ? 'Updating user...' : 'Sending invitation...');
         try {
             if (isEditing) {
-                await updateUserRole(currentUser.id, currentUser.role.id);
+                // Wait for the result of the update
+                const result = await updateUserRole(currentUser.id, currentUser.role.id);
+                // Check if the update returned data, if not, it likely failed
+                if (!result || result.length === 0) {
+                    throw new Error("Update failed. Please check permissions.");
+                }
             } else {
                 await inviteUser({
                     email: currentUser.email,
