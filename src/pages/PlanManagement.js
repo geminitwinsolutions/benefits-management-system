@@ -8,7 +8,7 @@ import {
 import Modal from '../components/Modal';
 
 // --- Carrier Management Component ---
-const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive }) => {
+const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive, selectedCarrier, onSelectCarrier }) => {
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentCarrier, setCurrentCarrier] = useState(null);
@@ -67,17 +67,22 @@ const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive }) => {
                 </button>
             </div>
             <div className="card-body">
-                <table className="employees-table">
+                <p className="form-note">Select a carrier to view and manage their benefit plans.</p>
+                <table className="employees-table carrier-table">
                     <thead><tr><th>Name</th><th>Contact</th><th>Actions</th></tr></thead>
                     <tbody>
                         {carriers.map(carrier => (
-                            <tr key={carrier.id}>
+                            <tr 
+                                key={carrier.id} 
+                                onClick={() => onSelectCarrier(carrier)}
+                                className={selectedCarrier?.id === carrier.id ? 'selected-row' : ''}
+                            >
                                 <td>{carrier.name}</td>
                                 <td>{carrier.contact_info}</td>
                                 <td className="action-buttons-cell">
                                     <button
                                         className="action-button-small"
-                                        onClick={() => handleOpenForm(carrier)}
+                                        onClick={(e) => { e.stopPropagation(); handleOpenForm(carrier); }}
                                         disabled={isEnrollmentActive}>
                                         Edit
                                     </button>
@@ -122,7 +127,7 @@ const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive }) => {
 };
 
 // --- Benefit Plan Management Component (Refactored) ---
-const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
+const PlanManager = ({ plans, selectedCarrier, onUpdate, isEnrollmentActive }) => {
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentPlan, setCurrentPlan] = useState(null);
@@ -141,13 +146,12 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
                 client_margin: plan.client_margin,
             });
             const rates = Array.isArray(plan.benefit_rates) ? plan.benefit_rates : [];
-            // Rates are stored as a single JSON object in the database to be flexible
             setCurrentRates(rates);
         } else {
             setCurrentPlan({
                 plan_name: '',
                 plan_type: 'Medical',
-                carrier_id: carriers[0]?.id || '',
+                carrier_id: selectedCarrier?.id || '',
                 description: '',
                 rate_model: 'FLAT',
                 client_margin: 0,
@@ -171,8 +175,6 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
             switch (value) {
                 case 'Life':
                 case 'Disability':
-                    // This is a more complex nested structure for life and disability plans
-                    // It will handle age bands and benefit amounts.
                     const initialRates = [
                         { age_band: '18-24', rates: [{ amount: 10000, premium: 1.12 }] },
                         { age_band: '25-29', rates: [{ amount: 10000, premium: 1.28 }] },
@@ -194,11 +196,9 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
         }
     };
     
-    // Reworked handler for the new rate structure
     const handleRateChange = (bandIndex, rateIndex, e) => {
         const { name, value, type, checked } = e.target;
         const newRates = [...currentRates];
-        // Ensure the nested structure exists
         if (!newRates[bandIndex].rates[rateIndex]) {
             newRates[bandIndex].rates[rateIndex] = {};
         }
@@ -226,15 +226,12 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
         setCurrentRates(newRates);
     };
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         const toastId = toast.loading('Saving plan...');
         try {
             const planData = { ...currentPlan };
             delete planData.id;
-            
-            // Convert rates to a format suitable for DB storage (e.g., JSON string)
             const ratesDataForDb = currentRates;
 
             if (isEditing) {
@@ -264,7 +261,6 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
         }
     };
 
-    // Reworked render function to handle new nested rate structure
     const renderRateInputs = () => {
         const model = currentPlan?.rate_model;
         if (!model) return null;
@@ -289,32 +285,6 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
                             </div>
                         ))}
                         <button type="button" onClick={() => setCurrentRates([...currentRates, { coverage_level: '', carrier_rate: '' }])} className="action-button-small">Add Row</button>
-                    </div>
-                );
-            case 'AGE_BANDED':
-                return (
-                    <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid #ccc', padding: '10px', borderRadius: '6px' }}>
-                        {currentRates.map((rate, index) => (
-                            <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-                                <input name="min_age" type="number" placeholder="Min Age" value={rate.min_age || ''} onChange={(e) => {
-                                    const newRates = [...currentRates];
-                                    newRates[index].min_age = parseFloat(e.target.value);
-                                    setCurrentRates(newRates);
-                                }} style={{width: '80px'}}/>
-                                <input name="max_age" type="number" placeholder="Max Age" value={rate.max_age || ''} onChange={(e) => {
-                                    const newRates = [...currentRates];
-                                    newRates[index].max_age = parseFloat(e.target.value);
-                                    setCurrentRates(newRates);
-                                }} style={{width: '80px'}}/>
-                                <input name="carrier_rate" type="number" placeholder="Carrier Rate" value={rate.carrier_rate || ''} onChange={(e) => {
-                                    const newRates = [...currentRates];
-                                    newRates[index].carrier_rate = parseFloat(e.target.value);
-                                    setCurrentRates(newRates);
-                                }} />
-                                <button type="button" onClick={() => setCurrentRates(currentRates.filter((_, i) => i !== index))} className="action-button-delete action-button-small">X</button>
-                            </div>
-                        ))}
-                        <button type="button" onClick={() => setCurrentRates([...currentRates, { min_age: '', max_age: '', carrier_rate: '' }])} className="action-button-small">Add Row</button>
                     </div>
                 );
             case 'AGE_BANDED_TIER':
@@ -372,78 +342,28 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
                         ))}
                     </div>
                 );
-            case 'COVERAGE_TIER':
-                return (
-                    <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid #ccc', padding: '10px', borderRadius: '6px' }}>
-                        {currentRates.map((rate, index) => (
-                            <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-                                <input name="min_age" type="number" placeholder="Min Age" value={rate.min_age || ''} onChange={(e) => {
-                                    const newRates = [...currentRates];
-                                    newRates[index].min_age = parseFloat(e.target.value);
-                                    setCurrentRates(newRates);
-                                }} style={{width: '80px'}}/>
-                                <input name="max_age" type="number" placeholder="Max Age" value={rate.max_age || ''} onChange={(e) => {
-                                    const newRates = [...currentRates];
-                                    newRates[index].max_age = parseFloat(e.target.value);
-                                    setCurrentRates(newRates);
-                                }} style={{width: '80px'}}/>
-                                <input type="number" name="carrier_rate" placeholder="Rate" value={rate.carrier_rate || ''} onChange={(e) => {
-                                    const newRates = [...currentRates];
-                                    newRates[index].carrier_rate = parseFloat(e.target.value);
-                                    setCurrentRates(newRates);
-                                }} style={{width: '80px'}}/>
-                                <label><input type="checkbox" name="rate_per_thousand" checked={!!rate.rate_per_thousand} onChange={(e) => {
-                                    const newRates = [...currentRates];
-                                    newRates[index].rate_per_thousand = e.target.checked;
-                                    setCurrentRates(newRates);
-                                }} /> Per $1k</label>
-                                <button type="button" onClick={() => setCurrentRates(currentRates.filter((_, i) => i !== index))} className="action-button-delete action-button-small">X</button>
-                            </div>
-                        ))}
-                        <button type="button" onClick={() => setCurrentRates([...currentRates, { min_age: '', max_age: '', carrier_rate: '', rate_per_thousand: false }])} className="action-button-small">Add Row</button>
-                    </div>
-                );
-            default:
-                return null;
+            default: return null;
         }
     };
-    
-    const getPlanCostDisplay = (plan) => {
-        if (!plan.benefit_rates || plan.benefit_rates.length === 0) return 'N/A';
-        const rates = Array.isArray(plan.benefit_rates) ? plan.benefit_rates : [];
-        if (rates.length === 0) return 'N/A';
 
-        switch (plan.rate_model) {
-            case 'FLAT':
-                const firstRate = parseFloat(rates[0].carrier_rate) * (1 + (parseFloat(plan.client_margin) / 100));
-                return `$${firstRate.toFixed(2)} ...`;
-            case 'AGE_BANDED':
-                return 'Age-Banded';
-            case 'AGE_BANDED_TIER':
-                return 'Age-Banded & Tiered';
-            case 'COVERAGE_TIER':
-                return 'By Age & Coverage';
-            default:
-                return 'N/A';
-        }
-    };
-    
+    if (!selectedCarrier) {
+        return null;
+    }
+
     return (
-        <div className="card">
+        <div className="card mt-4">
             <div className="page-header card-header blue">
-                <h2>Benefit Plans</h2>
+                <h2>Benefit Plans for {selectedCarrier.name}</h2>
                 <button className="add-button action-button-small" onClick={() => handleOpenForm()} disabled={isEnrollmentActive}>Add Plan</button>
             </div>
             <div className="card-body">
                 <table className="employees-table">
-                    <thead><tr><th>Plan Name</th><th>Type</th><th>Carrier</th><th>Cost Model</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Plan Name</th><th>Type</th><th>Actions</th></tr></thead>
                     <tbody>
                         {plans.map(plan => (
                             <tr key={plan.id}>
                                 <td>{plan.plan_name}</td>
                                 <td>{plan.plan_type}</td>
-                                <td>{carriers.find(c => c.id === plan.carrier_id)?.name || 'N/A'}</td>
-                                <td>{getPlanCostDisplay(plan)}</td>
                                 <td className="action-buttons-cell">
                                     <button className="action-button-small" onClick={() => handleOpenForm(plan)} disabled={isEnrollmentActive}>Edit</button>
                                 </td>
@@ -463,20 +383,7 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
                         <div className="form-group">
                             <label>Plan Type</label>
                             <select name="plan_type" value={currentPlan?.plan_type || ''} onChange={handlePlanChange}>
-                                <option>Medical</option>
-                                <option>Dental</option>
-                                <option>Vision</option>
-                                <option>Life</option>
-                                <option>Disability</option>
-                                <option>Critical Illness</option>
-                                <option>Other</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label>Carrier</label>
-                            <select name="carrier_id" value={currentPlan?.carrier_id || ''} onChange={handlePlanChange} required>
-                                <option value="" disabled>Select a carrier</option>
-                                {carriers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                <option>Medical</option><option>Dental</option><option>Vision</option><option>Life</option><option>Disability</option><option>Critical Illness</option><option>Other</option>
                             </select>
                         </div>
                         <div className="form-group">
@@ -512,6 +419,7 @@ const PlanManagement = () => {
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isEnrollmentActive, setIsEnrollmentActive] = useState(true);
+    const [selectedCarrier, setSelectedCarrier] = useState(null);
 
     const fetchData = useCallback(async () => {
         const toastId = toast.loading('Fetching data...');
@@ -536,6 +444,12 @@ const PlanManagement = () => {
         fetchData();
     }, [fetchData]);
 
+    const handleSelectCarrier = (carrier) => {
+        setSelectedCarrier(carrier);
+    };
+
+    const plansForSelectedCarrier = selectedCarrier ? plans.filter(p => p.carrier_id === selectedCarrier.id) : [];
+
     if (loading) {
         return <div className="page-container"><h1>Loading...</h1></div>;
     }
@@ -553,9 +467,20 @@ const PlanManagement = () => {
                 <p>Please end the active Open Enrollment period to add or edit plans and carriers.</p>
               </div>
             )}
-            <div className="plan-management-layout">
-                <CarrierManager carriers={carriers} onUpdate={fetchData} isEnrollmentActive={!isEnrollmentActive} />
-                <PlanManager plans={plans} carriers={carriers} onUpdate={fetchData} isEnrollmentActive={!isEnrollmentActive} />
+            <div className="mt-4">
+                <CarrierManager 
+                    carriers={carriers} 
+                    onUpdate={fetchData} 
+                    isEnrollmentActive={isEnrollmentActive}
+                    selectedCarrier={selectedCarrier}
+                    onSelectCarrier={handleSelectCarrier}
+                />
+                <PlanManager 
+                    plans={plansForSelectedCarrier} 
+                    selectedCarrier={selectedCarrier}
+                    onUpdate={fetchData} 
+                    isEnrollmentActive={isEnrollmentActive} 
+                />
             </div>
         </div>
     );
