@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
-import { payTypes, flsaTypes, eeocCategories } from '../utils/constants';
+import { payTypes, flsaTypes, eeocCategories, workersCompCodes } from '../utils/constants';
 
 // Generic manager component for Job Codes and Employment Types
 const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
@@ -16,7 +16,8 @@ const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
     setCurrentItem(item || {
       pay_type: payTypes[0],
       flsa_type: flsaTypes[1],
-      eeoc_id: `${eeocCategories[0].code} - ${eeocCategories[0].name}`
+      eeoc_id: `${eeocCategories[0].code} - ${eeocCategories[0].name}`,
+      workers_comp_code: workersCompCodes[0]
     });
     setShowForm(true);
   };
@@ -34,7 +35,7 @@ const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const toastId = toast.loading(`${isEditing ? 'Updating' : 'Adding'} item...`);
-    
+
     try {
       let error;
       const { id, ...updateData } = currentItem;
@@ -46,7 +47,7 @@ const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
       }
 
       if (error) throw error;
-      
+
       toast.success(`Item successfully ${isEditing ? 'updated' : 'added'}!`, { id: toastId });
       onUpdate();
       handleCloseForm();
@@ -71,7 +72,7 @@ const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
       }
     }
   };
-  
+
   const renderInput = (col) => {
     if (col.key === 'pay_type') {
         return (
@@ -94,6 +95,14 @@ const SettingManager = ({ title, tableName, columns, items, onUpdate }) => {
                     const val = `${cat.code} - ${cat.name}`;
                     return <option key={cat.code} value={val}>{val}</option>
                 })}
+            </select>
+        );
+    }
+    if (col.key === 'workers_comp_code') {
+        return (
+            <select name={col.key} value={currentItem[col.key] || ''} onChange={handleInputChange}>
+                <option value="" disabled>Select a code</option>
+                {workersCompCodes.map(code => <option key={code} value={code}>{code}</option>)}
             </select>
         );
     }
@@ -197,7 +206,7 @@ function EmployeeSettings() {
   if (loading) {
     return <div className="page-container"><h1>Loading Settings...</h1></div>;
   }
-  
+
   const jobCodeColumns = [
     { key: 'code', header: 'Job Code' }, { key: 'description', header: 'Description', required: false },
     { key: 'pay_type', header: 'Pay Type' }, { key: 'eeoc_id', header: 'EEOC Category' },
@@ -213,13 +222,13 @@ function EmployeeSettings() {
     <div>
       <h1>Employee Settings</h1>
       <p>Manage the options available for employee profiles.</p>
-      
+
       <div className="tabs-container">
         <button className={`tab-button ${activeTab === 'jobCodes' ? 'active' : ''}`} onClick={() => setActiveTab('jobCodes')}>Job Codes</button>
         <button className={`tab-button ${activeTab === 'empTypes' ? 'active' : ''}`} onClick={() => setActiveTab('empTypes')}>Employment Types</button>
         <button className={`tab-button ${activeTab === 'empStatuses' ? 'active' : ''}`} onClick={() => setActiveTab('empStatuses')}>Employee Statuses</button>
       </div>
-      
+
       {activeTab === 'jobCodes' && (
         <SettingManager title="Job Codes" tableName="job_codes" columns={jobCodeColumns} items={jobCodes} onUpdate={fetchData} />
       )}

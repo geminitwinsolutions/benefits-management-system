@@ -57,12 +57,12 @@ export const payPeriods = ['Weekly', 'Bi-Weekly 1', 'Bi-Weekly 2', 'Semi-Monthly
 // --- Benefits & Enrollment Related ---
 
 export const benefitPlanTypes = [
-    'Medical', 
-    'Dental', 
-    'Vision', 
-    'Life', 
-    'Disability', 
-    'Critical Illness', 
+    'Medical',
+    'Dental',
+    'Vision',
+    'Life',
+    'Disability',
+    'Critical Illness',
     'Accident',
     'Other'
 ];
@@ -103,4 +103,14 @@ export const usStates = [
     { name: 'Vermont', abbreviation: 'VT' }, { name: 'Virginia', abbreviation: 'VA' },
     { name: 'Washington', abbreviation: 'WA' }, { name: 'West Virginia', abbreviation: 'WV' },
     { name: 'Wisconsin', abbreviation: 'WI' }, { name: 'Wyoming', abbreviation: 'WY' }
+];
+
+// --- Workers Compensation ---
+export const workersCompCodes = [
+    '8810 - Clerical Office Employees',
+    '8017 - Furniture Store',
+    '7380 - Drivers & Chauffeurs',
+    '9079 - Restaurant & Food Service',
+    '8868 - College: Professional Staff',
+    'Not Applicable'
 ];
