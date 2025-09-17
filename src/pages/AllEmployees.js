@@ -119,6 +119,7 @@ function AllEmployees() {
       department: '',
       status_id: employeeStatuses.length > 0 ? employeeStatuses[0].id : '',
       hire_date: new Date().toISOString().split('T')[0],
+      date_of_birth: '', // Ensure date_of_birth is a field
       eid: '',
       email: '',
       phone_number: '',
@@ -280,6 +281,7 @@ function AllEmployees() {
                 <label>Phone Number</label>
                 <input type="tel" name="phone_number" placeholder="(XXX) XXX-XXXX" value={currentEmployee.phone_number || ''} onChange={handleInputChange} maxLength="14" />
               </div>
+              {/* Added date_of_birth field */}
               <div className="form-group">
                 <label>Date of Birth</label>
                 <input type="date" name="date_of_birth" value={formatDateForInput(currentEmployee.date_of_birth)} onChange={handleInputChange} />

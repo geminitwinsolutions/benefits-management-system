@@ -1,5 +1,5 @@
-// src/pages/PlanManagement.js
 import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import {
     getCarriers, addCarrier, updateCarrier, deleteCarrier,
     getBenefitPlans, addBenefitPlanWithRates, updateBenefitPlanWithRates, deleteBenefitPlan,
@@ -26,20 +26,32 @@ const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (isEditing) {
-            await updateCarrier(currentCarrier.id, currentCarrier);
-        } else {
-            await addCarrier(currentCarrier);
+        const toastId = toast.loading('Saving carrier...');
+        try {
+            if (isEditing) {
+                await updateCarrier(currentCarrier.id, currentCarrier);
+            } else {
+                await addCarrier(currentCarrier);
+            }
+            toast.success('Carrier saved successfully.', { id: toastId });
+            onUpdate();
+            handleCloseForm();
+        } catch (error) {
+            toast.error(`Failed to save carrier: ${error.message}`, { id: toastId });
         }
-        onUpdate();
-        handleCloseForm();
     };
 
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this carrier? This may affect associated benefit plans.')) {
-            await deleteCarrier(id);
-            onUpdate();
-            handleCloseForm();
+            const toastId = toast.loading('Deleting carrier...');
+            try {
+                await deleteCarrier(id);
+                toast.success('Carrier deleted successfully.', { id: toastId });
+                onUpdate();
+                handleCloseForm();
+            } catch (error) {
+                toast.error(`Failed to delete carrier: ${error.message}`, { id: toastId });
+            }
         }
     };
 
@@ -109,7 +121,6 @@ const CarrierManager = ({ carriers, onUpdate, isEnrollmentActive }) => {
     );
 };
 
-
 // --- Benefit Plan Management Component (Refactored) ---
 const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
     const [showForm, setShowForm] = useState(false);
@@ -130,7 +141,8 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
                 client_margin: plan.client_margin,
             });
             const rates = Array.isArray(plan.benefit_rates) ? plan.benefit_rates : [];
-            setCurrentRates(rates.map(({ id, benefit_id, ...rate }) => rate));
+            // Rates are stored as a single JSON object in the database to be flexible
+            setCurrentRates(rates);
         } else {
             setCurrentPlan({
                 plan_name: '',
@@ -154,53 +166,248 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
     const handlePlanChange = (e) => {
         const { name, value } = e.target;
         setCurrentPlan(prev => ({ ...prev, [name]: value }));
-        if (name === 'rate_model') {
-            if (value === 'FLAT') setCurrentRates([{ coverage_level: '', carrier_rate: '' }]);
-            if (value === 'AGE_BANDED') setCurrentRates([{ min_age: '', max_age: '', carrier_rate: '' }]);
-            if (value === 'COVERAGE_TIER') setCurrentRates([{ min_age: '', max_age: '', carrier_rate: '', rate_per_thousand: false }]);
+        // Initialize new rate structure based on plan type
+        if (name === 'plan_type') {
+            switch (value) {
+                case 'Life':
+                case 'Disability':
+                    // This is a more complex nested structure for life and disability plans
+                    // It will handle age bands and benefit amounts.
+                    const initialRates = [
+                        { age_band: '18-24', rates: [{ amount: 10000, premium: 1.12 }] },
+                        { age_band: '25-29', rates: [{ amount: 10000, premium: 1.28 }] },
+                    ];
+                    setCurrentRates(initialRates);
+                    setCurrentPlan(prev => ({ ...prev, rate_model: 'AGE_BANDED_TIER' }));
+                    break;
+                case 'Medical':
+                case 'Dental':
+                case 'Vision':
+                    setCurrentRates([{ coverage_level: 'Employee Only', carrier_rate: 0 }]);
+                    setCurrentPlan(prev => ({ ...prev, rate_model: 'FLAT' }));
+                    break;
+                default:
+                    setCurrentRates([{ min_age: '', max_age: '', carrier_rate: '' }]);
+                    setCurrentPlan(prev => ({ ...prev, rate_model: 'AGE_BANDED' }));
+                    break;
+            }
         }
     };
-
-    const handleRateChange = (index, e) => {
+    
+    // Reworked handler for the new rate structure
+    const handleRateChange = (bandIndex, rateIndex, e) => {
         const { name, value, type, checked } = e.target;
         const newRates = [...currentRates];
-        newRates[index][name] = type === 'checkbox' ? checked : value;
+        // Ensure the nested structure exists
+        if (!newRates[bandIndex].rates[rateIndex]) {
+            newRates[bandIndex].rates[rateIndex] = {};
+        }
+        newRates[bandIndex].rates[rateIndex][name] = type === 'checkbox' ? checked : parseFloat(value);
+        setCurrentRates(newRates);
+    };
+    
+    const addRateBand = () => {
+        setCurrentRates([...currentRates, { age_band: '', rates: [{ amount: '', premium: '' }] }]);
+    };
+
+    const addRateToBand = (bandIndex) => {
+        const newRates = [...currentRates];
+        newRates[bandIndex].rates.push({ amount: '', premium: '' });
         setCurrentRates(newRates);
     };
 
-    const addRateRow = () => {
-        if (currentPlan.rate_model === 'FLAT') setCurrentRates([...currentRates, { coverage_level: '', carrier_rate: '' }]);
-        if (currentPlan.rate_model === 'AGE_BANDED') setCurrentRates([...currentRates, { min_age: '', max_age: '', carrier_rate: '' }]);
-        if (currentPlan.rate_model === 'COVERAGE_TIER') setCurrentRates([...currentRates, { min_age: '', max_age: '', carrier_rate: '', rate_per_thousand: false }]);
+    const removeRateBand = (bandIndex) => {
+        setCurrentRates(currentRates.filter((_, i) => i !== bandIndex));
     };
-    
-    const removeRateRow = (index) => {
-        setCurrentRates(currentRates.filter((_, i) => i !== index));
+
+    const removeRateFromBand = (bandIndex, rateIndex) => {
+        const newRates = [...currentRates];
+        newRates[bandIndex].rates.splice(rateIndex, 1);
+        setCurrentRates(newRates);
     };
 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const planData = { ...currentPlan };
-        delete planData.id;
+        const toastId = toast.loading('Saving plan...');
+        try {
+            const planData = { ...currentPlan };
+            delete planData.id;
+            
+            // Convert rates to a format suitable for DB storage (e.g., JSON string)
+            const ratesDataForDb = currentRates;
 
-        if (isEditing) {
-            await updateBenefitPlanWithRates(currentPlan.id, planData, currentRates);
-        } else {
-            await addBenefitPlanWithRates(planData, currentRates);
+            if (isEditing) {
+                await updateBenefitPlanWithRates(currentPlan.id, planData, ratesDataForDb);
+            } else {
+                await addBenefitPlanWithRates(planData, ratesDataForDb);
+            }
+            toast.success('Plan saved successfully.', { id: toastId });
+            onUpdate();
+            handleCloseForm();
+        } catch (error) {
+            toast.error(`Failed to save plan: ${error.message}`, { id: toastId });
         }
-        onUpdate();
-        handleCloseForm();
     };
 
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this benefit plan?')) {
-            await deleteBenefitPlan(id);
-            onUpdate();
-            handleCloseForm();
+            const toastId = toast.loading('Deleting plan...');
+            try {
+                await deleteBenefitPlan(id);
+                toast.success('Plan deleted.', { id: toastId });
+                onUpdate();
+                handleCloseForm();
+            } catch (error) {
+                toast.error(`Failed to delete plan: ${error.message}`, { id: toastId });
+            }
         }
     };
 
+    // Reworked render function to handle new nested rate structure
+    const renderRateInputs = () => {
+        const model = currentPlan?.rate_model;
+        if (!model) return null;
+        
+        switch(model) {
+            case 'FLAT':
+                return (
+                    <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid #ccc', padding: '10px', borderRadius: '6px' }}>
+                        {currentRates.map((rate, index) => (
+                            <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+                                <input name="coverage_level" placeholder="Coverage Level" value={rate.coverage_level || ''} onChange={(e) => {
+                                    const newRates = [...currentRates];
+                                    newRates[index].coverage_level = e.target.value;
+                                    setCurrentRates(newRates);
+                                }} />
+                                <input name="carrier_rate" type="number" placeholder="Carrier Rate" value={rate.carrier_rate || ''} onChange={(e) => {
+                                    const newRates = [...currentRates];
+                                    newRates[index].carrier_rate = parseFloat(e.target.value);
+                                    setCurrentRates(newRates);
+                                }} />
+                                <button type="button" onClick={() => setCurrentRates(currentRates.filter((_, i) => i !== index))} className="action-button-delete action-button-small">X</button>
+                            </div>
+                        ))}
+                        <button type="button" onClick={() => setCurrentRates([...currentRates, { coverage_level: '', carrier_rate: '' }])} className="action-button-small">Add Row</button>
+                    </div>
+                );
+            case 'AGE_BANDED':
+                return (
+                    <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid #ccc', padding: '10px', borderRadius: '6px' }}>
+                        {currentRates.map((rate, index) => (
+                            <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+                                <input name="min_age" type="number" placeholder="Min Age" value={rate.min_age || ''} onChange={(e) => {
+                                    const newRates = [...currentRates];
+                                    newRates[index].min_age = parseFloat(e.target.value);
+                                    setCurrentRates(newRates);
+                                }} style={{width: '80px'}}/>
+                                <input name="max_age" type="number" placeholder="Max Age" value={rate.max_age || ''} onChange={(e) => {
+                                    const newRates = [...currentRates];
+                                    newRates[index].max_age = parseFloat(e.target.value);
+                                    setCurrentRates(newRates);
+                                }} style={{width: '80px'}}/>
+                                <input name="carrier_rate" type="number" placeholder="Carrier Rate" value={rate.carrier_rate || ''} onChange={(e) => {
+                                    const newRates = [...currentRates];
+                                    newRates[index].carrier_rate = parseFloat(e.target.value);
+                                    setCurrentRates(newRates);
+                                }} />
+                                <button type="button" onClick={() => setCurrentRates(currentRates.filter((_, i) => i !== index))} className="action-button-delete action-button-small">X</button>
+                            </div>
+                        ))}
+                        <button type="button" onClick={() => setCurrentRates([...currentRates, { min_age: '', max_age: '', carrier_rate: '' }])} className="action-button-small">Add Row</button>
+                    </div>
+                );
+            case 'AGE_BANDED_TIER':
+                return (
+                    <div className="rate-input-grid">
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-bold text-sm text-gray-500">Age Bands</h4>
+                            <button type="button" onClick={addRateBand} className="action-button-small">Add Age Band</button>
+                        </div>
+                        {currentRates.map((band, bandIndex) => (
+                            <div key={bandIndex} className="bg-gray-100 p-4 rounded-md mb-4 border border-gray-300">
+                                <div className="flex items-center mb-2">
+                                    <label className="font-medium mr-2">Age Range:</label>
+                                    <input type="text" placeholder="e.g., 18-24" value={band.age_band || ''} onChange={(e) => {
+                                        const newRates = [...currentRates];
+                                        newRates[bandIndex].age_band = e.target.value;
+                                        setCurrentRates(newRates);
+                                    }} className="w-full text-sm" />
+                                    <button type="button" onClick={() => removeRateBand(bandIndex)} className="action-button-delete action-button-small ml-2">X</button>
+                                </div>
+                                <div className="flex justify-between items-center mt-2 mb-2">
+                                    <h5 className="font-bold text-xs text-gray-400 uppercase">Rates</h5>
+                                    <button type="button" onClick={() => addRateToBand(bandIndex)} className="action-button-small">Add Rate</button>
+                                </div>
+                                {band.rates.map((rate, rateIndex) => (
+                                    <div key={rateIndex} className="flex gap-2 items-center mb-2">
+                                        <input
+                                            type="number"
+                                            name="amount"
+                                            placeholder="Benefit Amount (e.g., 10000)"
+                                            value={rate.amount || ''}
+                                            onChange={(e) => handleRateChange(bandIndex, rateIndex, e)}
+                                        />
+                                        <input
+                                            type="number"
+                                            name="premium"
+                                            placeholder="Premium (e.g., 1.12)"
+                                            value={rate.premium || ''}
+                                            onChange={(e) => handleRateChange(bandIndex, rateIndex, e)}
+                                        />
+                                        <label className="text-sm flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                name="rate_per_thousand"
+                                                checked={!!rate.rate_per_thousand}
+                                                onChange={(e) => handleRateChange(bandIndex, rateIndex, e)}
+                                                className="mr-1"
+                                            />
+                                            Per $1k
+                                        </label>
+                                        <button type="button" onClick={() => removeRateFromBand(bandIndex, rateIndex)} className="action-button-delete action-button-small">X</button>
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                );
+            case 'COVERAGE_TIER':
+                return (
+                    <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid #ccc', padding: '10px', borderRadius: '6px' }}>
+                        {currentRates.map((rate, index) => (
+                            <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+                                <input name="min_age" type="number" placeholder="Min Age" value={rate.min_age || ''} onChange={(e) => {
+                                    const newRates = [...currentRates];
+                                    newRates[index].min_age = parseFloat(e.target.value);
+                                    setCurrentRates(newRates);
+                                }} style={{width: '80px'}}/>
+                                <input name="max_age" type="number" placeholder="Max Age" value={rate.max_age || ''} onChange={(e) => {
+                                    const newRates = [...currentRates];
+                                    newRates[index].max_age = parseFloat(e.target.value);
+                                    setCurrentRates(newRates);
+                                }} style={{width: '80px'}}/>
+                                <input type="number" name="carrier_rate" placeholder="Rate" value={rate.carrier_rate || ''} onChange={(e) => {
+                                    const newRates = [...currentRates];
+                                    newRates[index].carrier_rate = parseFloat(e.target.value);
+                                    setCurrentRates(newRates);
+                                }} style={{width: '80px'}}/>
+                                <label><input type="checkbox" name="rate_per_thousand" checked={!!rate.rate_per_thousand} onChange={(e) => {
+                                    const newRates = [...currentRates];
+                                    newRates[index].rate_per_thousand = e.target.checked;
+                                    setCurrentRates(newRates);
+                                }} /> Per $1k</label>
+                                <button type="button" onClick={() => setCurrentRates(currentRates.filter((_, i) => i !== index))} className="action-button-delete action-button-small">X</button>
+                            </div>
+                        ))}
+                        <button type="button" onClick={() => setCurrentRates([...currentRates, { min_age: '', max_age: '', carrier_rate: '', rate_per_thousand: false }])} className="action-button-small">Add Row</button>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+    
     const getPlanCostDisplay = (plan) => {
         if (!plan.benefit_rates || plan.benefit_rates.length === 0) return 'N/A';
         const rates = Array.isArray(plan.benefit_rates) ? plan.benefit_rates : [];
@@ -212,6 +419,8 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
                 return `$${firstRate.toFixed(2)} ...`;
             case 'AGE_BANDED':
                 return 'Age-Banded';
+            case 'AGE_BANDED_TIER':
+                return 'Age-Banded & Tiered';
             case 'COVERAGE_TIER':
                 return 'By Age & Coverage';
             default:
@@ -219,43 +428,6 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
         }
     };
     
-    const renderRateInputs = () => {
-        const model = currentPlan?.rate_model;
-        if (!model) return null;
-
-        return (
-            <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid #ccc', padding: '10px', borderRadius: '6px' }}>
-                {currentRates.map((rate, index) => (
-                    <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-                        {model === 'FLAT' && (
-                            <>
-                                <input name="coverage_level" placeholder="Coverage Level" value={rate.coverage_level || ''} onChange={(e) => handleRateChange(index, e)} />
-                                <input name="carrier_rate" type="number" placeholder="Carrier Rate" value={rate.carrier_rate || ''} onChange={(e) => handleRateChange(index, e)} />
-                            </>
-                        )}
-                        {model === 'AGE_BANDED' && (
-                            <>
-                                <input name="min_age" type="number" placeholder="Min Age" value={rate.min_age || ''} onChange={(e) => handleRateChange(index, e)} style={{width: '80px'}}/>
-                                <input name="max_age" type="number" placeholder="Max Age" value={rate.max_age || ''} onChange={(e) => handleRateChange(index, e)} style={{width: '80px'}}/>
-                                <input name="carrier_rate" type="number" placeholder="Carrier Rate" value={rate.carrier_rate || ''} onChange={(e) => handleRateChange(index, e)} />
-                            </>
-                        )}
-                        {model === 'COVERAGE_TIER' && (
-                             <>
-                                <input name="min_age" type="number" placeholder="Min Age" value={rate.min_age || ''} onChange={(e) => handleRateChange(index, e)} style={{width: '80px'}}/>
-                                <input name="max_age" type="number" placeholder="Max Age" value={rate.max_age || ''} onChange={(e) => handleRateChange(index, e)} style={{width: '80px'}}/>
-                                <input name="carrier_rate" type="number" placeholder="Rate" value={rate.carrier_rate || ''} onChange={(e) => handleRateChange(index, e)} style={{width: '80px'}}/>
-                                <label><input type="checkbox" name="rate_per_thousand" checked={!!rate.rate_per_thousand} onChange={(e) => handleRateChange(index, e)} /> Per $1k</label>
-                            </>
-                        )}
-                        <button type="button" onClick={() => removeRateRow(index)} className="action-button-delete action-button-small">X</button>
-                    </div>
-                ))}
-                <button type="button" onClick={addRateRow} className="action-button-small">Add Row</button>
-            </div>
-        );
-    };
-
     return (
         <div className="card">
             <div className="page-header card-header blue">
@@ -291,7 +463,13 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
                         <div className="form-group">
                             <label>Plan Type</label>
                             <select name="plan_type" value={currentPlan?.plan_type || ''} onChange={handlePlanChange}>
-                                <option>Medical</option><option>Dental</option><option>Vision</option><option>Life</option><option>Disability</option><option>Critical Illness</option><option>Other</option>
+                                <option>Medical</option>
+                                <option>Dental</option>
+                                <option>Vision</option>
+                                <option>Life</option>
+                                <option>Disability</option>
+                                <option>Critical Illness</option>
+                                <option>Other</option>
                             </select>
                         </div>
                         <div className="form-group">
@@ -308,14 +486,6 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
                         <div className="form-group">
                             <label>Description</label>
                             <textarea name="description" value={currentPlan?.description || ''} onChange={handlePlanChange} />
-                        </div>
-                         <div className="form-group">
-                            <label>Rate Model</label>
-                            <select name="rate_model" value={currentPlan?.rate_model || 'FLAT'} onChange={handlePlanChange}>
-                                <option value="FLAT">Flat Rate (by coverage level)</option>
-                                <option value="AGE_BANDED">Age-Banded Rate</option>
-                                <option value="COVERAGE_TIER">Coverage Tier Rate (by age & amount)</option>
-                            </select>
                         </div>
                         <div className="form-group">
                             <label>Rates</label>
@@ -337,23 +507,29 @@ const PlanManager = ({ plans, carriers, onUpdate, isEnrollmentActive }) => {
 };
 
 // --- Main Page Component ---
-function PlanManagement() {
+const PlanManagement = () => {
     const [carriers, setCarriers] = useState([]);
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isEnrollmentActive, setIsEnrollmentActive] = useState(true);
 
     const fetchData = useCallback(async () => {
-        setLoading(true);
-        const [carrierData, planData, enrollmentPeriods] = await Promise.all([getCarriers(), getBenefitPlans(), getEnrollmentPeriods()]);
-        
-        setCarriers(carrierData);
-        setPlans(planData);
-        
-        const activePeriod = enrollmentPeriods.find(p => p.status === 'Active');
-        setIsEnrollmentActive(!!activePeriod);
-        
-        setLoading(false);
+        const toastId = toast.loading('Fetching data...');
+        try {
+            const [carrierData, planData, enrollmentPeriods] = await Promise.all([getCarriers(), getBenefitPlans(), getEnrollmentPeriods()]);
+            
+            setCarriers(carrierData);
+            setPlans(planData);
+            
+            const activePeriod = enrollmentPeriods.find(p => p.status === 'Active');
+            setIsEnrollmentActive(!!activePeriod);
+            
+            toast.dismiss(toastId);
+        } catch (error) {
+            toast.error('Failed to fetch data.', { id: toastId });
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
     useEffect(() => {
@@ -383,6 +559,6 @@ function PlanManagement() {
             </div>
         </div>
     );
-}
+};
 
 export default PlanManagement;

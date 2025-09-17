@@ -1,4 +1,3 @@
-// src/services/benefitService.js
 import { supabase } from '../supabase';
 import toast from 'react-hot-toast';
 
@@ -92,6 +91,7 @@ export const deleteService = async (id) => {
     .from('services')
     .delete()
     .eq('id', id);
+
   if (error) {
     console.error('Error deleting service:', error);
     return false;
@@ -288,23 +288,32 @@ export const addBenefitPlanWithRates = async (planData, ratesData) => {
     return null;
   }
 
-  const ratesToInsert = ratesData.map(rate => ({ ...rate, benefit_id: plan.id }));
-  const { error: ratesError } = await supabase.from('benefit_rates').insert(ratesToInsert);
+  // The `ratesData` now contains nested structures. We'll store it as JSON.
+  // We first clear existing rates to prepare for the new rates.
+  const { error: deleteRatesError } = await supabase.from('benefit_rates').delete().eq('benefit_id', plan.id);
+  if (deleteRatesError) {
+      console.error('Error clearing old rates:', deleteRatesError);
+      // We can decide to roll back the plan creation here if needed
+      return null;
+  }
+  
+  // Insert the new rate data as a single JSON object.
+  const ratesToInsert = {
+      benefit_id: plan.id,
+      rates: ratesData
+  }
 
+  const { error: ratesError } = await supabase.from('benefit_rates').insert([ratesToInsert]);
+  
   if (ratesError) {
     console.error('Error adding benefit rates:', ratesError);
     await supabase.from('benefits').delete().eq('id', plan.id);
     return null;
   }
 
-  return { ...plan, benefit_rates: ratesToInsert };
+  return { ...plan, benefit_rates: ratesData };
 };
 
-export const deleteBenefitPlan = async (id) => {
-  const { error } = await supabase.from('benefits').delete().eq('id', id);
-  if (error) console.error('Error deleting benefit plan:', error);
-  return !error;
-};
 
 export const updateBenefitPlanWithRates = async (planId, planData, ratesData) => {
   const { data: plan, error: planError } = await supabase
@@ -325,8 +334,13 @@ export const updateBenefitPlanWithRates = async (planId, planData, ratesData) =>
     return null;
   }
 
-  const ratesToInsert = ratesData.map(rate => ({ ...rate, benefit_id: planId }));
-  const { error: ratesError } = await supabase.from('benefit_rates').insert(ratesToInsert);
+  // Insert the new rates as a single JSON object.
+  const ratesToInsert = {
+      benefit_id: planId,
+      rates: ratesData
+  };
+
+  const { error: ratesError } = await supabase.from('benefit_rates').insert([ratesToInsert]);
 
   if (ratesError) {
     console.error('Error inserting new rates:', ratesError);
@@ -336,9 +350,18 @@ export const updateBenefitPlanWithRates = async (planId, planData, ratesData) =>
   return { ...plan, benefit_rates: ratesToInsert };
 };
 
+export const deleteBenefitPlan = async (id) => {
+  const { error } = await supabase.from('benefits').delete().eq('id', id);
+  if (error) console.error('Error deleting benefit plan:', error);
+  return !error;
+};
+
 export const getCarriers = async () => {
   const { data, error } = await supabase.from('carriers').select('*');
-  if (error) console.error('Error fetching carriers:', error);
+  if (error) {
+    console.error('Error fetching carriers:', error);
+    return [];
+  }
   return data || [];
 };
 
@@ -416,6 +439,7 @@ export const updateInvoiceStatus = async (invoiceId, newStatus) => {
 
 // --- Employee Management ---
 export const getEmployees = async () => {
+  // Add 'date_of_birth' to the select statement to fetch it
   const { data, error } = await supabase.from('employees').select('*, employee_statuses!fk_employee_status(name)');
 
   if (error) {
@@ -443,15 +467,6 @@ export const addEmployee = async (employeeData) => {
   return data[0];
 };
 
-export const deleteEmployee = async (id) => {
-  const { error } = await supabase.from('employees').delete().eq('id', id);
-  if (error) {
-    console.error('Error deleting employee:', error);
-    return false;
-  }
-  return true;
-};
-
 export const updateEmployee = async (id, employeeData) => {
   const { data, error } = await supabase
     .from('employees')
@@ -463,6 +478,15 @@ export const updateEmployee = async (id, employeeData) => {
     return null;
   }
   return data[0];
+};
+
+export const deleteEmployee = async (id) => {
+  const { error } = await supabase.from('employees').delete().eq('id', id);
+  if (error) {
+    console.error('Error deleting employee:', error);
+    return false;
+  }
+  return true;
 };
 
 // --- Bulk Operations ---

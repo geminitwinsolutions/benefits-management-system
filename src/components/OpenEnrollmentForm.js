@@ -1,11 +1,39 @@
-// src/components/OpenEnrollmentForm.js
 import React, { useState, useEffect, useMemo } from 'react';
 import Modal from '../components/Modal';
-// --- CHANGE: Removed unused 'submitEnrollment' import ---
 import { getBenefitPlans } from '../services/benefitService';
 
+// Helper function to calculate age from date of birth
+function calculateAge(dob) {
+    if (!dob) return null;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+// Helper function to get the correct rate based on age, amount, and rate data
+function getAgeBasedRate(age, rates, amount) {
+    // Find the correct age band
+    const ageBand = rates.find(band => {
+        const [minAge, maxAge] = band.age_band.split('-').map(Number);
+        return age >= minAge && age <= maxAge;
+    });
+
+    if (!ageBand) {
+        return null;
+    }
+
+    // Find the correct rate within the age band based on benefit amount
+    const rate = ageBand.rates.find(r => r.amount === amount);
+
+    return rate;
+}
+
 function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
-    // ... the rest of this file is correct and does not need changes
     const [selections, setSelections] = useState({ plans: {} });
     const [benefitPlans, setBenefitPlans] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -20,14 +48,40 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
         fetchPlans();
     }, []);
 
+    const employeeAge = useMemo(() => calculateAge(employeeInfo.date_of_birth), [employeeInfo.date_of_birth]);
+
     const organizedPlans = useMemo(() => {
         return benefitPlans.reduce((acc, plan) => {
             if (!plan || !plan.plan_type) {
                 return acc;
             }
-
-            (acc[plan.plan_type] = acc[plan.plan_type] || []).push(plan);
             
+            // This is where we calculate the cost for each plan item based on employee age
+            let cost = 0;
+            let planWithCost = { ...plan };
+            if (plan.rate_model === 'AGE_BANDED_TIER') {
+                // For age-banded tiered plans (like Life), we'll represent it as a single plan with multiple options
+                // We'll need a different way to display this in the UI
+                planWithCost.options = plan.benefit_rates.map(band => {
+                    const employeeRate = getAgeBasedRate(employeeAge, [band], band.rates[0].amount);
+                    if (employeeRate && employeeRate.rate_per_thousand) {
+                         return band.rates.map(r => ({
+                            ...r,
+                            display_name: `$${r.amount.toLocaleString()}`,
+                            cost: (r.premium * (r.amount / 1000)) * (1 + (plan.client_margin / 100))
+                         }));
+                    }
+                    return null;
+                }).filter(Boolean).flat();
+            } else {
+                // For simple flat rate plans, cost is pre-calculated
+                cost = (plan.benefit_rates[0]?.carrier_rate || 0) * (1 + (plan.client_margin / 100));
+                planWithCost.cost = cost;
+            }
+
+            (acc[plan.plan_type] = acc[plan.plan_type] || []).push(planWithCost);
+            
+            // Add a "Waive" option for every plan type
             if (!acc[plan.plan_type].some(p => p.plan_name === 'Waive')) {
                 acc[plan.plan_type].unshift({
                     id: `waive-${plan.plan_type}`,
@@ -39,11 +93,11 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
             }
             return acc;
         }, {});
-    }, [benefitPlans]);
+    }, [benefitPlans, employeeAge]);
+
 
     const handleSelectPlan = (planType, plan) => {
         const isSelected = selections.plans[planType]?.id === plan.id;
-
         if (isSelected) {
             const newSelections = { ...selections.plans };
             delete newSelections[planType];
@@ -61,6 +115,20 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
                 }
             }));
         }
+    };
+
+    const handleSelectLifeCoverage = (planType, plan, coverageOption) => {
+        setSelections(prev => ({
+            ...prev,
+            plans: {
+                ...prev.plans,
+                [planType]: {
+                    id: plan.id,
+                    name: `${plan.plan_name} - ${coverageOption.display_name}`,
+                    cost: coverageOption.cost
+                }
+            }
+        }));
     };
     
     const calculateTotals = () => {
@@ -88,9 +156,9 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
             </Modal>
         );
     }
-
+    
     return (
-        <Modal onClose={onClose}>
+        <Modal onClose={onClose} size="large">
             <div className="max-w-4xl mx-auto">
                 <h1 className="text-3xl font-bold text-center mb-2">Annual Open Enrollment</h1>
                 <p className="text-center text-gray-600 mb-8">Please review your benefit options and make your selections.</p>
@@ -103,6 +171,7 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
                         <div className="card-body">
                            <p><strong>Full Name:</strong> {employeeInfo.fullName}</p>
                            <p><strong>Employee ID:</strong> {employeeInfo.employeeId}</p>
+                           <p><strong>Age:</strong> {employeeAge !== null ? employeeAge : 'N/A'}</p>
                         </div>
                     </div>
                     
@@ -115,12 +184,38 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
                                 {plans.map(plan => (
                                     <div
                                         key={plan.id}
-                                        onClick={() => handleSelectPlan(planType, plan)}
+                                        onClick={() => {
+                                            if (!plan.options) {
+                                                handleSelectPlan(planType, plan);
+                                            }
+                                        }}
                                         className={`plan-card ${selections.plans[planType]?.id === plan.id ? 'selected' : ''}`}
                                     >
                                         <h3 className="text-lg font-bold">{plan.plan_name}</h3>
                                         <p className="text-sm text-gray-600 mb-2 flex-grow">{plan.description}</p>
-                                        <span className="text-lg font-semibold">${plan.cost}/mo</span>
+                                        
+                                        {plan.options ? (
+                                            <div>
+                                                <h4 className="text-sm font-semibold mt-2">Choose Coverage:</h4>
+                                                {plan.options.map((option, index) => (
+                                                    <div key={index} className="flex items-center mt-1">
+                                                        <input
+                                                            type="radio"
+                                                            id={`${plan.id}-${index}`}
+                                                            name={`${plan.id}`}
+                                                            checked={selections.plans[planType]?.name === `${plan.plan_name} - ${option.display_name}`}
+                                                            onChange={() => handleSelectLifeCoverage(planType, plan, option)}
+                                                            className="mr-2"
+                                                        />
+                                                        <label htmlFor={`${plan.id}-${index}`}>
+                                                            {option.display_name} - ${option.cost.toFixed(2)}/mo
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <span className="text-lg font-semibold">${plan.cost?.toFixed(2) || 0}/mo</span>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -140,7 +235,7 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
                                         {Object.entries(selections.plans).map(([type, plan]) => (
                                             <li key={type} className="flex justify-between">
                                                 <span>{plan.name}</span>
-                                                <span>${plan.cost}/mo</span>
+                                                <span>${plan.cost.toFixed(2)}/mo</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -168,4 +263,5 @@ function OpenEnrollmentForm({ employeeInfo, onClose, onSubmit }) {
         </Modal>
     );
 }
+
 export default OpenEnrollmentForm;

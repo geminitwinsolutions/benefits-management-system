@@ -24,7 +24,7 @@ import EmployeeSettings from './pages/EmployeeSettings';
 import PlanManagement from './pages/PlanManagement';
 import UserSettings from './pages/UserSettings';
 import RoleManagement from './pages/RoleManagement';
-import CompanySettings from './pages/CompanySettings'; // Import the new page
+import CompanySettings from './pages/CompanySettings'; 
 
 import './App.css';
 
@@ -109,6 +109,12 @@ function App() {
       {session && <Navbar />}
       <Routes>
         <Route path="/" element={!session ? <Auth /> : <Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<ProtectedRoute session={session}><Dashboard /></ProtectedRoute>} />
+        <Route path="/employees" element={<ProtectedRoute session={session}><AllEmployees /></ProtectedRoute>} />
+        <Route path="/clients" element={<ProtectedRoute session={session}><ClientDetails /></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute session={session}><StatsAndReports /></ProtectedRoute>} />
+        <Route path="/communications" element={<ProtectedRoute session={session}><Communications /></ProtectedRoute>} />
+        
         <Route path="/central-hub" element={<ProtectedRoute session={session}><CentralHub /></ProtectedRoute>}>
           <Route path="enrollment-management" element={<EnrollmentManagement />} />
           <Route path="open-enrollment" element={<OpenEnrollment />} />
@@ -118,11 +124,10 @@ function App() {
           <Route path="service-library" element={<ServiceLibrary />} />
           <Route path="user-settings" element={<UserSettings />} />
           <Route path="role-management" element={<RoleManagement />} />
-          <Route path="company-settings" element={<CompanySettings />} /> {/* <-- Add this route */}
+          <Route path="company-settings" element={<CompanySettings />} />
           <Route path="employee-settings" element={<EmployeeSettings />} />
           <Route index element={<Navigate to="enrollment-management" replace />} />
         </Route>
-
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
