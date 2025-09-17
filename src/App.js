@@ -70,19 +70,21 @@ function App() {
       </div>
     );
   }
-
-  // Use the bypass for the root route logic
-  if (BYPASS_AUTH) {
-    return (
-      <>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
+  // --- Updated routing logic to handle top-level routes correctly
+  // The logic is now cleaner and easier to read.
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={!session ? <Auth /> : <Navigate to="/dashboard" replace />} />
+        
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute session={session} />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/employees" element={<AllEmployees />} />
           <Route path="/clients" element={<ClientDetails />} />
           <Route path="/reports" element={<StatsAndReports />} />
           <Route path="/communications" element={<Communications />} />
+          
           <Route path="/central-hub" element={<CentralHub />}>
             <Route path="enrollment-management" element={<EnrollmentManagement />} />
             <Route path="open-enrollment" element={<OpenEnrollment />} />
@@ -96,37 +98,6 @@ function App() {
             <Route path="employee-settings" element={<EmployeeSettings />} />
             <Route index element={<Navigate to="enrollment-management" replace />} />
           </Route>
-
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </>
-    );
-  }
-
-  // Original authentication logic
-  return (
-    <>
-      {session && <Navbar />}
-      <Routes>
-        <Route path="/" element={!session ? <Auth /> : <Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<ProtectedRoute session={session}><Dashboard /></ProtectedRoute>} />
-        <Route path="/employees" element={<ProtectedRoute session={session}><AllEmployees /></ProtectedRoute>} />
-        <Route path="/clients" element={<ProtectedRoute session={session}><ClientDetails /></ProtectedRoute>} />
-        <Route path="/reports" element={<ProtectedRoute session={session}><StatsAndReports /></ProtectedRoute>} />
-        <Route path="/communications" element={<ProtectedRoute session={session}><Communications /></ProtectedRoute>} />
-        
-        <Route path="/central-hub" element={<ProtectedRoute session={session}><CentralHub /></ProtectedRoute>}>
-          <Route path="enrollment-management" element={<EnrollmentManagement />} />
-          <Route path="open-enrollment" element={<OpenEnrollment />} />
-          <Route path="tier-management" element={<TierManagement />} />
-          <Route path="plan-management" element={<PlanManagement />} />
-          <Route path="reconciliation" element={<BenefitsReconciliation />} />
-          <Route path="service-library" element={<ServiceLibrary />} />
-          <Route path="user-settings" element={<UserSettings />} />
-          <Route path="role-management" element={<RoleManagement />} />
-          <Route path="company-settings" element={<CompanySettings />} />
-          <Route path="employee-settings" element={<EmployeeSettings />} />
-          <Route index element={<Navigate to="enrollment-management" replace />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
