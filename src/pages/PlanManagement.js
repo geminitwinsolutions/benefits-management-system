@@ -427,7 +427,7 @@ const PlanManagement = () => {
         } finally {
             setLoading(false);
         }
-    }, [selectedCarrier]);
+    }, []);
 
     useEffect(() => {
         fetchData();
